@@ -1,0 +1,222 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Requests\CreateUserRequest;
+use App\Http\Requests\UpdateUserRequest;
+use App\Http\Resources\UserResource;
+use App\Services\UserService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+
+/**
+ * User Controller
+ * 
+ * Handles CRUD operations for users
+ * Delegates business logic to UserService
+ */
+class UserController extends Controller
+{
+    public function __construct(
+        private UserService $userService
+    ) {}
+
+    /**
+     * Get all users with filtering and pagination
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $filters = $request->only(['status', 'role', 'search', 'division_id']);
+        $perPage = $request->input('per_page', 15);
+        
+        $users = $this->userService->getAllUsers($filters, $perPage);
+        
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'data' => UserResource::collection($users->items()),
+                'current_page' => $users->currentPage(),
+                'total' => $users->total(),
+                'per_page' => $users->perPage(),
+                'last_page' => $users->lastPage(),
+            ],
+            'message' => 'Users retrieved successfully'
+        ]);
+    }
+
+    /**
+     * Get single user by ID
+     * 
+     * @param int $id
+     * @return JsonResponse
+     */
+    public function show(int $id): JsonResponse
+    {
+        $user = $this->userService->getUserById($id);
+        
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'error' => 'User not found',
+                'message' => 'The requested user does not exist'
+            ], 404);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'data' => new UserResource($user),
+            'message' => 'User retrieved successfully'
+        ]);
+    }
+
+    /**
+     * Create new user
+     * 
+     * @param CreateUserRequest $request
+     * @return JsonResponse
+     */
+    public function store(CreateUserRequest $request): JsonResponse
+    {
+        $user = $this->userService->createUser($request->validated());
+        
+        return response()->json([
+            'success' => true,
+            'data' => new UserResource($user),
+            'message' => 'User created successfully'
+        ], 201);
+    }
+
+    /**
+     * Update existing user
+     * 
+     * @param UpdateUserRequest $request
+     * @param int $id
+     * @return JsonResponse
+     */
+    public function update(UpdateUserRequest $request, int $id): JsonResponse
+    {
+        $user = $this->userService->updateUser($id, $request->validated());
+        
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'error' => 'User not found',
+                'message' => 'The requested user does not exist'
+            ], 404);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'data' => new UserResource($user),
+            'message' => 'User updated successfully'
+        ]);
+    }
+
+    /**
+     * Delete user (soft delete)
+     * 
+     * @param int $id
+     * @return JsonResponse
+     */
+    public function destroy(int $id): JsonResponse
+    {
+        $result = $this->userService->deleteUser($id);
+        
+        if (!$result) {
+            return response()->json([
+                'success' => false,
+                'error' => 'User not found',
+                'message' => 'The requested user does not exist'
+            ], 404);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'User deleted successfully'
+        ]);
+    }
+
+    /**
+     * Restore soft-deleted user
+     * 
+     * @param int $id
+     * @return JsonResponse
+     */
+    public function restore(int $id): JsonResponse
+    {
+        $user = $this->userService->restoreUser($id);
+        
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'error' => 'User not found',
+                'message' => 'The requested user does not exist or is not deleted'
+            ], 404);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'data' => new UserResource($user),
+            'message' => 'User restored successfully'
+        ]);
+    }
+
+    /**
+     * Assign roles to user
+     * 
+     * @param Request $request
+     * @param int $id
+     * @return JsonResponse
+     */
+    public function assignRoles(Request $request, int $id): JsonResponse
+    {
+        $request->validate([
+            'roles' => 'required|array',
+            'roles.*' => 'string|exists:roles,name'
+        ]);
+        
+        $user = $this->userService->assignRoles($id, $request->input('roles'));
+        
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'error' => 'User not found',
+                'message' => 'The requested user does not exist'
+            ], 404);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'data' => new UserResource($user),
+            'message' => 'Roles assigned successfully'
+        ]);
+    }
+
+    /**
+     * Get user's permissions
+     * 
+     * @param int $id
+     * @return JsonResponse
+     */
+    public function permissions(int $id): JsonResponse
+    {
+        $permissions = $this->userService->getUserPermissions($id);
+        
+        if ($permissions === null) {
+            return response()->json([
+                'success' => false,
+                'error' => 'User not found',
+                'message' => 'The requested user does not exist'
+            ], 404);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'data' => $permissions,
+            'message' => 'User permissions retrieved successfully'
+        ]);
+    }
+}

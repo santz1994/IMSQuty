@@ -1,0 +1,46 @@
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Docker volumes
+mysql_data/
+redis_data/
+rabbitmq_data/
+minio_data/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Service-specific ignores
+*/vendor/
+*/node_modules/
+*/storage/logs/*
+*/storage/framework/cache/*
+*/storage/framework/sessions/*
+*/storage/framework/views/*
+*/bootstrap/cache/*
+
+# Composer
+composer.phar
+composer.lock
+
+# NPM
+package-lock.json
+yarn.lock
+
+# Testing
+.phpunit.result.cache
+coverage/

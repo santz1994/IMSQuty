@@ -1,0 +1,491 @@
+version: '3.8'
+
+services:
+  # ===========================================
+  # INFRASTRUCTURE SERVICES
+  # ===========================================
+  
+  # MySQL - Shared Database
+  mysql:
+    image: mysql:8.0
+    container_name: imsquty-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password_123
+      MYSQL_DATABASE: imsquty
+      MYSQL_USER: root
+      MYSQL_PASSWORD: 
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./infrastructure/mysql/init:/docker-entrypoint-initdb.d
+    networks:
+      - imsquty-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis - Cache & Session Store
+  redis:
+    image: redis:7-alpine
+    container_name: imsquty-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - imsquty-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # RabbitMQ - Message Queue
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: imsquty-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: imsquty
+      RABBITMQ_DEFAULT_PASS: rabbitmq_pass_123
+    ports:
+      - "5672:5672"   # AMQP port
+      - "15672:15672" # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - imsquty-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # MinIO - Object Storage (Alternative to S3)
+  minio:
+    image: minio/minio:latest
+    container_name: imsquty-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    ports:
+      - "9000:9000"   # API port
+      - "9001:9001"   # Console UI
+    volumes:
+      - minio_data:/data
+    networks:
+      - imsquty-network
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # Mailhog - Email Testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: imsquty-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"   # SMTP port
+      - "8025:8025"   # Web UI
+    networks:
+      - imsquty-network
+
+  # ===========================================
+  # MICROSERVICES
+  # ===========================================
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: imsquty-api-gateway
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - AUTH_SERVICE_URL=http://auth-service:8001
+      - USER_SERVICE_URL=http://user-service:8002
+      - ASSET_SERVICE_URL=http://asset-service:8003
+      - TICKET_SERVICE_URL=http://ticket-service:8004
+      - INVENTORY_SERVICE_URL=http://inventory-service:8005
+      - FINANCIAL_SERVICE_URL=http://financial-service:8006
+      - MEETING_ROOM_SERVICE_URL=http://meeting-room-service:8007
+      - MASTER_DATA_SERVICE_URL=http://master-data-service:8008
+      - REPORTING_SERVICE_URL=http://reporting-service:8009
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8010
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - redis
+    networks:
+      - imsquty-network
+    volumes:
+      - ./api-gateway:/var/www/api-gateway
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: imsquty-auth-service
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    environment:
+      - APP_NAME=AuthService
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_PORT=8001
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=imstest_quty
+      - DB_USERNAME=imsquty_user
+      - DB_PASSWORD=imsquty_pass_123
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=your-secret-key-change-in-production
+      - JWT_TTL=60
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - imsquty-network
+    volumes:
+      - ./services/auth-service:/var/www/auth-service
+
+  # User Service
+  user-service:
+    build:
+      context: ./services/user-service
+      dockerfile: Dockerfile
+    container_name: imsquty-user-service
+    restart: unless-stopped
+    ports:
+      - "8002:8002"
+    environment:
+      - APP_NAME=UserService
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_PORT=8002
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=imstest_quty
+      - DB_USERNAME=imsquty_user
+      - DB_PASSWORD=imsquty_pass_123
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - AUTH_SERVICE_URL=http://auth-service:8001
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    networks:
+      - imsquty-network
+    volumes:
+      - ./services/user-service:/var/www/user-service
+
+  # Asset Service
+  asset-service:
+    build:
+      context: ./services/asset-service
+      dockerfile: Dockerfile
+    container_name: imsquty-asset-service
+    restart: unless-stopped
+    ports:
+      - "8003:8003"
+    environment:
+      - APP_NAME=AssetService
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_PORT=8003
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=imstest_quty
+      - DB_USERNAME=imsquty_user
+      - DB_PASSWORD=imsquty_pass_123
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - MINIO_ENDPOINT=http://minio:9000
+      - MINIO_KEY=minioadmin
+      - MINIO_SECRET=minioadmin123
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - imsquty-network
+    volumes:
+      - ./services/asset-service:/var/www/asset-service
+
+  # Ticket Service
+  ticket-service:
+    build:
+      context: ./services/ticket-service
+      dockerfile: Dockerfile
+    container_name: imsquty-ticket-service
+    restart: unless-stopped
+    ports:
+      - "8004:8004"
+    environment:
+      - APP_NAME=TicketService
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_PORT=8004
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=imstest_quty
+      - DB_USERNAME=imsquty_user
+      - DB_PASSWORD=imsquty_pass_123
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=imsquty
+      - RABBITMQ_PASS=rabbitmq_pass_123
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8010
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - imsquty-network
+    volumes:
+      - ./services/ticket-service:/var/www/ticket-service
+
+  # Inventory Service
+  inventory-service:
+    build:
+      context: ./services/inventory-service
+      dockerfile: Dockerfile
+    container_name: imsquty-inventory-service
+    restart: unless-stopped
+    ports:
+      - "8005:8005"
+    environment:
+      - APP_NAME=InventoryService
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_PORT=8005
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=imstest_quty
+      - DB_USERNAME=imsquty_user
+      - DB_PASSWORD=imsquty_pass_123
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - imsquty-network
+    volumes:
+      - ./services/inventory-service:/var/www/inventory-service
+
+  # Financial Service
+  financial-service:
+    build:
+      context: ./services/financial-service
+      dockerfile: Dockerfile
+    container_name: imsquty-financial-service
+    restart: unless-stopped
+    ports:
+      - "8006:8006"
+    environment:
+      - APP_NAME=FinancialService
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_PORT=8006
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=imstest_quty
+      - DB_USERNAME=imsquty_user
+      - DB_PASSWORD=imsquty_pass_123
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - imsquty-network
+    volumes:
+      - ./services/financial-service:/var/www/financial-service
+
+  # Meeting Room Service
+  meeting-room-service:
+    build:
+      context: ./services/meeting-room-service
+      dockerfile: Dockerfile
+    container_name: imsquty-meeting-room-service
+    restart: unless-stopped
+    ports:
+      - "8007:8007"
+    environment:
+      - APP_NAME=MeetingRoomService
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_PORT=8007
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=imstest_quty
+      - DB_USERNAME=imsquty_user
+      - DB_PASSWORD=imsquty_pass_123
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - imsquty-network
+    volumes:
+      - ./services/meeting-room-service:/var/www/meeting-room-service
+
+  # Master Data Service
+  master-data-service:
+    build:
+      context: ./services/master-data-service
+      dockerfile: Dockerfile
+    container_name: imsquty-master-data-service
+    restart: unless-stopped
+    ports:
+      - "8008:8008"
+    environment:
+      - APP_NAME=MasterDataService
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_PORT=8008
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=imstest_quty
+      - DB_USERNAME=imsquty_user
+      - DB_PASSWORD=imsquty_pass_123
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - imsquty-network
+    volumes:
+      - ./services/master-data-service:/var/www/master-data-service
+
+  # Reporting Service
+  reporting-service:
+    build:
+      context: ./services/reporting-service
+      dockerfile: Dockerfile
+    container_name: imsquty-reporting-service
+    restart: unless-stopped
+    ports:
+      - "8009:8009"
+    environment:
+      - APP_NAME=ReportingService
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_PORT=8009
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=imstest_quty
+      - DB_USERNAME=imsquty_user
+      - DB_PASSWORD=imsquty_pass_123
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - imsquty-network
+    volumes:
+      - ./services/reporting-service:/var/www/reporting-service
+
+  # Notification Service
+  notification-service:
+    build:
+      context: ./services/notification-service
+      dockerfile: Dockerfile
+    container_name: imsquty-notification-service
+    restart: unless-stopped
+    ports:
+      - "8010:8010"
+    environment:
+      - APP_NAME=NotificationService
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_PORT=8010
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=imstest_quty
+      - DB_USERNAME=imsquty_user
+      - DB_PASSWORD=imsquty_pass_123
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=imsquty
+      - RABBITMQ_PASS=rabbitmq_pass_123
+      - MAIL_HOST=mailhog
+      - MAIL_PORT=1025
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      mailhog:
+        condition: service_started
+    networks:
+      - imsquty-network
+    volumes:
+      - ./services/notification-service:/var/www/notification-service
+
+# ===========================================
+# NETWORKS
+# ===========================================
+networks:
+  imsquty-network:
+    driver: bridge
+
+# ===========================================
+# VOLUMES
+# ===========================================
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+  minio_data:
+    driver: local

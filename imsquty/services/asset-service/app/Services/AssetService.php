@@ -1,0 +1,157 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Asset;
+use App\Models\Movement;
+use App\Repositories\AssetRepository;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Log;
+
+class AssetService
+{
+    protected $assetRepository;
+
+    public function __construct(AssetRepository $assetRepository)
+    {
+        $this->assetRepository = $assetRepository;
+    }
+
+    public function getAll(array $filters = [], int $perPage = 15): LengthAwarePaginator
+    {
+        return $this->assetRepository->getAll($filters, $perPage);
+    }
+
+    public function getById(int $id, bool $withTrashed = false): ?Asset
+    {
+        $asset = $this->assetRepository->findById($id, $withTrashed);
+        if (!$asset) throw new \Exception("Asset not found");
+        return $asset;
+    }
+
+    public function create(array $data): Asset
+    {
+        if (isset($data['asset_tag']) && $this->assetRepository->assetTagExists($data['asset_tag'])) {
+            throw new \Exception("Asset tag {$data['asset_tag']} already exists.");
+        }
+        return $this->assetRepository->create($data);
+    }
+
+    public function update(int $id, array $data): Asset
+    {
+        return $this->assetRepository->update($id, $data);
+    }
+
+    public function delete(int $id): bool
+    {
+        return $this->assetRepository->delete($id);
+    }
+
+    public function restore(int $id): bool
+    {
+        return $this->assetRepository->restore($id);
+    }
+
+    public function getByQRCode(string $qrCode): ?Asset
+    {
+        $asset = $this->assetRepository->findByQrCode($qrCode);
+        if (!$asset) throw new \Exception("Asset with QR code {$qrCode} not found.");
+        return $asset;
+    }
+
+    // Controller method aliases
+    public function getAllAssets(array $filters = [], int $perPage = 15): LengthAwarePaginator
+    {
+        return $this->getAll($filters, $perPage);
+    }
+
+    public function getAssetById(int $id, bool $withTrashed = false): ?Asset
+    {
+        return $this->getById($id, $withTrashed);
+    }
+
+    public function getAssetByQrCode(string $qrCode): ?Asset
+    {
+        return $this->getByQRCode($qrCode);
+    }
+
+    public function createAsset(array $data): Asset
+    {
+        return $this->create($data);
+    }
+
+    public function updateAsset(int $id, array $data): Asset
+    {
+        return $this->update($id, $data);
+    }
+
+    public function deleteAsset(int $id): bool
+    {
+        return $this->delete($id);
+    }
+
+    public function restoreAsset(int $id): bool
+    {
+        return $this->restore($id);
+    }
+
+    public function assignAsset(int $id, int $userId, array $data = []): Asset
+    {
+        $asset = $this->getById($id);
+        
+        // Get assigned status ID (assuming status_id 2 is "assigned")
+        $assignedStatusId = 2;
+        
+        $assignData = [
+            'assigned_to' => $userId,
+            'status_id' => $assignedStatusId,
+        ];
+        
+        if (!empty($data['location_id'])) {
+            $assignData['location_id'] = $data['location_id'];
+        }
+        
+        $updated = $this->update($id, $assignData);
+        
+        // Create movement record
+        Movement::create([
+            'asset_id' => $id,
+            'from_user_id' => $asset->assigned_to,
+            'to_user_id' => $userId,
+            'from_location_id' => $asset->location_id,
+            'to_location_id' => $data['location_id'] ?? $asset->location_id,
+            'reason' => $data['reason'] ?? 'Asset assignment',
+            'notes' => $data['notes'] ?? null,
+            'movement_date' => now(),
+        ]);
+        
+        return $updated;
+    }
+
+    public function transferAsset(int $id, array $data): Asset
+    {
+        // Transfer from one user to another
+        $asset = $this->getById($id);
+        $transferData = [
+            'user_id' => $data['to_user_id'],
+            'location' => $data['location'] ?? $asset->location,
+        ];
+        Log::info("Asset {$id} transferred from user {$asset->user_id} to {$data['to_user_id']}");
+        return $this->update($id, $transferData);
+    }
+
+    public function getExpiringWarranties(int $days = 30): LengthAwarePaginator
+    {
+        return $this->assetRepository->getExpiringWarranties($days);
+    }
+
+    public function getAssetStatistics(): array
+    {
+        return [
+            'total' => $this->assetRepository->count(),
+            'assigned' => $this->assetRepository->countAssigned(),
+            'maintenance' => $this->assetRepository->countMaintenance(),
+            'disposal' => $this->assetRepository->countDisposal(),
+        ];
+    }
+}
