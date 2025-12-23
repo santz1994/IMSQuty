@@ -6,6 +6,7 @@ use App\Http\Requests\Division\CreateDivisionRequest;
 use App\Http\Requests\Division\UpdateDivisionRequest;
 use App\Http\Resources\DivisionResource;
 use App\Services\DivisionService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -45,8 +46,10 @@ class DivisionController extends Controller
                 'data' => new DivisionResource($this->service->getDivisionById($id)),
                 'message' => 'Division retrieved successfully'
             ]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 404);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'error' => $e->getMessage()], $e->getCode() ?: 500);
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
     }
 
@@ -114,7 +117,7 @@ class DivisionController extends Controller
         try {
             return response()->json([
                 'success' => true,
-                'data' => DivisionResource::collection($this->service->getDivisionsHierarchy()),
+                'data' => $this->service->getDivisionsHierarchy(),
                 'message' => 'Divisions hierarchy retrieved successfully'
             ]);
         } catch (\Exception $e) {

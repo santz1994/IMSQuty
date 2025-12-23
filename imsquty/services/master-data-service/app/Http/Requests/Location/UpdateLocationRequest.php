@@ -41,7 +41,7 @@ class UpdateLocationRequest extends FormRequest
                 'required',
                 'string',
                 'max:20',
-                'unique:locations,code,' . $this->location
+                Rule::unique('locations', 'code')->ignore($locationId)
             ],
             'type' => [
                 'nullable',

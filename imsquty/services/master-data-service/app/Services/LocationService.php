@@ -44,7 +44,9 @@ class LocationService
         $location = $this->repository->findById($id, $withTrashed);
         
         if (!$location) {
-            throw new ModelNotFoundException("Location {$id} not found");
+            $exception = new ModelNotFoundException("Location {$id} not found");
+            $exception->setModel(Location::class);
+            throw $exception;
         }
         
         return $location;
@@ -204,10 +206,10 @@ class LocationService
     /**
      * Get locations hierarchy
      * 
-     * @return Collection
+     * @return array
      */
-    public function getLocationsHierarchy(): Collection
+    public function getLocationsHierarchy(): array
     {
-        return $this->repository->getHierarchy();
+        return $this->repository->getHierarchy()->toArray();
     }
 }

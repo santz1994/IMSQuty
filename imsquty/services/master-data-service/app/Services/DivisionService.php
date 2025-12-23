@@ -44,7 +44,9 @@ class DivisionService
         $division = $this->repository->findById($id, $withTrashed);
         
         if (!$division) {
-            throw new ModelNotFoundException("Division {$id} not found");
+            $exception = new ModelNotFoundException("Division {$id} not found");
+            $exception->setModel(Division::class);
+            throw $exception;
         }
         
         return $division;
@@ -203,10 +205,10 @@ class DivisionService
     /**
      * Get divisions hierarchy
      * 
-     * @return Collection
+     * @return array
      */
-    public function getDivisionsHierarchy(): Collection
+    public function getDivisionsHierarchy(): array
     {
-        return $this->repository->getHierarchy();
+        return $this->repository->getHierarchy()->toArray();
     }
 }

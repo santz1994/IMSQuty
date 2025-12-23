@@ -18,6 +18,7 @@ return new class extends Migration
             $table->text('comment');
             $table->boolean('is_internal')->default(false);
             $table->timestamps();
+            $table->softDeletes();
 
             $table->foreign('ticket_id')->references('id')->on('tickets')->onDelete('cascade');
         });

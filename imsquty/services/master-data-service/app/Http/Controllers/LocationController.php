@@ -6,6 +6,7 @@ use App\Http\Requests\Location\CreateLocationRequest;
 use App\Http\Requests\Location\UpdateLocationRequest;
 use App\Http\Resources\LocationResource;
 use App\Services\LocationService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -73,6 +74,12 @@ class LocationController extends Controller
                 'data' => new LocationResource($location),
                 'message' => 'Location retrieved successfully'
             ]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'message' => 'Location not found'
+            ], 404);
         } catch (\Exception $e) {
             $status = $e->getCode() === 404 ? 404 : 500;
             return response()->json([
@@ -230,7 +237,7 @@ class LocationController extends Controller
             
             return response()->json([
                 'success' => true,
-                'data' => LocationResource::collection($locations),
+                'data' => $locations,
                 'message' => 'Locations hierarchy retrieved successfully'
             ]);
         } catch (\Exception $e) {
