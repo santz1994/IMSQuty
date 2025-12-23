@@ -33,6 +33,9 @@ class AssetModelControllerTest extends TestCase
         // Seed RBAC tables for feature tests
         $this->seedRoles();
         
+        // Seed foreign key test data (manufacturers, pcspecs)
+        $this->seedForeignKeyData();
+        
         // Create or get admin role and user for authentication
         $adminRole = Role::where('name', 'Admin')->where('guard_name', 'web')->first();
         $this->authenticatedUser = User::factory()->create([
@@ -41,17 +44,19 @@ class AssetModelControllerTest extends TestCase
         ]);
         $this->authenticatedUser->assignRole($adminRole);
         
-        // Create asset types
+        // Create asset types using new schema fields
         $this->laptopType = AssetType::create([
-            'type_name' => 'Laptop',
-            'abbreviation' => 'LPT',
-            'spare' => false,
+            'name' => 'Laptop',
+            'code' => 'laptop',
+            'icon' => 'laptop',
+            'is_active' => true,
         ]);
         
         $this->desktopType = AssetType::create([
-            'type_name' => 'Desktop',
-            'abbreviation' => 'DSK',
-            'spare' => false,
+            'name' => 'Desktop',
+            'code' => 'desktop',
+            'icon' => 'computer',
+            'is_active' => true,
         ]);
     }
 

@@ -123,6 +123,7 @@ class AssetService
                 'to_location_id' => $data['location_id'] ?? $asset->location_id,
                 'moved_at' => now(),
                 'moved_by' => auth()->id() ?? 1,
+                'reason' => $data['reason'] ?? null,
                 'notes' => $data['notes'] ?? null,
             ]);
         }
@@ -134,9 +135,12 @@ class AssetService
     {
         $asset = $this->getById($id);
         
+        $toUserId = $data['to_user_id'] ?? $asset->assigned_to;
+        $toLocationId = $data['to_location_id'] ?? $asset->location_id;
+        
         $transferData = [
-            'assigned_to' => $data['to_user_id'],
-            'location_id' => $data['location_id'] ?? $asset->location_id,
+            'assigned_to' => $toUserId,
+            'location_id' => $toLocationId,
         ];
         
         $updated = $this->update($id, $transferData);
@@ -145,15 +149,16 @@ class AssetService
         Movement::create([
             'asset_id' => $id,
             'from_user_id' => $asset->assigned_to,
-            'to_user_id' => $data['to_user_id'],
+            'to_user_id' => $toUserId,
             'from_location_id' => $asset->location_id,
-            'to_location_id' => $data['location_id'] ?? $asset->location_id,
+            'to_location_id' => $toLocationId,
             'moved_by' => auth()->id() ?? 1,
+            'reason' => $data['reason'] ?? null,
             'notes' => $data['notes'] ?? null,
-            'moved_at' => now(),
+            'moved_at' => ($data['movement_date'] ?? null) ? \Carbon\Carbon::parse($data['movement_date']) : now(),
         ]);
         
-        Log::info("Asset {$id} transferred from user {$asset->assigned_to} to {$data['to_user_id']}");
+        Log::info("Asset {$id} transferred from user {$asset->assigned_to} to {$toUserId}");
         return $updated;
     }
 

@@ -1,0 +1,27 @@
+Array
+(
+    [success] => 1
+    [data] => Array
+        (
+            [id] => 1
+            [asset_tag] => AST-DEBUG-001
+            [name] => Debug Laptop
+            [serial_number] => SN-DEBUG-123456
+            [qr_code] => 
+            [status_id] => 1
+            [model_id] => 1
+            [location_id] => 
+            [assigned_to] => 
+            [purchase_date] => 2024-01-15T00:00:00.000000Z
+            [warranty_months] => 24
+            [warranty_expiry_date] => 2026-01-15
+            [ip_address] => 
+            [mac_address] => 
+            [notes] => 
+            [created_at] => 2025-12-23T07:42:13.000000Z
+            [updated_at] => 2025-12-23T07:42:13.000000Z
+            [deleted_at] => 
+        )
+
+    [message] => Asset created successfully
+)

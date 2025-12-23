@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Location;
 use App\Repositories\LocationRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -43,7 +44,7 @@ class LocationService
         $location = $this->repository->findById($id, $withTrashed);
         
         if (!$location) {
-            throw new \Exception('Location not found', 404);
+            throw new ModelNotFoundException("Location {$id} not found");
         }
         
         return $location;
@@ -165,9 +166,9 @@ class LocationService
      * Restore soft-deleted location
      * 
      * @param int $id
-     * @return bool
+     * @return Location
      */
-    public function restoreLocation(int $id): bool
+    public function restoreLocation(int $id): Location
     {
         DB::beginTransaction();
         
@@ -178,9 +179,11 @@ class LocationService
                 throw new \Exception('Failed to restore location or location not found', 404);
             }
             
+            $location = $this->repository->findById($id, true);
+            
             DB::commit();
             
-            return true;
+            return $location;
             
         } catch (\Exception $e) {
             DB::rollBack();

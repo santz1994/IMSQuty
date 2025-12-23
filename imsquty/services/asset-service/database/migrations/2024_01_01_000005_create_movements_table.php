@@ -22,8 +22,12 @@ return new class extends Migration
             $table->unsignedBigInteger('to_user_id')->nullable(); // User Service
             $table->unsignedBigInteger('moved_by'); // User Service
             
+            $table->string('reason')->nullable(); // Reason for movement
             $table->text('notes')->nullable();
-            $table->timestamp('moved_at');
+            $table->timestamp('moved_at')->useCurrent();
+            // Audit trail (for Auditable trait - ISO 27001, GDPR, SOC2)
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();
             
             $table->index('asset_id');

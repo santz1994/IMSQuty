@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Division;
 use App\Repositories\DivisionRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -43,7 +44,7 @@ class DivisionService
         $division = $this->repository->findById($id, $withTrashed);
         
         if (!$division) {
-            throw new \Exception('Division not found', 404);
+            throw new ModelNotFoundException("Division {$id} not found");
         }
         
         return $division;
@@ -164,9 +165,9 @@ class DivisionService
      * Restore soft-deleted division
      * 
      * @param int $id
-     * @return bool
+     * @return Division
      */
-    public function restoreDivision(int $id): bool
+    public function restoreDivision(int $id): Division
     {
         DB::beginTransaction();
         
@@ -177,9 +178,11 @@ class DivisionService
                 throw new \Exception('Failed to restore division or division not found', 404);
             }
             
+            $division = $this->repository->findById($id, true);
+            
             DB::commit();
             
-            return true;
+            return $division;
             
         } catch (\Exception $e) {
             DB::rollBack();

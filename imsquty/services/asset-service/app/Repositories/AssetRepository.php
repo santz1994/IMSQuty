@@ -93,7 +93,7 @@ class AssetRepository
 
     public function count(): int
     {
-        return Asset::count();
+        return (int) Asset::count();
     }
 
     public function countAssigned(): int
@@ -113,9 +113,12 @@ class AssetRepository
 
     public function getExpiringWarranties(int $days = 30): LengthAwarePaginator
     {
-        $expiryDate = now()->addDays($days)->toDateString();
-        return Asset::whereNotNull('warranty_expiry_date')
-            ->where('warranty_expiry_date', '<=', $expiryDate)
+        $startDate = now()->toDateString();
+        $endDate = now()->addDays($days)->toDateString();
+        
+        return Asset::whereNotNull('purchase_date')
+            ->whereNotNull('warranty_months')
+            ->whereRaw("DATE_ADD(purchase_date, INTERVAL warranty_months MONTH) BETWEEN ? AND ?", [$startDate, $endDate])
             ->paginate(15);
     }
 
@@ -136,6 +139,8 @@ class AssetRepository
 
     public function getTotalValue(): float
     {
-        return Asset::sum('purchase_price') ?? 0.0;
+        // Note: purchase_price column doesn't exist in this service
+        // Value tracking is handled by Financial Service
+        return 0.0;
     }
 }

@@ -30,8 +30,8 @@ class LocationServiceTest extends TestCase
 
         $result = $this->service->getAllLocations([], 10);
 
-        $this->assertCount(10, $result['data']);
-        $this->assertEquals(15, $result['meta']['total']);
+        $this->assertCount(10, $result->items());
+        $this->assertEquals(15, $result->total());
     }
 
     /** @test */
@@ -42,7 +42,7 @@ class LocationServiceTest extends TestCase
 
         $result = $this->service->getAllLocations(['search' => 'Head'], 10);
 
-        $this->assertCount(1, $result['data']);
+        $this->assertCount(1, $result->items());
     }
 
     /** @test */

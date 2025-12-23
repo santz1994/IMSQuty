@@ -77,7 +77,7 @@ class AssetModelService
             $model = $this->assetModelRepository->findById($id, $withTrashed);
             
             if (!$model) {
-                throw new \Exception("Asset model with ID {$id} not found.");
+                throw new \Exception("Asset model not found");
             }
             
             return $model;

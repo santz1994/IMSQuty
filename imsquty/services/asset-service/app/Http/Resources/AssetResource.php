@@ -67,6 +67,7 @@ class AssetResource extends JsonResource
             // Purchase Information
             'purchase_date' => $this->purchase_date,
             'warranty_months' => $this->warranty_months,
+            'warranty_expiry_date' => $this->warranty_expiry_date,
             'ip_address' => $this->ip_address,
             'mac_address' => $this->mac_address,
             'notes' => $this->notes,

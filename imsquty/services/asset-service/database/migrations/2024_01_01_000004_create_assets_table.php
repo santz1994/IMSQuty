@@ -41,6 +41,11 @@ return new class extends Migration
             $table->date('purchase_date')->nullable();
             $table->integer('warranty_months')->default(0);
             
+            // Audit trail (for Auditable trait - ISO 27001, GDPR, SOC2)
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->unsignedBigInteger('updated_by')->nullable();
+            $table->unsignedBigInteger('deleted_by')->nullable();
+            
             $table->timestamps();
             $table->softDeletes();
             

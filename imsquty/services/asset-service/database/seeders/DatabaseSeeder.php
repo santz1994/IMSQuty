@@ -156,7 +156,7 @@ class DatabaseSeeder extends Seeder
      */
     private function seedSampleAssets(): void
     {
-        // Get first asset model and available status
+        // Get first asset model and statuses
         $assetModel = AssetModel::first();
         $availableStatus = Status::where('code', 'available')->first();
         $assignedStatus = Status::where('code', 'assigned')->first();
@@ -166,8 +166,16 @@ class DatabaseSeeder extends Seeder
             return;
         }
 
-        // Create 10 available assets
-        Asset::factory()->count(10)->create([
+        // Create 8 available assets with normal warranty
+        Asset::factory()->count(8)->create([
+            'model_id' => $assetModel->id,
+            'status_id' => $availableStatus->id,
+            'assigned_to' => null,
+            'created_by' => 1,
+        ]);
+
+        // Create 5 available assets with expiring warranty (within 60 days)
+        Asset::factory()->count(5)->warrantyExpiring()->create([
             'model_id' => $assetModel->id,
             'status_id' => $availableStatus->id,
             'assigned_to' => null,
@@ -182,6 +190,6 @@ class DatabaseSeeder extends Seeder
             'created_by' => 1,
         ]);
 
-        $this->command->info('  ✓ Sample assets seeded (15 assets)');
+        $this->command->info('  ✓ Sample assets seeded (18 assets)');
     }
 }

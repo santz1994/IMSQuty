@@ -20,6 +20,9 @@ return new class extends Migration
             $table->unsignedBigInteger('performed_by'); // User Service (no FK constraint)
             $table->timestamp('performed_at');
             $table->text('notes')->nullable();
+            // Audit trail (for Auditable trait - ISO 27001, GDPR, SOC2)
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();
             $table->softDeletes();
             

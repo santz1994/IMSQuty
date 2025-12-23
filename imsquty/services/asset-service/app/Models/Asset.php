@@ -119,4 +119,15 @@ class Asset extends Model
                      ->orWhere('asset_tag', 'like', "%$search%")
                      ->orWhere('serial_number', 'like', "%$search%");
     }
+
+    /**
+     * Get the warranty expiry date (calculated from purchase_date + warranty_months)
+     */
+    public function getWarrantyExpiryDateAttribute()
+    {
+        if ($this->purchase_date && $this->warranty_months) {
+            return $this->purchase_date->addMonths($this->warranty_months)->toDateString();
+        }
+        return null;
+    }
 }

@@ -52,6 +52,7 @@ class Movement extends Model
         'to_user_id',
         'moved_at',
         'moved_by',
+        'reason',
         'notes',
     ];
 
