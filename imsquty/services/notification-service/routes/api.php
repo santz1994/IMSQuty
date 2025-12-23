@@ -9,7 +9,7 @@ use App\Http\Controllers\NotificationController;
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('v1')->group(function () {
+Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     // Notification management - Specific routes first (must be before {id} parameter)
     Route::get('/notifications/statistics', [NotificationController::class, 'statistics']);
     Route::get('/notifications/unread', [NotificationController::class, 'unread']);

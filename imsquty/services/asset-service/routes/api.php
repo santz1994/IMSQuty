@@ -14,7 +14,7 @@ use App\Http\Controllers\AssetModelController;
 |
 */
 
-Route::prefix('v1')->group(function () {
+Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     
     // Asset Routes
     Route::prefix('assets')->group(function () {

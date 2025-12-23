@@ -68,7 +68,13 @@ class AssetModelController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => AssetModelResource::collection($models),
+                'data' => [
+                    'data' => AssetModelResource::collection($models->items()),
+                    'current_page' => $models->currentPage(),
+                    'per_page' => $models->perPage(),
+                    'total' => $models->total(),
+                    'last_page' => $models->lastPage(),
+                ],
                 'message' => 'Asset models retrieved successfully',
             ], 200);
         } catch (\Exception $e) {

@@ -8,6 +8,7 @@ use App\Models\AssetModel;
 use App\Models\AssetType;
 use App\Models\Status;
 use App\Models\Movement;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 
@@ -31,15 +32,17 @@ class AssetControllerTest extends TestCase
     {
         parent::setUp();
         
+        // Ensure test tables exist (manufacturers, pcspecs, etc.)
+        $this->ensureTestTables();
+        
         // Seed RBAC tables for feature tests
         $this->seedRoles();
         
-        // Create authenticated user (mock Laravel Sanctum auth)
-        $this->authenticatedUser = (object) [
-            'id' => 1,
+        // Create authenticated user using factory
+        $this->authenticatedUser = User::factory()->create([
             'name' => 'testuser',
             'email' => 'test@quty.co.id',
-        ];
+        ]);
         
         // Create asset types
         $this->assetType = AssetType::create([
@@ -74,7 +77,7 @@ class AssetControllerTest extends TestCase
         ]);
         
         // Act
-        $response = $this->getJson('/api/v1/assets');
+        $response = $this->actingAs($this->authenticatedUser)->getJson('/api/v1/assets');
         
         // Assert
         $response->assertStatus(200)
@@ -120,7 +123,7 @@ class AssetControllerTest extends TestCase
         ]);
         
         // Act
-        $response = $this->getJson('/api/v1/assets?status_id=' . $this->availableStatus->id);
+        $response = $this->actingAs($this->authenticatedUser)->getJson('/api/v1/assets?status_id=' . $this->availableStatus->id);
         
         // Assert
         $response->assertStatus(200);
@@ -148,7 +151,7 @@ class AssetControllerTest extends TestCase
         ]);
         
         // Act
-        $response = $this->getJson('/api/v1/assets?search=TEST');
+        $response = $this->actingAs($this->authenticatedUser)->getJson('/api/v1/assets?search=TEST');
         
         // Assert
         $response->assertStatus(200);
@@ -166,7 +169,7 @@ class AssetControllerTest extends TestCase
         ]);
         
         // Act
-        $response = $this->getJson("/api/v1/assets/{$asset->id}");
+        $response = $this->actingAs($this->authenticatedUser)->getJson("/api/v1/assets/{$asset->id}");
         
         // Assert
         $response->assertStatus(200)
@@ -200,7 +203,7 @@ class AssetControllerTest extends TestCase
     public function test_show_returns404_whenAssetNotFound(): void
     {
         // Act
-        $response = $this->getJson('/api/v1/assets/9999');
+        $response = $this->actingAs($this->authenticatedUser)->getJson('/api/v1/assets/9999');
         
         // Assert
         $response->assertStatus(404)
@@ -225,7 +228,7 @@ class AssetControllerTest extends TestCase
         ];
         
         // Act
-        $response = $this->postJson('/api/v1/assets', $assetData);
+        $response = $this->actingAs($this->authenticatedUser)->postJson('/api/v1/assets', $assetData);
         
         // Assert
         $response->assertStatus(201)
@@ -257,7 +260,7 @@ class AssetControllerTest extends TestCase
         ];
         
         // Act
-        $response = $this->postJson('/api/v1/assets', $assetData);
+        $response = $this->actingAs($this->authenticatedUser)->postJson('/api/v1/assets', $assetData);
         
         // Assert
         $response->assertStatus(422)
@@ -282,7 +285,7 @@ class AssetControllerTest extends TestCase
         ];
         
         // Act
-        $response = $this->postJson('/api/v1/assets', $assetData);
+        $response = $this->actingAs($this->authenticatedUser)->postJson('/api/v1/assets', $assetData);
         
         // Assert
         $response->assertStatus(422)
@@ -304,7 +307,7 @@ class AssetControllerTest extends TestCase
         ];
         
         // Act
-        $response = $this->putJson("/api/v1/assets/{$asset->id}", $updateData);
+        $response = $this->actingAs($this->authenticatedUser)->putJson("/api/v1/assets/{$asset->id}", $updateData);
         
         // Assert
         $response->assertStatus(200)
@@ -330,7 +333,7 @@ class AssetControllerTest extends TestCase
         ]);
         
         // Act
-        $response = $this->deleteJson("/api/v1/assets/{$asset->id}");
+        $response = $this->actingAs($this->authenticatedUser)->deleteJson("/api/v1/assets/{$asset->id}");
         
         // Assert
         $response->assertStatus(200)
@@ -353,7 +356,7 @@ class AssetControllerTest extends TestCase
         $asset->delete();
         
         // Act
-        $response = $this->postJson("/api/v1/assets/{$asset->id}/restore");
+        $response = $this->actingAs($this->authenticatedUser)->postJson("/api/v1/assets/{$asset->id}/restore");
         
         // Assert
         $response->assertStatus(200)
@@ -385,7 +388,7 @@ class AssetControllerTest extends TestCase
         ];
         
         // Act
-        $response = $this->postJson("/api/v1/assets/{$asset->id}/assign", $assignData);
+        $response = $this->actingAs($this->authenticatedUser)->postJson("/api/v1/assets/{$asset->id}/assign", $assignData);
         
         // Assert
         $response->assertStatus(200)
@@ -424,7 +427,7 @@ class AssetControllerTest extends TestCase
         ];
         
         // Act
-        $response = $this->postJson("/api/v1/assets/{$asset->id}/transfer", $transferData);
+        $response = $this->actingAs($this->authenticatedUser)->postJson("/api/v1/assets/{$asset->id}/transfer", $transferData);
         
         // Assert
         $response->assertStatus(200)
@@ -457,7 +460,7 @@ class AssetControllerTest extends TestCase
         ]);
         
         // Act
-        $response = $this->getJson('/api/v1/assets/qr/QR-TEST-12345');
+        $response = $this->actingAs($this->authenticatedUser)->getJson('/api/v1/assets/qr/QR-TEST-12345');
         
         // Assert
         $response->assertStatus(200)
@@ -487,7 +490,7 @@ class AssetControllerTest extends TestCase
         ]);
         
         // Act
-        $response = $this->getJson('/api/v1/assets/warranties/expiring?days=60');
+        $response = $this->actingAs($this->authenticatedUser)->getJson('/api/v1/assets/warranties/expiring?days=60');
         
         // Assert
         $response->assertStatus(200)
@@ -518,7 +521,7 @@ class AssetControllerTest extends TestCase
         ]);
         
         // Act
-        $response = $this->getJson('/api/v1/assets/statistics');
+        $response = $this->actingAs($this->authenticatedUser)->getJson('/api/v1/assets/statistics');
         
         // Assert
         $response->assertStatus(200)
@@ -534,3 +537,4 @@ class AssetControllerTest extends TestCase
         $this->assertGreaterThanOrEqual(15, $response->json('data.total_assets'));
     }
 }
+

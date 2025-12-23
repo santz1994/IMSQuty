@@ -19,15 +19,8 @@ class AssetServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        \DB::statement('SET FOREIGN_KEY_CHECKS=0');
         $this->assetRepository = new AssetRepository();
         $this->assetService = new AssetService($this->assetRepository);
-    }
-
-    protected function tearDown(): void
-    {
-        \DB::statement('SET FOREIGN_KEY_CHECKS=1');
-        parent::tearDown();
     }
 
     public function test_getAll_returnsPaginatedAssets(): void

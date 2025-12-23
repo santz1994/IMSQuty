@@ -28,8 +28,14 @@ class AssetResource extends JsonResource
             'status_id' => $this->status_id,
             'model_id' => $this->model_id,
             
-            // Asset Model relationship (use model_id field or load relationship)
-            'asset_model' => $this->model_id,
+            // Asset Model relationship
+            'asset_model' => $this->whenLoaded('assetModel', function () {
+                return [
+                    'id' => $this->assetModel->id,
+                    'asset_model' => $this->assetModel->asset_model ?? $this->assetModel->name,
+                    'asset_type_id' => $this->assetModel->asset_type_id,
+                ];
+            }),
             
             // Location
             'location_id' => $this->location_id,

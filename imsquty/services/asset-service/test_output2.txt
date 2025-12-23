@@ -58,49 +58,49 @@
    WARN  Metadata found in doc-comment for method Tests\Feature\AssetModelControllerTest::test_pagination_worksCorrectly(). Metadata in doc-comments is deprecated and will no longer be supported in PHPUnit 12. Update your test code to use attributes instead.
 
    PASS  Tests\Unit\AssetServiceTest
-  Γ£ô get all returns paginated assets                                                                                                                                                     3.02s  
-  Γ£ô get by id returns asset when found                                                                                                                                                   0.04s  
-  Γ£ô get by id throws exception when not found                                                                                                                                            0.04s  
+  Γ£ô get all returns paginated assets                                                                                                                                                     4.85s  
+  Γ£ô get by id returns asset when found                                                                                                                                                   0.07s  
+  Γ£ô get by id throws exception when not found                                                                                                                                            0.06s  
   Γ£ô create creates asset                                                                                                                                                                 0.04s  
-  Γ£ô update updates asset                                                                                                                                                                 0.04s  
-  Γ£ô delete soft deletes asset                                                                                                                                                            0.05s  
-  Γ£ô restore recovers deleted asset                                                                                                                                                       0.05s  
-  Γ£ô search finds asset by name                                                                                                                                                           0.04s  
-  Γ£ô search finds asset by tag                                                                                                                                                            0.05s  
-  Γ£ô by location filters assets                                                                                                                                                           0.05s  
+  Γ£ô update updates asset                                                                                                                                                                 0.07s  
+  Γ£ô delete soft deletes asset                                                                                                                                                            0.07s  
+  Γ£ô restore recovers deleted asset                                                                                                                                                       0.07s  
+  Γ£ô search finds asset by name                                                                                                                                                           0.05s  
+  Γ£ô search finds asset by tag                                                                                                                                                            0.07s  
+  Γ£ô by location filters assets                                                                                                                                                           0.08s  
 
    FAIL  Tests\Feature\AssetControllerTest
-  Γ£ô index returns assets list with pagination                                                                                                                                            0.33s  
-  Γ£ô index filters assets by status                                                                                                                                                       2.73s  
-  Γ£ô index searches assets by tag or name                                                                                                                                                 2.77s  
-  Γ¿» show returns single asset with relationships                                                                                                                                         2.65s  
-  Γ£ô show returns404 when asset not found                                                                                                                                                 2.70s  
-  Γ£ô store creates new asset with valid data                                                                                                                                              2.74s  
-  Γ£ô store validates required fields                                                                                                                                                      2.67s  
-  Γ£ô store validates unique asset tag                                                                                                                                                     2.56s  
-  Γ£ô update modifies existing asset                                                                                                                                                       2.83s  
-  Γ£ô destroy soft deletes asset                                                                                                                                                           2.55s  
-  Γ£ô restore recovers deleted asset                                                                                                                                                       2.68s  
-  Γ¿» assign assigns asset to user                                                                                                                                                         2.69s  
-  Γ¿» transfer transfers asset to new location                                                                                                                                             2.68s  
-  Γ£ô qr code finds asset by q r code                                                                                                                                                      2.62s  
-  Γ¿» expiring warranties returns assets with soon to expire warranties                                                                                                                    2.74s  
-  Γ¿» statistics returns asset stats                                                                                                                                                       2.67s  
+  Γ£ô index returns assets list with pagination                                                                                                                                            0.45s  
+  Γ£ô index filters assets by status                                                                                                                                                       3.36s  
+  Γ£ô index searches assets by tag or name                                                                                                                                                 3.57s  
+  Γ¿» show returns single asset with relationships                                                                                                                                         3.73s  
+  Γ£ô show returns404 when asset not found                                                                                                                                                 3.38s  
+  Γ£ô store creates new asset with valid data                                                                                                                                              3.57s  
+  Γ£ô store validates required fields                                                                                                                                                      3.66s  
+  Γ£ô store validates unique asset tag                                                                                                                                                     3.52s  
+  Γ£ô update modifies existing asset                                                                                                                                                       3.34s  
+  Γ£ô destroy soft deletes asset                                                                                                                                                           3.32s  
+  Γ£ô restore recovers deleted asset                                                                                                                                                       3.33s  
+  Γ¿» assign assigns asset to user                                                                                                                                                         3.44s  
+  Γ¿» transfer transfers asset to new location                                                                                                                                             3.47s  
+  Γ£ô qr code finds asset by q r code                                                                                                                                                      3.23s  
+  Γ¿» expiring warranties returns assets with soon to expire warranties                                                                                                                    3.30s  
+  Γ¿» statistics returns asset stats                                                                                                                                                       3.33s  
 
    FAIL  Tests\Feature\AssetModelControllerTest
-  Γ¿» index returns asset models list with pagination                                                                                                                                      3.00s  
-  Γ¿» index searches asset models                                                                                                                                                          2.83s  
-  Γ£ô show returns single asset model with relationships                                                                                                                                   2.76s  
-  Γ¿» show returns404 when asset model not found                                                                                                                                           2.72s  
-  Γ¿» store creates new asset model with valid data                                                                                                                                        2.60s  
-  Γ£ô store validates required fields                                                                                                                                                      3.58s  
-  Γ£ô store validates unique asset model                                                                                                                                                   2.97s  
-  Γ£ô update modifies existing asset model                                                                                                                                                 3.29s  
-  Γ£ô destroy soft deletes asset model                                                                                                                                                     2.97s  
-  Γ£ô restore recovers deleted asset model                                                                                                                                                 2.90s  
-  Γ£ô by type returns models for specific type                                                                                                                                             3.25s  
-  Γ£ô by manufacturer returns models for specific manufacturer                                                                                                                             3.20s  
-  Γ¿» pagination works correctly                                                                                                                                                           3.15s  
+  Γ¿» index returns asset models list with pagination                                                                                                                                      3.66s  
+  Γ¿» index searches asset models                                                                                                                                                          3.53s  
+  Γ£ô show returns single asset model with relationships                                                                                                                                   3.45s  
+  Γ¿» show returns404 when asset model not found                                                                                                                                           3.52s  
+  Γ¿» store creates new asset model with valid data                                                                                                                                        3.36s  
+  Γ£ô store validates required fields                                                                                                                                                      3.62s  
+  Γ£ô store validates unique asset model                                                                                                                                                   3.46s  
+  Γ£ô update modifies existing asset model                                                                                                                                                 3.35s  
+  Γ£ô destroy soft deletes asset model                                                                                                                                                     3.41s  
+  Γ£ô restore recovers deleted asset model                                                                                                                                                 3.30s  
+  Γ£ô by type returns models for specific type                                                                                                                                             3.40s  
+  Γ£ô by manufacturer returns models for specific manufacturer                                                                                                                             3.11s  
+  Γ¿» pagination works correctly                                                                                                                                                           3.50s  
   ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ  
    FAILED  Tests\Feature\AssetControllerTest > show returns single asset with relationships                                                                                                     
   Expected response status code [200] but received 404.
@@ -300,5 +300,5 @@ The following errors occurred during the last request:
 
 
   Tests:    10 failed, 29 passed (248 assertions)
-  Duration: 83.46s
+  Duration: 102.43s
 

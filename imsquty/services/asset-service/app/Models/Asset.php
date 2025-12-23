@@ -71,6 +71,22 @@ class Asset extends Model
     }
 
     /**
+     * Get the asset model/specification
+     */
+    public function assetModel()
+    {
+        return $this->belongsTo(AssetModel::class, 'model_id');
+    }
+
+    /**
+     * Get the asset status
+     */
+    public function status()
+    {
+        return $this->belongsTo(Status::class, 'status_id');
+    }
+
+    /**
      * Scope: Filter by location
      */
     public function scopeByLocation($query, $locationId)

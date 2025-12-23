@@ -386,6 +386,7 @@ class BookingControllerTest extends TestCase
             'user_id' => $this->user->id,
             'start_time' => Carbon::today()->addHours(10),
             'end_time' => Carbon::today()->addHours(11),
+            'status' => 'approved',
         ]);
 
         MeetingRoomBooking::factory()->create([
@@ -393,6 +394,7 @@ class BookingControllerTest extends TestCase
             'user_id' => $this->user->id,
             'start_time' => Carbon::tomorrow()->addHours(10),
             'end_time' => Carbon::tomorrow()->addHours(11),
+            'status' => 'approved',
         ]);
 
         $response = $this->getJson('/api/v1/bookings/query/today');

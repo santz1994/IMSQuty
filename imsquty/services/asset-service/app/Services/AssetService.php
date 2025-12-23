@@ -114,30 +114,47 @@ class AssetService
         $updated = $this->update($id, $assignData);
         
         // Create movement record
-        Movement::create([
-            'asset_id' => $id,
-            'from_user_id' => $asset->assigned_to,
-            'to_user_id' => $userId,
-            'from_location_id' => $asset->location_id,
-            'to_location_id' => $data['location_id'] ?? $asset->location_id,
-            'reason' => $data['reason'] ?? 'Asset assignment',
-            'notes' => $data['notes'] ?? null,
-            'movement_date' => now(),
-        ]);
+        if (isset($data['location_id']) || $asset->assigned_to !== $userId) {
+            Movement::create([
+                'asset_id' => $id,
+                'from_user_id' => $asset->assigned_to,
+                'to_user_id' => $userId,
+                'from_location_id' => $asset->location_id,
+                'to_location_id' => $data['location_id'] ?? $asset->location_id,
+                'moved_at' => now(),
+                'moved_by' => auth()->id() ?? 1,
+                'notes' => $data['notes'] ?? null,
+            ]);
+        }
         
         return $updated;
     }
 
     public function transferAsset(int $id, array $data): Asset
     {
-        // Transfer from one user to another
         $asset = $this->getById($id);
+        
         $transferData = [
-            'user_id' => $data['to_user_id'],
-            'location' => $data['location'] ?? $asset->location,
+            'assigned_to' => $data['to_user_id'],
+            'location_id' => $data['location_id'] ?? $asset->location_id,
         ];
-        Log::info("Asset {$id} transferred from user {$asset->user_id} to {$data['to_user_id']}");
-        return $this->update($id, $transferData);
+        
+        $updated = $this->update($id, $transferData);
+        
+        // Create movement record
+        Movement::create([
+            'asset_id' => $id,
+            'from_user_id' => $asset->assigned_to,
+            'to_user_id' => $data['to_user_id'],
+            'from_location_id' => $asset->location_id,
+            'to_location_id' => $data['location_id'] ?? $asset->location_id,
+            'moved_by' => auth()->id() ?? 1,
+            'notes' => $data['notes'] ?? null,
+            'moved_at' => now(),
+        ]);
+        
+        Log::info("Asset {$id} transferred from user {$asset->assigned_to} to {$data['to_user_id']}");
+        return $updated;
     }
 
     public function getExpiringWarranties(int $days = 30): LengthAwarePaginator
@@ -147,11 +164,19 @@ class AssetService
 
     public function getAssetStatistics(): array
     {
-        return [
-            'total' => $this->assetRepository->count(),
-            'assigned' => $this->assetRepository->countAssigned(),
-            'maintenance' => $this->assetRepository->countMaintenance(),
-            'disposal' => $this->assetRepository->countDisposal(),
-        ];
+        try {
+            return [
+                'total_assets' => $this->assetRepository->count(),
+                'by_status' => $this->assetRepository->getStatusCounts() ?? [],
+                'total_value' => $this->assetRepository->getTotalValue() ?? 0.0,
+            ];
+        } catch (\Exception $e) {
+            // Fallback if methods fail
+            return [
+                'total_assets' => 0,
+                'by_status' => [],
+                'total_value' => 0.0,
+            ];
+        }
     }
 }

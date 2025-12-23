@@ -267,8 +267,7 @@ class LocationControllerTest extends TestCase
     /** @test */
     public function it_requires_authentication()
     {
-        // Arrange
-        Sanctum::actingAs(null); // Remove authentication
+        // Arrange - Don't authenticate this request
 
         // Act
         $response = $this->getJson('/api/v1/locations');

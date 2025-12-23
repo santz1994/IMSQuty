@@ -113,6 +113,8 @@ class AssetController extends Controller
     {
         try {
             $asset = $this->assetService->getAssetById($id);
+            // Eager load relationships for resource transformation
+            $asset->load(['assetModel', 'status', 'location']);
 
             return response()->json([
                 'success' => true,
@@ -391,7 +393,7 @@ class AssetController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => AssetResource::collection($assets),
+                'data' => AssetResource::collection($assets->items()),
                 'message' => 'Expiring warranties retrieved successfully',
             ], 200);
         } catch (\Exception $e) {

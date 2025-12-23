@@ -27,6 +27,9 @@ class AssetModelControllerTest extends TestCase
     {
         parent::setUp();
         
+        // Ensure test database tables exist (RefreshDatabase may drop them)
+        $this->ensureTestTables();
+        
         // Seed RBAC tables for feature tests
         $this->seedRoles();
         
@@ -101,7 +104,7 @@ class AssetModelControllerTest extends TestCase
         ]);
         
         // Act
-        $response = $this->getJson('/api/v1/asset-models?search=Latitude');
+        $response = $this->actingAs($this->authenticatedUser)->getJson('/api/v1/asset-models?search=Latitude');
         
         // Assert
         $response->assertStatus(200);
@@ -118,7 +121,7 @@ class AssetModelControllerTest extends TestCase
         ]);
         
         // Act
-        $response = $this->getJson("/api/v1/asset-models/{$assetModel->id}");
+        $response = $this->actingAs($this->authenticatedUser)->getJson("/api/v1/asset-models/{$assetModel->id}");
         
         // Assert
         $response->assertStatus(200)
@@ -144,7 +147,7 @@ class AssetModelControllerTest extends TestCase
     public function test_show_returns404_whenAssetModelNotFound(): void
     {
         // Act
-        $response = $this->getJson('/api/v1/asset-models/9999');
+        $response = $this->actingAs($this->authenticatedUser)->getJson('/api/v1/asset-models/9999');
         
         // Assert
         $response->assertStatus(404)
@@ -167,7 +170,7 @@ class AssetModelControllerTest extends TestCase
         ];
         
         // Act
-        $response = $this->postJson('/api/v1/asset-models', $modelData);
+        $response = $this->actingAs($this->authenticatedUser)->postJson('/api/v1/asset-models', $modelData);
         
         // Assert
         $response->assertStatus(201)
@@ -198,7 +201,7 @@ class AssetModelControllerTest extends TestCase
         ];
         
         // Act
-        $response = $this->postJson('/api/v1/asset-models', $modelData);
+        $response = $this->actingAs($this->authenticatedUser)->postJson('/api/v1/asset-models', $modelData);
         
         // Assert
         $response->assertStatus(422)
@@ -220,7 +223,7 @@ class AssetModelControllerTest extends TestCase
         ];
         
         // Act
-        $response = $this->postJson('/api/v1/asset-models', $modelData);
+        $response = $this->actingAs($this->authenticatedUser)->postJson('/api/v1/asset-models', $modelData);
         
         // Assert
         $response->assertStatus(422)
@@ -241,7 +244,7 @@ class AssetModelControllerTest extends TestCase
         ];
         
         // Act
-        $response = $this->putJson("/api/v1/asset-models/{$assetModel->id}", $updateData);
+        $response = $this->actingAs($this->authenticatedUser)->putJson("/api/v1/asset-models/{$assetModel->id}", $updateData);
         
         // Assert
         $response->assertStatus(200)
@@ -266,7 +269,7 @@ class AssetModelControllerTest extends TestCase
         ]);
         
         // Act
-        $response = $this->deleteJson("/api/v1/asset-models/{$assetModel->id}");
+        $response = $this->actingAs($this->authenticatedUser)->deleteJson("/api/v1/asset-models/{$assetModel->id}");
         
         // Assert
         $response->assertStatus(200)
@@ -288,7 +291,7 @@ class AssetModelControllerTest extends TestCase
         $assetModel->delete();
         
         // Act
-        $response = $this->postJson("/api/v1/asset-models/{$assetModel->id}/restore");
+        $response = $this->actingAs($this->authenticatedUser)->postJson("/api/v1/asset-models/{$assetModel->id}/restore");
         
         // Assert
         $response->assertStatus(200)
@@ -315,7 +318,7 @@ class AssetModelControllerTest extends TestCase
         ]);
         
         // Act
-        $response = $this->getJson("/api/v1/asset-models/by-type/{$this->laptopType->id}");
+        $response = $this->actingAs($this->authenticatedUser)->getJson("/api/v1/asset-models/by-type/{$this->laptopType->id}");
         
         // Assert
         $response->assertStatus(200);
@@ -343,7 +346,7 @@ class AssetModelControllerTest extends TestCase
         ]);
         
         // Act
-        $response = $this->getJson("/api/v1/asset-models/by-manufacturer/{$manufacturerId}");
+        $response = $this->actingAs($this->authenticatedUser)->getJson("/api/v1/asset-models/by-manufacturer/{$manufacturerId}");
         
         // Assert
         $response->assertStatus(200);
@@ -364,7 +367,7 @@ class AssetModelControllerTest extends TestCase
         ]);
         
         // Act: Request page 2 with 10 per page
-        $response = $this->getJson('/api/v1/asset-models?page=2&per_page=10');
+        $response = $this->actingAs($this->authenticatedUser)->getJson('/api/v1/asset-models?page=2&per_page=10');
         
         // Assert
         $response->assertStatus(200);
@@ -376,3 +379,4 @@ class AssetModelControllerTest extends TestCase
         $this->assertEquals(30, $data['total']);
     }
 }
+

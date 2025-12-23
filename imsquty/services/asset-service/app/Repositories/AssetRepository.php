@@ -118,4 +118,24 @@ class AssetRepository
             ->where('warranty_expiry_date', '<=', $expiryDate)
             ->paginate(15);
     }
+
+    public function getStatusCounts(): array
+    {
+        // Group assets by status_id and count them
+        $counts = [];
+        $results = Asset::groupBy('status_id')
+            ->selectRaw('status_id, COUNT(*) as count')
+            ->get();
+        
+        foreach ($results as $result) {
+            $counts[$result->status_id] = $result->count;
+        }
+        
+        return $counts;
+    }
+
+    public function getTotalValue(): float
+    {
+        return Asset::sum('purchase_price') ?? 0.0;
+    }
 }

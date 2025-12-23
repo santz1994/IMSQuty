@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FinancialController;
 
-Route::prefix('v1')->group(function () {
+Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     // Invoices
     Route::get('/invoices', [FinancialController::class, 'invoices']);
     Route::post('/invoices', [FinancialController::class, 'storeInvoice']);

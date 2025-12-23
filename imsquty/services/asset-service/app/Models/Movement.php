@@ -50,9 +50,8 @@ class Movement extends Model
         'to_location_id',
         'from_user_id',
         'to_user_id',
-        'movement_date',
-        'reason',
-        'approved_by',
+        'moved_at',
+        'moved_by',
         'notes',
     ];
 

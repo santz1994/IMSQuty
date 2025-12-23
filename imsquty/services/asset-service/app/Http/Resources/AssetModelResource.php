@@ -22,6 +22,9 @@ class AssetModelResource extends JsonResource
         return [
             'id' => $this->id,
             'asset_model' => $this->asset_model,
+            'asset_type_id' => $this->asset_type_id,
+            'manufacturer_id' => $this->manufacturer_id,
+            'pcspec_id' => $this->pcspec_id,
             'part_number' => $this->part_number,
             'name' => $this->name, // Accessor alias
             'full_name' => $this->full_name, // Accessor with manufacturer
@@ -41,7 +44,6 @@ class AssetModelResource extends JsonResource
                 return $this->manufacturer ? [
                     'id' => $this->manufacturer->id,
                     'name' => $this->manufacturer->name,
-                    'code' => $this->manufacturer->code,
                 ] : null;
             }),
             

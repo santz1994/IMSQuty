@@ -159,7 +159,7 @@ class PcspecControllerTest extends TestCase
     /** @test */
     public function it_requires_authentication()
     {
-        Sanctum::actingAs(null);
+        // Don't authenticate this request
 
         $response = $this->getJson('/api/v1/pcspecs');
 

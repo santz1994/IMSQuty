@@ -124,9 +124,126 @@ class AssetType extends Model
     public function scopeSearch($query, $search)
     {
         return $query->where(function ($q) use ($search) {
-            $q->where('name', 'LIKE', "%{$search}%")
-              ->orWhere('code', 'LIKE', "%{$search}%")
-              ->orWhere('description', 'LIKE', "%{$search}%");
+            $q->where('type_name', 'LIKE', "%{$search}%")
+              ->orWhere('abbreviation', 'LIKE', "%{$search}%");
         });
+    }
+
+    // ========================
+    // ACCESSORS & MUTATORS
+    // ========================
+
+    /**
+     * Get name attribute (mapped from type_name)
+     * Monolith field name: type_name → API field name: name
+     *
+     * @return string|null
+     */
+    public function getNameAttribute()
+    {
+        return $this->attributes['type_name'] ?? null;
+    }
+
+    /**
+     * Set name attribute (mapped to type_name)
+     * API field name: name → Monolith field name: type_name
+     *
+     * @param string $value
+     * @return void
+     */
+    public function setNameAttribute($value)
+    {
+        $this->attributes['type_name'] = $value;
+    }
+
+    /**
+     * Get code attribute (mapped from abbreviation)
+     * Monolith field name: abbreviation → API field name: code
+     *
+     * @return string|null
+     */
+    public function getCodeAttribute()
+    {
+        return $this->attributes['abbreviation'] ?? null;
+    }
+
+    /**
+     * Set code attribute (mapped to abbreviation)
+     * API field name: code → Monolith field name: abbreviation
+     *
+     * @param string $value
+     * @return void
+     */
+    public function setCodeAttribute($value)
+    {
+        $this->attributes['abbreviation'] = $value;
+    }
+
+    /**
+     * Get is_active attribute (mapped from spare field)
+     * Monolith: spare=true means "spare part", so invert for is_active
+     * Note: This might need business logic review
+     *
+     * @return bool
+     */
+    public function getIsActiveAttribute()
+    {
+        // If spare is true, it's not actively used = is_active should be false
+        return !($this->attributes['spare'] ?? false);
+    }
+
+    /**
+     * Set is_active attribute (mapped to spare)
+     *
+     * @param bool $value
+     * @return void
+     */
+    public function setIsActiveAttribute($value)
+    {
+        $this->attributes['spare'] = !$value;
+    }
+
+    /**
+     * Get icon attribute (placeholder)
+     * Monolith doesn't have this field - return default or null
+     *
+     * @return string|null
+     */
+    public function getIconAttribute()
+    {
+        return null; // Monolith doesn't store icon, could return default SVG name
+    }
+
+    /**
+     * Set icon attribute (no-op for monolith)
+     *
+     * @param string|null $value
+     * @return void
+     */
+    public function setIconAttribute($value)
+    {
+        // Icon not stored in monolith, silently ignore
+    }
+
+    /**
+     * Get description attribute (placeholder)
+     * Monolith doesn't have description field
+     *
+     * @return string|null
+     */
+    public function getDescriptionAttribute()
+    {
+        return null;
+    }
+
+    /**
+     * Set description attribute (no-op)
+     *
+     * @param string|null $value
+     * @return void
+     */
+    public function setDescriptionAttribute($value)
+    {
+        // Description not stored in monolith
     }
 }
