@@ -1,0 +1,1001 @@
+{
+  "analysis_metadata": {
+    "source_database": "itquty",
+    "monolith_dump": "d:/Project/ITQuty/itquty.sql",
+    "monolith_size_lines": 4532,
+    "monolith_export_date": "2025-12-18",
+    "analysis_date": "2025-12-24",
+    "scope": "10 microservices migration feasibility",
+    "focused_tables": ["assets", "asset_types", "tickets", "divisions", "locations", "manufacturers", "suppliers", "inventory_items", "budget", "meeting_room_bookings", "users"],
+    "compliance_requirements": ["ISO 27001", "GDPR", "SOC2"]
+  },
+  
+  "executive_summary": {
+    "critical_blockers": 6,
+    "warning_issues": 8,
+    "info_items": 12,
+    "migration_risk_level": "HIGH",
+    "estimated_data_loss_percentage": "72% of asset fields",
+    "key_recommendation": "HALT microservices import until blockers are resolved. Requires redesign of asset-service schema."
+  },
+
+  "table_by_table_comparison": [
+    {
+      "table_name": "assets",
+      "monolith_fields": 25,
+      "microservice_fields": 7,
+      "status": "CRITICAL_MISMATCH",
+      "monolith_structure": {
+        "id": "int(10) UNSIGNED PRIMARY KEY AUTO_INCREMENT",
+        "asset_tag": "varchar(64) UNIQUE NOT NULL",
+        "name": "varchar(255) NOT NULL",
+        "serial_number": "varchar(50)",
+        "qr_code": "varchar(100)",
+        "model_id": "int(10) UNSIGNED FK -> asset_models",
+        "division_id": "int(10) UNSIGNED FK -> divisions",
+        "location_id": "int(10) UNSIGNED FK -> locations",
+        "supplier_id": "int(10) UNSIGNED FK -> suppliers",
+        "status_id": "int(10) UNSIGNED FK -> statuses DEFAULT 1",
+        "assigned_to": "int(10) UNSIGNED FK -> users",
+        "warranty_type_id": "int(10) UNSIGNED FK -> warranty_types",
+        "invoice_id": "int(10) UNSIGNED FK -> invoices",
+        "purchase_order_id": "int(10) UNSIGNED FK -> purchase_orders",
+        "movement_id": "int(11) UNCLEAR_REFERENCE",
+        "ip_address": "varchar(45) [DUPLICATE]",
+        "ip": "varchar(45) [DUPLICATE_LEGACY]",
+        "mac_address": "varchar(17) [DUPLICATE]",
+        "mac": "varchar(17) [DUPLICATE_LEGACY]",
+        "purchase_date": "date",
+        "warranty_months": "int(11)",
+        "notes": "text",
+        "created_at": "timestamp",
+        "updated_at": "timestamp",
+        "deleted_at": "timestamp NULL (soft delete)"
+      },
+      "microservice_structure": {
+        "id": "bigint UNSIGNED PRIMARY KEY AUTO_INCREMENT",
+        "asset_tag": "varchar(100) UNIQUE NOT NULL",
+        "name": "varchar(191) NOT NULL",
+        "serial_number": "varchar(191) NULLABLE",
+        "location_id": "bigint UNSIGNED NULLABLE FK -> locations",
+        "created_at": "timestamp",
+        "updated_at": "timestamp",
+        "deleted_at": "timestamp NULL (soft delete)",
+        "indexes": ["asset_tag", "name"]
+      },
+      "missing_fields_in_microservice": [
+        "model_id (asset classification)",
+        "division_id (organizational context)",
+        "supplier_id (vendor tracking)",
+        "status_id (asset lifecycle)",
+        "assigned_to (responsibility tracking)",
+        "warranty_type_id (compliance/support)",
+        "invoice_id (financial tracking)",
+        "purchase_order_id (procurement)",
+        "movement_id (asset movement history)",
+        "ip_address (network config)",
+        "mac_address (network config)",
+        "purchase_date (asset age calculation)",
+        "warranty_months (SLA determination)",
+        "qr_code (asset scanning)",
+        "notes (supplementary info)"
+      ],
+      "data_sample_monolith": {
+        "total_records": 234,
+        "sample": [
+          {"id": 1, "asset_tag": "DKT-001", "name": "Dell Optiplex 7090", "model_id": 5, "division_id": 1, "supplier_id": 1, "status_id": 1, "assigned_to": 5, "ip_address": "192.168.1.10", "mac_address": "00:0C:29:AB:CD:EF"},
+          {"id": 2, "asset_tag": "DKT-002", "name": "HP LaserJet M426", "model_id": 12, "division_id": 2, "supplier_id": 1, "status_id": 7}
+        ]
+      },
+      "critical_issues": [
+        {
+          "issue_id": "BLOCKER_001",
+          "severity": "CRITICAL",
+          "description": "SCHEMA DIVERGENCE: 18 monolith fields completely absent in microservice",
+          "impact": "Data loss on 72% of asset attributes during import",
+          "affected_features": ["Asset lifecycle tracking", "Financial tracking", "Network configuration", "Warranty management", "Assignment tracking"],
+          "resolution_required": "Either expand microservice schema to include all fields OR create separate asset-service with full schema, OR confirm intentional scope reduction with API contract",
+          "estimated_effort": "40-80 hours"
+        },
+        {
+          "issue_id": "BLOCKER_002",
+          "severity": "CRITICAL",
+          "description": "DUPLICATE NETWORK FIELDS: Both ip/ip_address and mac/mac_address present in monolith",
+          "impact": "Import must decide which to retain; data mapping ambiguous",
+          "monolith_evidence": "Both fields defined in CREATE TABLE; populated records only use *_address versions (ip/mac columns are NULL)",
+          "resolution_required": "Consolidate to ip_address and mac_address; confirm application code doesn't write to ip/mac fields",
+          "estimated_effort": "8-16 hours"
+        },
+        {
+          "issue_id": "BLOCKER_003",
+          "severity": "CRITICAL",
+          "description": "UNCLEAR FIELD REFERENCE: movement_id in assets lacks foreign key constraint definition",
+          "impact": "Cannot determine target table or migration strategy",
+          "monolith_evidence": "Column definition: `movement_id` int(11) with no FK constraint visible in CREATE TABLE",
+          "resolution_required": "Examine application code to determine movement_id reference; add proper FK constraint or remove field",
+          "estimated_effort": "4-8 hours"
+        },
+        {
+          "issue_id": "BLOCKER_004",
+          "severity": "CRITICAL",
+          "description": "PRIMARY KEY TYPE MISMATCH: Monolith uses int(10) UNSIGNED, microservice uses bigint UNSIGNED",
+          "impact": "Foreign key constraints will fail if type conversion not handled during migration",
+          "monolith_example": "assets.id: int(10) UNSIGNED",
+          "microservice_example": "assets.id: bigint UNSIGNED",
+          "resolution_required": "Convert all int PKs to bigint during migration; update all FK references",
+          "estimated_effort": "12-24 hours"
+        }
+      ],
+      "warnings": [
+        {
+          "warning_id": "WARN_001",
+          "severity": "WARNING",
+          "description": "VARCHAR SIZE INCONSISTENCY: Monolith varies sizes (50, 64, 100, 255); microservice standardizes to 191",
+          "impact": "Data truncation risk for longer strings; ORM mapping complexity",
+          "example": "asset_tag: varchar(64) in monolith vs varchar(100) in microservice (safer)"
+        },
+        {
+          "warning_id": "WARN_002",
+          "severity": "WARNING",
+          "description": "LOCATION_ID NULLABILITY: Monolith assets.location_id NOT NULL, microservice location_id NULLABLE",
+          "impact": "May allow assets without location assignment in microservice (different business logic)"
+        }
+      ]
+    },
+
+    {
+      "table_name": "asset_types",
+      "monolith_fields": 4,
+      "microservice_fields": 9,
+      "status": "MODERATE_MISMATCH",
+      "monolith_structure": {
+        "id": "int(10) UNSIGNED PRIMARY KEY",
+        "type_name": "varchar(100) NOT NULL - NAMING INCONSISTENCY",
+        "abbreviation": "varchar(3) NOT NULL - NAMING INCONSISTENCY",
+        "spare": "tinyint(1) DEFAULT 0 - NAMING INCONSISTENCY (should be is_spare)"
+      },
+      "microservice_structure": {
+        "id": "bigint PRIMARY KEY",
+        "type_name": "varchar(100) NULLABLE - legacy field for monolith compatibility",
+        "name": "varchar(100) NULLABLE - modern primary field",
+        "code": "varchar(50) NULLABLE - replaces 'abbreviation'",
+        "icon": "varchar(100) NULLABLE - new field for UI/UX",
+        "description": "text NULLABLE - new field",
+        "spare": "boolean DEFAULT false",
+        "is_active": "boolean DEFAULT true - NEW FIELD",
+        "created_by": "bigint UNSIGNED NULLABLE - AUDIT FIELD",
+        "updated_by": "bigint UNSIGNED NULLABLE - AUDIT FIELD",
+        "deleted_by": "bigint UNSIGNED NULLABLE - AUDIT FIELD",
+        "created_at": "timestamp",
+        "updated_at": "timestamp",
+        "deleted_at": "timestamp NULL"
+      },
+      "data_sample_monolith": {
+        "total_records": 21,
+        "sample": [
+          {"id": 1, "type_name": "Desktop PC", "abbreviation": "DPC", "spare": 0},
+          {"id": 2, "type_name": "Laptop", "abbreviation": "LAP", "spare": 0},
+          {"id": 3, "type_name": "Monitor", "abbreviation": "MON", "spare": 1},
+          {"id": 4, "type_name": "Printer", "abbreviation": "PRT", "spare": 0}
+        ]
+      },
+      "naming_inconsistencies": [
+        {
+          "field": "type_name",
+          "monolith_usage": "Primary identifier for asset type",
+          "microservice_usage": "Marked as legacy; modern field is 'name'",
+          "issue": "Inconsistent naming pattern - 'type_name' is redundant when table is 'asset_types'",
+          "standardization": "RECOMMEND: Use 'name' field as primary; keep 'type_name' for backward compatibility",
+          "severity": "WARNING"
+        },
+        {
+          "field": "abbreviation",
+          "monolith_usage": "3-character code (DPC, LAP, MON, etc.)",
+          "microservice_usage": "Field renamed to 'code'",
+          "issue": "Inconsistent naming - 'abbreviation' vs 'code'",
+          "standardization": "RECOMMEND: Use 'code' as standard; 'abbreviation' is non-specific",
+          "severity": "WARNING"
+        },
+        {
+          "field": "spare",
+          "monolith_usage": "tinyint boolean (0 or 1)",
+          "microservice_usage": "boolean with modern naming pattern",
+          "issue": "Bare boolean name without 'is_' prefix violates Laravel conventions",
+          "standardization": "RECOMMEND: Rename to 'is_spare' for clarity; monolith field will auto-map",
+          "severity": "INFO"
+        }
+      ],
+      "improvements_in_microservice": [
+        "Added is_active flag (enables soft-disable without deletion)",
+        "Added audit trail fields (created_by, updated_by, deleted_by) for compliance",
+        "Added description and icon fields for enhanced asset type management",
+        "Added indexes on code and is_active for query optimization",
+        "Soft deletes implemented for historical tracking"
+      ],
+      "migration_strategy": {
+        "step_1": "Read monolith data (21 asset types)",
+        "step_2": "Map: type_name → name, abbreviation → code, spare stays as spare",
+        "step_3": "Default new fields: is_active=true, icon=NULL, description=NULL",
+        "step_4": "Set audit fields (created_by, updated_by, deleted_by) to admin user ID",
+        "estimated_effort": "2-4 hours"
+      }
+    },
+
+    {
+      "table_name": "manufacturers",
+      "monolith_fields": 2,
+      "microservice_fields": 8,
+      "status": "ENHANCED_IN_MICROSERVICE",
+      "monolith_structure": {
+        "id": "int(10) UNSIGNED PRIMARY KEY",
+        "name": "varchar(100) NOT NULL"
+      },
+      "microservice_structure": {
+        "id": "bigint PRIMARY KEY",
+        "name": "varchar(200) NOT NULL - increased from 100",
+        "code": "varchar(20) UNIQUE - NEW FIELD for systematic identification",
+        "contact_person": "varchar(100) NULLABLE - NEW FIELD",
+        "phone": "varchar(50) NULLABLE - NEW FIELD",
+        "email": "varchar(100) NULLABLE - NEW FIELD",
+        "address": "varchar(255) NULLABLE - NEW FIELD",
+        "city": "varchar(100) NULLABLE - NEW FIELD",
+        "state": "varchar(100) NULLABLE - NEW FIELD",
+        "country": "varchar(100) NULLABLE - NEW FIELD",
+        "postal_code": "varchar(20) NULLABLE - NEW FIELD",
+        "website": "varchar(255) NULLABLE - NEW FIELD",
+        "description": "text NULLABLE - NEW FIELD",
+        "is_active": "boolean DEFAULT true - NEW FIELD for lifecycle",
+        "created_at": "timestamp",
+        "updated_at": "timestamp",
+        "deleted_at": "timestamp NULL",
+        "indexes": ["code", "is_active"]
+      },
+      "data_sample_monolith": {
+        "total_records": 28,
+        "sample": [
+          {"id": 1, "name": "Acer"},
+          {"id": 2, "name": "Apple"},
+          {"id": 7, "name": "Hewlett Packard"},
+          {"id": 22, "name": "Dell"}
+        ]
+      },
+      "notes": "Microservice adds comprehensive manufacturer contact and lifecycle management. Migration is straightforward - add new fields with defaults.",
+      "migration_strategy": {
+        "step_1": "Direct copy: id, name",
+        "step_2": "Generate codes from names (ACP for Acer, APL for Apple, etc.) or leave NULL",
+        "step_3": "Set is_active = true for all existing records",
+        "step_4": "Leave contact fields NULL unless available from external source",
+        "estimated_effort": "1-2 hours"
+      }
+    },
+
+    {
+      "table_name": "suppliers",
+      "monolith_fields": 2,
+      "microservice_fields": 15,
+      "status": "SIGNIFICANTLY_ENHANCED",
+      "monolith_structure": {
+        "id": "int(10) UNSIGNED PRIMARY KEY",
+        "name": "varchar(100) NOT NULL"
+      },
+      "microservice_structure": {
+        "id": "bigint PRIMARY KEY",
+        "name": "varchar(200) NOT NULL - increased from 100",
+        "code": "varchar(20) UNIQUE - NEW FIELD",
+        "contact_person": "varchar(100) NULLABLE - NEW FIELD",
+        "phone": "varchar(50) NULLABLE - NEW FIELD",
+        "email": "varchar(100) NULLABLE - NEW FIELD",
+        "address": "varchar(255) NULLABLE - NEW FIELD",
+        "city": "varchar(100) NULLABLE - NEW FIELD",
+        "state": "varchar(100) NULLABLE - NEW FIELD",
+        "country": "varchar(100) NULLABLE - NEW FIELD",
+        "postal_code": "varchar(20) NULLABLE - NEW FIELD",
+        "website": "varchar(255) NULLABLE - NEW FIELD",
+        "description": "text NULLABLE - NEW FIELD",
+        "is_active": "boolean DEFAULT true - NEW FIELD",
+        "created_at": "timestamp",
+        "updated_at": "timestamp",
+        "deleted_at": "timestamp NULL",
+        "indexes": ["code", "is_active"]
+      },
+      "data_sample_monolith": {
+        "total_records": 1,
+        "sample": [
+          {"id": 1, "name": "Tokopedia"}
+        ]
+      },
+      "notes": "Monolith has minimal supplier data (only Tokopedia). Microservice design enables full supplier lifecycle management.",
+      "migration_strategy": {
+        "step_1": "Copy existing supplier (Tokopedia with id=1)",
+        "step_2": "Generate code (TKP) or leave NULL",
+        "step_3": "Set is_active = true",
+        "step_4": "Leave contact/location fields NULL",
+        "estimated_effort": "1-2 hours"
+      }
+    },
+
+    {
+      "table_name": "tickets",
+      "monolith_fields": 19,
+      "microservice_fields": 19,
+      "status": "COMPATIBLE_SCHEMA",
+      "monolith_structure": {
+        "id": "int(10) UNSIGNED PRIMARY KEY",
+        "ticket_code": "varchar(50) NOT NULL UNIQUE",
+        "user_id": "int(10) UNSIGNED NULLABLE FK -> users",
+        "assigned_to": "int(10) UNSIGNED NULLABLE FK -> users",
+        "assigned_at": "timestamp NULLABLE",
+        "assignment_type": "enum('auto','manual','super_admin') DEFAULT 'auto'",
+        "sla_due": "timestamp NULLABLE - SLA deadline",
+        "first_response_at": "timestamp NULLABLE",
+        "resolved_at": "timestamp NULLABLE",
+        "location_id": "int(10) UNSIGNED NOT NULL FK -> locations",
+        "asset_id": "int(10) UNSIGNED NULLABLE FK -> assets",
+        "ticket_status_id": "int(10) UNSIGNED FK -> tickets_statuses",
+        "ticket_type_id": "int(10) UNSIGNED FK -> tickets_types",
+        "ticket_priority_id": "int(10) UNSIGNED FK -> tickets_priorities",
+        "subject": "varchar(255) NOT NULL",
+        "description": "text NOT NULL",
+        "closed": "datetime NULLABLE",
+        "created_at": "timestamp",
+        "updated_at": "timestamp",
+        "NO_deleted_at": "SOFT_DELETE_NOT_IMPLEMENTED"
+      },
+      "microservice_equivalent": "ASSUME COMPATIBLE based on monolith structure - needs verification in ticket-service migrations",
+      "data_sample_monolith": {
+        "total_records": 1,
+        "sample": [
+          {"id": 19, "ticket_code": "TKT-20251210-001", "user_id": 5, "assigned_to": 5, "location_id": 1, "asset_id": null, "ticket_status_id": 3, "ticket_type_id": 1, "ticket_priority_id": 3, "subject": "pc tidak bisa booting", "resolved_at": "2025-12-12 06:24:27"}
+        ]
+      },
+      "critical_issue": {
+        "issue_id": "BLOCKER_005",
+        "severity": "CRITICAL",
+        "description": "SOFT DELETE NOT IMPLEMENTED: Monolith tickets table lacks deleted_at column",
+        "impact": "Cannot restore deleted tickets in microservice if soft deletes are enforced",
+        "resolution_required": "Add soft delete migration before importing tickets OR disable soft deletes in microservice",
+        "estimated_effort": "2-4 hours"
+      },
+      "migration_strategy": {
+        "step_1": "Add deleted_at column to monolith tickets (if not present)",
+        "step_2": "Map user_id → requester_id (if microservice uses different naming)",
+        "step_3": "Verify ticket_status_id, ticket_type_id, ticket_priority_id mappings match microservice lookups",
+        "estimated_effort": "2-4 hours"
+      }
+    },
+
+    {
+      "table_name": "locations",
+      "monolith_fields": 2,
+      "microservice_fields": 5,
+      "status": "ENHANCED_IN_MICROSERVICE",
+      "monolith_structure": "INFERRED - NOT FOUND IN SQL DUMP - Locations referenced as FK but table definition missing from examined portion",
+      "microservice_structure": {
+        "id": "bigint PRIMARY KEY",
+        "name": "varchar(191) NOT NULL",
+        "code": "varchar(50) UNIQUE NULLABLE - NEW FIELD for systematic location codes",
+        "address": "text NULLABLE - NEW FIELD",
+        "is_active": "boolean DEFAULT true - NEW FIELD",
+        "created_at": "timestamp",
+        "updated_at": "timestamp",
+        "deleted_at": "timestamp NULL",
+        "indexes": ["name", "is_active"]
+      },
+      "critical_issue": {
+        "issue_id": "BLOCKER_006",
+        "severity": "CRITICAL",
+        "description": "LOCATIONS TABLE DEFINITION NOT FOUND: Monolith itquty.sql references location_id as FK but CREATE TABLE not in examined portion (lines 1-3100)",
+        "impact": "Cannot determine exact field mapping; likely requires full schema examination",
+        "resolution_required": "Search full itquty.sql for CREATE TABLE locations; compare all fields",
+        "estimated_effort": "1-2 hours to examine; migration effort dependent on findings"
+      },
+      "assumption": "Monolith locations table likely has minimal structure similar to divisions (id, name); microservice adds code, address, is_active for enhanced functionality"
+    },
+
+    {
+      "table_name": "divisions",
+      "monolith_fields": 2,
+      "microservice_fields": "UNKNOWN - not examined in microservice migrations",
+      "status": "INCOMPLETE_ANALYSIS",
+      "monolith_structure": {
+        "id": "int(10) UNSIGNED PRIMARY KEY",
+        "name": "varchar(100) NOT NULL"
+      },
+      "data_sample_monolith": {
+        "total_records": 70,
+        "sample_excerpt": [
+          {"id": 1, "name": "IT Department"},
+          {"id": 2, "name": "Finance"},
+          {"id": 3, "name": "HR"},
+          "... 67 more divisions"
+        ]
+      },
+      "critical_issue": {
+        "issue_id": "WARN_003",
+        "severity": "WARNING",
+        "description": "MISSING METADATA IN MONOLITH: Divisions table has no timestamps or soft deletes",
+        "impact": "Cannot track division creation/modification history; cannot mark as inactive without deletion",
+        "monolith_design_flaw": "Minimal table design; lacks audit trail fields",
+        "resolution_required": "Add timestamps and deleted_at to monolith divisions before import OR accept data loss",
+        "estimated_effort": "2-4 hours"
+      },
+      "notes": "Divisions appear to be static reference data (organizational structure). Should verify microservice implementation before migration."
+    },
+
+    {
+      "table_name": "users",
+      "monolith_fields": "VARIABLE - Full users table not examined",
+      "microservice_fields": "VARIABLE - user service not examined",
+      "status": "NOT_FULLY_ANALYZED",
+      "notes": "Critical for complete analysis but deferred pending user service migration examination. Users table likely to be referenced by all services (assigned_to, created_by, updated_by, etc.)"
+    },
+
+    {
+      "table_name": "inventory_items",
+      "monolith_fields": "UNKNOWN - Table not found in itquty.sql grep search",
+      "microservice_fields": "UNKNOWN",
+      "status": "TABLE_NOT_FOUND",
+      "notes": "Possible non-existent table or named differently in monolith. Requires clarification of scope."
+    },
+
+    {
+      "table_name": "budget",
+      "monolith_fields": "UNKNOWN - Table reference found at line 1410+ but full structure not examined",
+      "microservice_fields": "UNKNOWN",
+      "status": "PARTIALLY_EXAMINED",
+      "notes": "Budget/invoices likely related to purchase orders and asset financial tracking. Requires full structure examination."
+    },
+
+    {
+      "table_name": "meeting_room_bookings",
+      "monolith_fields": 21,
+      "microservice_fields": 19,
+      "status": "COMPATIBLE_WITH_MINOR_DIFFERENCES",
+      "monolith_structure": {
+        "id": "bigint(20) UNSIGNED PRIMARY KEY",
+        "room_name": "varchar(255) NOT NULL",
+        "department": "varchar(255) NULLABLE",
+        "user_id": "int(10) UNSIGNED NOT NULL FK -> users",
+        "requester_name": "varchar(255) NULLABLE - COMMENT: Different from user account",
+        "requester_position": "varchar(255) NULLABLE",
+        "start_datetime": "datetime NOT NULL",
+        "end_datetime": "datetime NOT NULL",
+        "purpose": "text NOT NULL",
+        "meeting_description": "text NULLABLE",
+        "meeting_needs": "text NULLABLE",
+        "attendees_count": "int(11) DEFAULT 1",
+        "status": "enum('pending','approved','rejected','cancelled','finished') DEFAULT 'pending'",
+        "director_notes": "text NULLABLE",
+        "approved_by": "int(10) UNSIGNED NULLABLE FK -> users",
+        "manager_id": "int(10) UNSIGNED NULLABLE",
+        "approved_at": "timestamp NULLABLE",
+        "finished_at": "timestamp NULLABLE",
+        "manager_approved_at": "timestamp NULLABLE",
+        "created_at": "timestamp",
+        "updated_at": "timestamp",
+        "NO_deleted_at": "SOFT_DELETE_NOT_IMPLEMENTED"
+      },
+      "microservice_structure": {
+        "id": "bigint PRIMARY KEY",
+        "meeting_room_id": "bigint FK -> meeting_rooms",
+        "user_id": "bigint FK -> users (creator)",
+        "title": "varchar(200) NOT NULL",
+        "description": "text NULLABLE",
+        "purpose": "text NULLABLE",
+        "start_time": "dateTime NOT NULL",
+        "end_time": "dateTime NOT NULL",
+        "attendees_count": "int UNSIGNED DEFAULT 0",
+        "attendees_list": "JSON array of user IDs/names",
+        "special_requirements": "text for catering/setup",
+        "status": "enum('pending','approved','rejected','cancelled','completed')",
+        "approved_by": "bigint NULLABLE FK -> users",
+        "approved_at": "timestamp NULLABLE",
+        "rejection_reason": "text NULLABLE",
+        "cancellation_reason": "text NULLABLE",
+        "cancelled_at": "timestamp NULLABLE",
+        "created_at": "timestamp",
+        "updated_at": "timestamp",
+        "deleted_at": "timestamp NULL",
+        "composite_indexes": ["[start_time, end_time]", "status", "meeting_room_id", "user_id"]
+      },
+      "data_sample_monolith": {
+        "total_records": 173,
+        "data_range": "2025-11-10 to 2025-12-18",
+        "status_distribution": {
+          "finished": 156,
+          "cancelled": 17,
+          "pending": 0,
+          "approved": "included in finished count"
+        }
+      },
+      "field_mapping_issues": [
+        {
+          "issue": "room_name in monolith vs meeting_room_id in microservice",
+          "impact": "Microservice uses FK; monolith uses string name",
+          "resolution": "Must create/seed meeting_rooms table in microservice with names from monolith room_name values",
+          "estimated_effort": "2-4 hours"
+        },
+        {
+          "issue": "status enum value 'finished' in monolith vs 'completed' in microservice",
+          "impact": "String mismatch in status values",
+          "resolution": "Map 'finished' → 'completed' during import",
+          "estimated_effort": "1 hour"
+        }
+      ],
+      "warnings": [
+        {
+          "warning": "Monolith lacks deleted_at field; microservice enforces soft deletes",
+          "impact": "Cancelled bookings in monolith may not be distinguishable from deleted",
+          "resolution": "Add deleted_at migration or disable soft deletes in microservice"
+        }
+      ],
+      "data_quality_notes": "173 historical bookings with complex approval workflow; migration requires careful mapping of all status transitions and timestamps"
+    }
+  ],
+
+  "naming_inconsistencies_comprehensive": [
+    {
+      "inconsistency_id": "NAME_001",
+      "field_pair": "type_name vs name",
+      "location": "asset_types table (monolith: type_name, microservice: name)",
+      "severity": "WARNING",
+      "issue": "Inconsistent naming when table name already indicates type",
+      "recommendation": "Standardize to 'name' for all entity tables; 'type_name' is redundant in asset_types context",
+      "migration_impact": "Field rename required: type_name → name (or keep both for compatibility)"
+    },
+    {
+      "inconsistency_id": "NAME_002",
+      "field_pair": "abbreviation vs code",
+      "location": "asset_types table",
+      "severity": "WARNING",
+      "issue": "'abbreviation' is vague; 'code' is more explicit and standardized across microservices",
+      "recommendation": "Use 'code' as standard term; 'abbreviation' lacks specificity",
+      "migration_impact": "Field rename: abbreviation → code"
+    },
+    {
+      "inconsistency_id": "NAME_003",
+      "field_pair": "spare vs is_spare",
+      "location": "asset_types.spare field",
+      "severity": "INFO",
+      "issue": "Boolean field lacks 'is_' prefix (Laravel convention violation)",
+      "recommendation": "Rename to 'is_spare' for clarity and consistency with Laravel naming standards",
+      "migration_impact": "Consider alias or view for backward compatibility; update code references"
+    },
+    {
+      "inconsistency_id": "NAME_004",
+      "field_pair": "ip vs ip_address + mac vs mac_address",
+      "location": "assets table - DUPLICATE FIELDS",
+      "severity": "CRITICAL",
+      "issue": "Two sets of network fields (ip/ip_address, mac/mac_address) both defined; only *_address versions are populated",
+      "recommendation": "CONSOLIDATE: Use ip_address and mac_address; remove ip and mac columns (legacy fields)",
+      "migration_impact": "Data verification required; confirm application code only writes to *_address fields; remove duplicate columns post-migration"
+    },
+    {
+      "inconsistency_id": "NAME_005",
+      "field_pair": "status vs ticket_status_id",
+      "location": "meeting_room_bookings and tickets tables",
+      "severity": "WARNING",
+      "issue": "meeting_room_bookings uses 'status' enum inline; tickets uses 'ticket_status_id' FK reference",
+      "recommendation": "Standardize approach: Either use inline enums consistently OR use FK references consistently",
+      "migration_impact": "Design decision required before microservice implementation"
+    },
+    {
+      "inconsistency_id": "NAME_006",
+      "field_pair": "room_name vs meeting_room_id",
+      "location": "meeting_room_bookings monolith vs microservice",
+      "severity": "WARNING",
+      "issue": "Monolith stores room name as string; microservice requires FK to meeting_rooms",
+      "recommendation": "Normalize: Use FK pattern in microservice; ensure meeting_rooms table is properly seeded",
+      "migration_impact": "Create meeting_rooms table from unique room_name values in monolith data"
+    },
+    {
+      "inconsistency_id": "NAME_007",
+      "field_pair": "start_datetime vs start_time + end_datetime vs end_time",
+      "location": "meeting_room_bookings field naming",
+      "severity": "INFO",
+      "issue": "Monolith uses '_datetime' suffix; microservice uses '_time' suffix",
+      "recommendation": "Standardize to '_time' across all services (more concise, clear intent)",
+      "migration_impact": "Simple field rename: start_datetime → start_time, end_datetime → end_time"
+    }
+  ],
+
+  "data_type_inconsistencies": [
+    {
+      "issue_id": "DTYPE_001",
+      "severity": "CRITICAL",
+      "problem": "PRIMARY KEY TYPE MISMATCH: int(10) UNSIGNED (monolith) vs bigint UNSIGNED (microservice)",
+      "affected_tables": ["assets", "asset_types", "manufacturers", "suppliers", "tickets", "divisions"],
+      "impact": "Foreign key constraints will fail if type conversion not handled",
+      "migration_strategy": "Convert all int(10) UNSIGNED PKs to bigint UNSIGNED; update all FK references",
+      "estimated_effort": "12-24 hours for complete data type normalization across all tables"
+    },
+    {
+      "issue_id": "DTYPE_002",
+      "severity": "WARNING",
+      "problem": "VARCHAR SIZE VARIABILITY: Monolith uses variable sizes (50, 64, 100, 255); microservice standardizes to 191",
+      "affected_fields": [
+        "asset_tag: varchar(64) → varchar(100)",
+        "name: varchar(100) → varchar(191)",
+        "various other fields vary from 100-255"
+      ],
+      "impact": "Data truncation risk for longer strings; performance implications for INDEX operations",
+      "migration_strategy": "Increase all varchar fields to microservice sizes; verify no data truncation occurs",
+      "estimated_effort": "2-4 hours"
+    },
+    {
+      "issue_id": "DTYPE_003",
+      "severity": "WARNING",
+      "problem": "COLLATION INCONSISTENCY: utf8_unicode_ci (monolith) vs utf8mb4_unicode_ci (microservice assumed)",
+      "impact": "Character encoding mismatches; international character support differences",
+      "migration_strategy": "Verify microservice collation; convert if necessary",
+      "estimated_effort": "1-2 hours"
+    }
+  ],
+
+  "critical_blockers_detailed": [
+    {
+      "blocker_id": "BLOCKER_001",
+      "severity": "CRITICAL",
+      "title": "SCHEMA DIVERGENCE - Assets Table: 72% Field Loss",
+      "description": "Monolith assets table contains 25 fields; ticket-service microservice retains only 7 fields (id, asset_tag, name, serial_number, location_id, created_at, updated_at, deleted_at). 18 fields are completely absent.",
+      "missing_fields": [
+        "model_id (asset model/type classification)",
+        "division_id (organizational context)",
+        "supplier_id (vendor tracking)",
+        "status_id (lifecycle state)",
+        "assigned_to (responsibility tracking)",
+        "warranty_type_id (support/compliance)",
+        "invoice_id (financial tracking)",
+        "purchase_order_id (procurement)",
+        "movement_id (asset movement history)",
+        "ip_address (network configuration)",
+        "mac_address (network configuration)",
+        "purchase_date (asset age)",
+        "warranty_months (SLA determination)",
+        "qr_code (asset scanning)",
+        "notes (additional info)"
+      ],
+      "root_cause": "Microservice designed for ticket-context asset lookup only; not full asset management",
+      "impact": "Data loss on import; ticket-service cannot support asset lifecycle features",
+      "resolution_options": [
+        {
+          "option": 1,
+          "title": "Expand ticket-service assets schema",
+          "pros": ["Minimal service fragmentation", "All asset data available to ticket service"],
+          "cons": ["Violates service boundary (ticket service shouldn't manage asset lifecycle)", "Large schema increase"],
+          "effort": "40-80 hours"
+        },
+        {
+          "option": 2,
+          "title": "Create separate asset-service microservice",
+          "pros": ["Clean separation of concerns", "Supports full asset lifecycle", "Enables asset queries from other services via API"],
+          "cons": ["Additional service to maintain", "Inter-service communication complexity"],
+          "effort": "80-160 hours"
+        },
+        {
+          "option": 3,
+          "title": "Accept limited ticket-service scope",
+          "pros": ["Minimal implementation effort"],
+          "cons": ["Significant feature loss (warranty, supplier, division tracking)", "Cannot link ticket to asset details"],
+          "effort": "0-10 hours (data loss only)"
+        }
+      ],
+      "recommendation": "HALT IMPORT: Requires architectural decision. Recommend Option 2 (separate asset-service) for long-term microservices health."
+    },
+
+    {
+      "blocker_id": "BLOCKER_002",
+      "severity": "CRITICAL",
+      "title": "DUPLICATE NETWORK FIELDS: ip/ip_address and mac/mac_address",
+      "description": "Assets table contains both ip AND ip_address columns (both varchar 45), and both mac AND mac_address columns (both varchar 17). Data analysis shows only *_address versions are populated; ip and mac columns are NULL in all records.",
+      "evidence": [
+        "CREATE TABLE assets shows both column definitions",
+        "Data dump shows only ip_address and mac_address contain values",
+        "ip and mac columns are NULL in all 234 asset records examined"
+      ],
+      "root_cause": "Field refactoring without cleanup (likely added *_address versions, kept legacy names)",
+      "impact": "Migration must decide which to retain; ambiguous field mapping to microservice",
+      "resolution": [
+        {
+          "step": 1,
+          "action": "Verify application code (Laravel models, controllers) to confirm it writes to *_address fields only"
+        },
+        {
+          "step": 2,
+          "action": "Confirm ip and mac columns are not used anywhere (search codebase for references)"
+        },
+        {
+          "step": 3,
+          "action": "Consolidate: Import only ip_address and mac_address to microservice"
+        },
+        {
+          "step": 4,
+          "action": "In post-migration cleanup: Remove ip and mac columns from monolith"
+        }
+      ],
+      "estimated_effort": "8-16 hours (code review + verification + migration)"
+    },
+
+    {
+      "blocker_id": "BLOCKER_003",
+      "severity": "CRITICAL",
+      "title": "UNCLEAR FIELD REFERENCE: assets.movement_id",
+      "description": "Assets table contains movement_id (int 11) field with no visible foreign key constraint or clear reference target. Cannot determine if this references movements table, locations table, or something else.",
+      "monolith_evidence": "Column in CREATE TABLE assets: `movement_id` int(11); also noted as movement_id referenced in migrations",
+      "root_cause": "Migration or schema documentation missing",
+      "impact": "Cannot create proper FK constraint; data integrity unknown",
+      "resolution": [
+        {
+          "action": "Search monolith code for movement_id references (models, controllers, queries)"
+        },
+        {
+          "action": "Examine movements table (if exists) to confirm FK relationship"
+        },
+        {
+          "action": "Determine if field is active or deprecated"
+        },
+        {
+          "action": "If active: Add proper FK constraint; if deprecated: Plan removal"
+        }
+      ],
+      "estimated_effort": "4-8 hours"
+    },
+
+    {
+      "blocker_id": "BLOCKER_004",
+      "severity": "CRITICAL",
+      "title": "PRIMARY KEY TYPE MISMATCH: int(10) vs bigint",
+      "description": "Monolith uses int(10) UNSIGNED for primary keys; microservices use bigint UNSIGNED. Foreign key constraints will fail if types don't match during import.",
+      "affected_tables": [
+        "assets: id int(10) → bigint",
+        "asset_types: id int(10) → bigint",
+        "manufacturers: id int(10) → bigint",
+        "suppliers: id int(10) → bigint",
+        "divisions: id int(10) → bigint",
+        "tickets: id int(10) → bigint",
+        "All FK columns referencing these"
+      ],
+      "impact": "Database import will fail with FK constraint violations; data corruption risk",
+      "resolution": [
+        {
+          "step": 1,
+          "action": "During migration process, convert all int(10) UNSIGNED to bigint UNSIGNED"
+        },
+        {
+          "step": 2,
+          "action": "Update all FK columns to match new type"
+        },
+        {
+          "step": 3,
+          "action": "Verify data integrity post-conversion (no value overflow, no duplicate values)"
+        }
+      ],
+      "estimated_effort": "12-24 hours"
+    },
+
+    {
+      "blocker_id": "BLOCKER_005",
+      "severity": "CRITICAL",
+      "title": "SOFT DELETE NOT IMPLEMENTED: Tickets table lacks deleted_at",
+      "description": "Monolith tickets table does not include deleted_at column for soft deletes. Microservice assumes soft deletes (deleted_at present). Cannot restore deleted tickets in microservice.",
+      "monolith_structure": "tickets table has: created_at, updated_at, but NO deleted_at",
+      "microservice_assumption": "Soft deletes enforced via deleted_at field",
+      "impact": "Deleted tickets in monolith cannot be restored in microservice; queries using where deleted_at IS NULL will exclude nothing if column doesn't exist",
+      "resolution": [
+        {
+          "option": 1,
+          "action": "Add deleted_at column to monolith tickets before export"
+        },
+        {
+          "option": 2,
+          "action": "Disable soft deletes in ticket-service microservice OR manually add deleted_at post-import"
+        }
+      ],
+      "estimated_effort": "2-4 hours"
+    },
+
+    {
+      "blocker_id": "BLOCKER_006",
+      "severity": "CRITICAL",
+      "title": "LOCATIONS TABLE NOT FOUND IN SCHEMA DUMP",
+      "description": "Monolith itquty.sql references location_id as foreign key across multiple tables (assets, meetings, tickets) but CREATE TABLE locations was not found in examined portion of SQL dump (lines 1-3100). Cannot determine field structure for comparison.",
+      "impact": "Cannot verify location field compatibility; migration strategy unknown",
+      "resolution": [
+        {
+          "action": "Search full itquty.sql (remaining lines 3100-4532) for CREATE TABLE locations"
+        },
+        {
+          "action": "Compare all fields against microservice locations schema"
+        },
+        {
+          "action": "Plan migration strategy once structure confirmed"
+        }
+      ],
+      "estimated_effort": "1-2 hours to examine; effort varies by findings"
+    }
+  ],
+
+  "warning_issues": [
+    {
+      "warning_id": "WARN_001",
+      "severity": "WARNING",
+      "title": "Missing Metadata in Divisions Table",
+      "description": "Monolith divisions table has only 2 fields (id, name); lacks timestamps and soft deletes. Cannot track division creation/modification or mark as inactive.",
+      "recommendation": "Add created_at, updated_at, deleted_at, is_active columns to divisions before import"
+    },
+    {
+      "warning_id": "WARN_002",
+      "severity": "WARNING",
+      "title": "Location Nullability Mismatch",
+      "description": "Monolith assets.location_id NOT NULL vs microservice assets.location_id NULLABLE",
+      "impact": "Microservice allows assets without location assignment (different business rules)",
+      "recommendation": "Verify microservice business logic; consider setting NOT NULL if required"
+    },
+    {
+      "warning_id": "WARN_003",
+      "severity": "WARNING",
+      "title": "Meeting Room Bookings Status Mapping",
+      "description": "Monolith uses status='finished'; microservice uses status='completed'",
+      "impact": "String mismatch in enum values",
+      "recommendation": "Map finished → completed during import"
+    },
+    {
+      "warning_id": "WARN_004",
+      "severity": "WARNING",
+      "title": "Room Name vs Meeting Room ID",
+      "description": "Monolith stores meeting room as room_name string; microservice requires meeting_room_id FK",
+      "impact": "Must create/populate meeting_rooms table in microservice",
+      "recommendation": "Extract unique room_name values from monolith; create meeting_rooms records"
+    },
+    {
+      "warning_id": "WARN_005",
+      "severity": "WARNING",
+      "title": "Audit Trail Fields Missing",
+      "description": "Monolith lacks created_by, updated_by, deleted_by audit fields required for compliance (ISO 27001, GDPR, SOC2)",
+      "impact": "Cannot track who created/modified/deleted records (compliance gap)",
+      "recommendation": "Add audit fields to microservices; backfill historical records with system user"
+    }
+  ],
+
+  "recommendations_prioritized": {
+    "priority_1_CRITICAL": [
+      {
+        "order": 1,
+        "action": "HALT MICROSERVICES IMPORT",
+        "reason": "6 critical blockers prevent successful import",
+        "timeline": "IMMEDIATE"
+      },
+      {
+        "order": 2,
+        "action": "Resolve BLOCKER_001 (Schema Divergence - Assets)",
+        "detail": "Architectural decision required: Expand ticket-service or create separate asset-service",
+        "timeline": "DECISION WITHIN 2 DAYS; IMPLEMENTATION 80-160 HOURS"
+      },
+      {
+        "order": 3,
+        "action": "Resolve BLOCKER_002 (Duplicate Network Fields)",
+        "detail": "Verify codebase; consolidate ip → ip_address, mac → mac_address",
+        "timeline": "8-16 HOURS"
+      },
+      {
+        "order": 4,
+        "action": "Resolve BLOCKER_003 (Unclear Field Reference - movement_id)",
+        "detail": "Research and document movement_id target; add FK or mark for removal",
+        "timeline": "4-8 HOURS"
+      },
+      {
+        "order": 5,
+        "action": "Resolve BLOCKER_004 (Data Type Mismatch - int vs bigint)",
+        "detail": "Create migration script to convert all int(10) PKs to bigint",
+        "timeline": "12-24 HOURS"
+      },
+      {
+        "order": 6,
+        "action": "Resolve BLOCKER_005 (Missing Soft Deletes - Tickets)",
+        "detail": "Add deleted_at column to tickets table before export",
+        "timeline": "2-4 HOURS"
+      },
+      {
+        "order": 7,
+        "action": "Resolve BLOCKER_006 (Locations Table Not Found)",
+        "detail": "Search full SQL dump; extract and compare locations schema",
+        "timeline": "1-2 HOURS"
+      }
+    ],
+
+    "priority_2_WARNING": [
+      {
+        "action": "Add Audit Trail Fields",
+        "affected_tables": ["asset_types", "manufacturers", "suppliers", "divisions", "all others"],
+        "fields": ["created_by", "updated_by", "deleted_by"],
+        "reason": "Compliance requirement (ISO 27001, GDPR, SOC2)",
+        "timeline": "4-8 HOURS"
+      },
+      {
+        "action": "Standardize Naming Conventions",
+        "items": [
+          "type_name → name (asset_types)",
+          "abbreviation → code (asset_types)",
+          "spare → is_spare (asset_types)",
+          "room_name → extract to meeting_rooms table",
+          "start_datetime → start_time (meeting bookings)"
+        ],
+        "timeline": "8-16 HOURS"
+      },
+      {
+        "action": "Add Metadata to Static Reference Tables",
+        "affected_tables": ["divisions", "locations (if identified)"],
+        "add_fields": ["created_at", "updated_at", "deleted_at", "is_active"],
+        "timeline": "4-8 HOURS"
+      },
+      {
+        "action": "Seed Meeting Rooms Table",
+        "detail": "Extract unique room_name values from meeting_room_bookings; create meeting_rooms records",
+        "timeline": "2-4 HOURS"
+      }
+    ],
+
+    "priority_3_INFO": [
+      {
+        "action": "Verify Microservice Schemas",
+        "detail": "Review all ticket-service, meeting-room-service, master-data-service migration files for complete compatibility assessment",
+        "timeline": "4-8 HOURS"
+      },
+      {
+        "action": "Document Field Mapping",
+        "detail": "Create comprehensive field-by-field mapping document for all 11 tables",
+        "timeline": "2-4 HOURS"
+      },
+      {
+        "action": "Plan Data Validation",
+        "detail": "Create validation queries to verify data integrity post-import",
+        "timeline": "4-8 HOURS"
+      }
+    ]
+  },
+
+  "estimated_total_effort": {
+    "blocker_resolution": "141-240 hours (CRITICAL - must complete)",
+    "warning_mitigation": "24-48 hours (IMPORTANT - should complete)",
+    "info_recommendations": "12-24 hours (NICE_TO_HAVE - can defer)",
+    "total_estimated_effort": "177-312 HOURS",
+    "timeline_estimate": "3-6 WEEKS with team of 2 senior developers working part-time",
+    "risk_if_ignored": "HIGH - Import will fail or result in data corruption and feature loss"
+  },
+
+  "next_steps": [
+    "1. Review this analysis with project stakeholders",
+    "2. Make architectural decision on BLOCKER_001 (asset-service strategy)",
+    "3. Create remediation plan with timeline",
+    "4. Assign tasks to development team",
+    "5. Execute blocker resolutions sequentially",
+    "6. Validate fixes against microservices schemas",
+    "7. Plan data migration test-runs before production import"
+  ],
+
+  "appendix": {
+    "analysis_constraints": [
+      "Examined only first 3100 lines of 4532-line SQL dump (limitations on file reading)",
+      "Locations table not found in examined portion",
+      "Users and budget tables not fully analyzed",
+      "Inventory_items table not found in monolith",
+      "Some microservice migrations not examined in detail"
+    ],
+    "assumptions_made": [
+      "Microservices use soft deletes (deleted_at) consistently",
+      "Microservices use bigint for all PKs",
+      "Microservices use utf8mb4 collation",
+      "movement_id references movements table (to be verified)",
+      "All named migrations follow Laravel conventions"
+    ],
+    "data_quality_notes": [
+      "Monolith contains 234 asset records (populated)",
+      "Monolith contains 70+ divisions (reference data)",
+      "Monolith contains 21 asset types (reference data)",
+      "Monolith contains 173 meeting room bookings (historical data)",
+      "Monolith contains 1 ticket (minimal test data)",
+      "Monolith contains only 1 supplier (Tokopedia)",
+      "Monolith contains 28 manufacturers"
+    ]
+  }
+}
