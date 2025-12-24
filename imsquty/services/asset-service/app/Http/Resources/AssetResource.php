@@ -64,6 +64,13 @@ class AssetResource extends JsonResource
                 ] : null;
             }),
             
+            // Cross-Service References
+            'division_id' => $this->division_id,
+            'supplier_id' => $this->supplier_id,
+            'warranty_type_id' => $this->warranty_type_id,
+            'invoice_id' => $this->invoice_id,
+            'purchase_order_id' => $this->purchase_order_id,
+            
             // Purchase Information
             'purchase_date' => $this->purchase_date,
             'warranty_months' => $this->warranty_months,
