@@ -10,8 +10,6 @@ rabbitmq_data/
 minio_data/
 
 # Local project directories
-quty2/
-imsquty/
 
 # IDE
 .vscode
