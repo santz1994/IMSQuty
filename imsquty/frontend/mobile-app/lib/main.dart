@@ -3,6 +3,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:imsquty_mobile/services/api_service.dart';
+import 'package:imsquty_mobile/services/connectivity_service.dart';
+import 'package:imsquty_mobile/services/firebase_messaging_service.dart';
+import 'package:imsquty_mobile/services/local_storage_service.dart';
 import 'package:imsquty_mobile/services/notification_service.dart';
 import 'package:imsquty_mobile/services/storage_service.dart';
 
@@ -25,8 +28,26 @@ void main() async {
     print('FCM initialization failed: $e');
   }
 
-  // Initialize Hive for local storage (if needed)
-  // await Hive.initFlutter();
+  // Initialize Firebase Messaging for push notifications
+  try {
+    await firebaseMessagingService.initialize();
+  } catch (e) {
+    print('Firebase Messaging initialization failed: $e');
+  }
+
+  // Initialize offline support (Hive local storage)
+  try {
+    await localStorageService.initialize();
+  } catch (e) {
+    print('Local storage initialization failed: $e');
+  }
+
+  // Initialize connectivity monitoring
+  try {
+    await connectivityService.initialize();
+  } catch (e) {
+    print('Connectivity service initialization failed: $e');
+  }
 
   runApp(const ProviderScope(child: MyApp()));
 }

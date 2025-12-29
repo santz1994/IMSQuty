@@ -6,13 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:imsquty_mobile/models/ticket_model.dart';
-import 'package:imsquty_mobile/providers/ticket_provider.dart';
 import 'package:imsquty_mobile/providers/asset_provider.dart';
+import 'package:imsquty_mobile/providers/ticket_provider.dart';
 
 class TicketDetailScreen extends ConsumerStatefulWidget {
   final int ticketId;
 
-  const TicketDetailScreen({Key? key, required this.ticketId}) : super(key: key);
+  const TicketDetailScreen({Key? key, required this.ticketId})
+    : super(key: key);
 
   @override
   ConsumerState<TicketDetailScreen> createState() => _TicketDetailScreenState();
@@ -38,7 +39,9 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Ticket?'),
-        content: Text('Are you sure you want to permanently delete "${ticket.title}"?'),
+        content: Text(
+          'Are you sure you want to permanently delete "${ticket.title}"?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -51,15 +54,18 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                   .read(ticketListProvider.notifier)
                   .deleteTicket(ticket.id)
                   .then((_) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Ticket deleted successfully')),
-                );
-                context.pop();
-              }).catchError((error) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error: $error')),
-                );
-              });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Ticket deleted successfully'),
+                      ),
+                    );
+                    context.pop();
+                  })
+                  .catchError((error) {
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('Error: $error')));
+                  });
             },
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
@@ -142,9 +148,7 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                                 const SizedBox(height: 4),
                                 Text(
                                   'ID: ${ticket.id}',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
+                                  style: Theme.of(context).textTheme.bodySmall
                                       ?.copyWith(color: Colors.grey),
                                 ),
                               ],
@@ -156,8 +160,9 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: _getStatusColor(ticket.status)
-                                  .withOpacity(0.2),
+                              color: _getStatusColor(
+                                ticket.status,
+                              ).withOpacity(0.2),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
@@ -186,8 +191,8 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                       Text(
                         'Ticket Information',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 12),
                       Card(
@@ -197,7 +202,10 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                             children: [
                               _buildDetailRow('Priority', ticket.priority),
                               _buildDivider(),
-                              _buildDetailRow('Category', ticket.category ?? 'N/A'),
+                              _buildDetailRow(
+                                'Category',
+                                ticket.category ?? 'N/A',
+                              ),
                               _buildDivider(),
                               _buildDetailRow('Status', ticket.status),
                               _buildDivider(),
@@ -229,8 +237,8 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                       Text(
                         'Assignment',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 12),
                       Card(
@@ -245,7 +253,9 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                               _buildDivider(),
                               _buildDetailRow(
                                 'Asset',
-                                ticket.assetId != null ? 'Asset #${ticket.assetId}' : 'N/A',
+                                ticket.assetId != null
+                                    ? 'Asset #${ticket.assetId}'
+                                    : 'N/A',
                               ),
                               _buildDivider(),
                               _buildDetailRow(
@@ -264,15 +274,18 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
               // Description Section
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Description',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 12),
                       Card(
@@ -280,9 +293,7 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                           padding: const EdgeInsets.all(12),
                           child: Text(
                             ticket.description ?? 'No description',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
+                            style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(
                                   color: ticket.description == null
                                       ? Colors.grey
@@ -300,15 +311,17 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
               if (ticket.assetId != null)
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           'Related Asset',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 12),
                         assetListAsync.when(
@@ -320,12 +333,11 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                             if (asset == null) {
                               return Card(
                                 child: ListTile(
-                                  title: Text(
-                                    'Asset #${ticket.assetId}',
-                                  ),
+                                  title: Text('Asset #${ticket.assetId}'),
                                   trailing: const Icon(Icons.chevron_right),
-                                  onTap: () => context
-                                      .push('/home/assets/${ticket.assetId}'),
+                                  onTap: () => context.push(
+                                    '/home/assets/${ticket.assetId}',
+                                  ),
                                 ),
                               );
                             }
@@ -335,7 +347,8 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                                 title: Text(asset.name),
                                 subtitle: Text(asset.model ?? 'N/A'),
                                 trailing: const Icon(Icons.chevron_right),
-                                onTap: () => context.push('/home/assets/${asset.id}'),
+                                onTap: () =>
+                                    context.push('/home/assets/${asset.id}'),
                               ),
                             );
                           },
@@ -357,15 +370,11 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                   ),
                 ),
 
-              SliverToBoxAdapter(
-                child: const SizedBox(height: 32),
-              ),
+              SliverToBoxAdapter(child: const SizedBox(height: 32)),
             ],
           );
         },
-        loading: () => const Center(
-          child: CircularProgressIndicator(),
-        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -379,7 +388,8 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
               ElevatedButton.icon(
                 icon: const Icon(Icons.refresh),
                 label: const Text('Retry'),
-                onPressed: () => ref.refresh(ticketDetailProvider(widget.ticketId)),
+                onPressed: () =>
+                    ref.refresh(ticketDetailProvider(widget.ticketId)),
               ),
             ],
           ),
@@ -394,24 +404,24 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
       children: [
         Text(
           label,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
         ),
         Text(
           value,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
         ),
       ],
     );
   }
 
   Widget _buildDivider() => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Divider(height: 1),
-      );
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: Divider(height: 1),
+  );
 
   Color _getStatusColor(String status) {
     switch (status) {

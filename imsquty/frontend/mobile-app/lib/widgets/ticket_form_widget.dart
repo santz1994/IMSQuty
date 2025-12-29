@@ -4,10 +4,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:imsquty_mobile/models/ticket_model.dart';
 import 'package:imsquty_mobile/providers/asset_provider.dart';
 import 'package:imsquty_mobile/utils/validators.dart';
+import 'package:intl/intl.dart';
 
 class TicketFormWidget extends ConsumerStatefulWidget {
   final GlobalKey<FormState> formKey;
@@ -47,11 +47,15 @@ class _TicketFormWidgetState extends ConsumerState<TicketFormWidget> {
 
   void _initializeControllers() {
     final ticket = widget.initialTicket;
-    
+
     _titleController = TextEditingController(text: ticket?.title ?? '');
-    _descriptionController = TextEditingController(text: ticket?.description ?? '');
+    _descriptionController = TextEditingController(
+      text: ticket?.description ?? '',
+    );
     _categoryController = TextEditingController(text: ticket?.category ?? '');
-    _assignedToController = TextEditingController(text: ticket?.assignedTo ?? '');
+    _assignedToController = TextEditingController(
+      text: ticket?.assignedTo ?? '',
+    );
     _notesController = TextEditingController(text: ticket?.notes ?? '');
 
     _selectedPriority = ticket?.priority ?? 'medium';
@@ -93,13 +97,17 @@ class _TicketFormWidgetState extends ConsumerState<TicketFormWidget> {
     final ticket = Ticket(
       id: widget.initialTicket?.id ?? 0,
       title: _titleController.text,
-      description:
-          _descriptionController.text.isEmpty ? null : _descriptionController.text,
-      category: _categoryController.text.isEmpty ? null : _categoryController.text,
+      description: _descriptionController.text.isEmpty
+          ? null
+          : _descriptionController.text,
+      category: _categoryController.text.isEmpty
+          ? null
+          : _categoryController.text,
       priority: _selectedPriority,
       status: _selectedStatus,
-      assignedTo:
-          _assignedToController.text.isEmpty ? null : _assignedToController.text,
+      assignedTo: _assignedToController.text.isEmpty
+          ? null
+          : _assignedToController.text,
       assetId: _selectedAssetId,
       dueDate: DateFormat('yyyy-MM-dd').format(_dueDate),
       notes: _notesController.text.isEmpty ? null : _notesController.text,
@@ -179,7 +187,10 @@ class _TicketFormWidgetState extends ConsumerState<TicketFormWidget> {
               ),
               items: const [
                 DropdownMenuItem(value: 'open', child: Text('Open')),
-                DropdownMenuItem(value: 'in_progress', child: Text('In Progress')),
+                DropdownMenuItem(
+                  value: 'in_progress',
+                  child: Text('In Progress'),
+                ),
                 DropdownMenuItem(value: 'resolved', child: Text('Resolved')),
                 DropdownMenuItem(value: 'closed', child: Text('Closed')),
               ],
@@ -241,9 +252,8 @@ class _TicketFormWidgetState extends ConsumerState<TicketFormWidget> {
                 ),
                 prefixIcon: const Icon(Icons.person),
               ),
-              validator: (value) => value?.isEmpty ?? false
-                  ? null
-                  : validateName(value),
+              validator: (value) =>
+                  value?.isEmpty ?? false ? null : validateName(value),
             ),
             const SizedBox(height: 12),
 
@@ -339,7 +349,9 @@ class _TicketFormWidgetState extends ConsumerState<TicketFormWidget> {
                           )
                         : const Icon(Icons.check),
                     label: Text(
-                      widget.initialTicket != null ? 'Update Ticket' : 'Create Ticket',
+                      widget.initialTicket != null
+                          ? 'Update Ticket'
+                          : 'Create Ticket',
                     ),
                   ),
                 ),
@@ -365,9 +377,9 @@ class _TicketFormWidgetState extends ConsumerState<TicketFormWidget> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+      style: Theme.of(
+        context,
+      ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
     );
   }
 }

@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:imsquty_mobile/models/ticket_model.dart';
-import 'package:imsquty_mobile/providers/ticket_provider.dart';
 import 'package:imsquty_mobile/providers/master_data_provider.dart';
+import 'package:imsquty_mobile/providers/ticket_provider.dart';
 
 class TicketListScreen extends ConsumerStatefulWidget {
   const TicketListScreen({Key? key}) : super(key: key);
@@ -97,15 +97,21 @@ class _TicketListScreenState extends ConsumerState<TicketListScreen> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              ref.read(ticketListProvider.notifier).deleteTicket(ticketId).then((_) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Ticket deleted successfully')),
-                );
-              }).catchError((error) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error: $error')),
-                );
-              });
+              ref
+                  .read(ticketListProvider.notifier)
+                  .deleteTicket(ticketId)
+                  .then((_) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Ticket deleted successfully'),
+                      ),
+                    );
+                  })
+                  .catchError((error) {
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('Error: $error')));
+                  });
             },
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
@@ -266,17 +272,14 @@ class _TicketListScreenState extends ConsumerState<TicketListScreen> {
                   )
                 else
                   SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final ticket = ticketListState.tickets[index];
-                        return _TicketCard(
-                          ticket: ticket,
-                          onTap: () => context.push('/home/tickets/${ticket.id}'),
-                          onDelete: () => _deleteTicket(ticket.id, ticket.title),
-                        );
-                      },
-                      childCount: ticketListState.tickets.length,
-                    ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final ticket = ticketListState.tickets[index];
+                      return _TicketCard(
+                        ticket: ticket,
+                        onTap: () => context.push('/home/tickets/${ticket.id}'),
+                        onDelete: () => _deleteTicket(ticket.id, ticket.title),
+                      );
+                    }, childCount: ticketListState.tickets.length),
                   ),
                 // Pagination Controls
                 SliverToBoxAdapter(
@@ -297,8 +300,8 @@ class _TicketListScreenState extends ConsumerState<TicketListScreen> {
                         ElevatedButton.icon(
                           icon: const Icon(Icons.chevron_right),
                           label: const Text('Next'),
-                          onPressed: _currentPage <
-                                  (ticketListState.total / 20).ceil()
+                          onPressed:
+                              _currentPage < (ticketListState.total / 20).ceil()
                               ? _nextPage
                               : null,
                         ),
@@ -310,9 +313,7 @@ class _TicketListScreenState extends ConsumerState<TicketListScreen> {
             ),
           );
         },
-        loading: () => const Center(
-          child: CircularProgressIndicator(),
-        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -403,9 +404,7 @@ class _TicketCard extends StatelessWidget {
                       children: [
                         Text(
                           ticket.title,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
+                          style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.bold),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -413,10 +412,9 @@ class _TicketCard extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           'ID: ${ticket.id}',
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
-                              ?.copyWith(color: Colors.grey),
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodySmall?.copyWith(color: Colors.grey),
                         ),
                       ],
                     ),
@@ -448,8 +446,9 @@ class _TicketCard extends StatelessWidget {
                 children: [
                   Chip(
                     label: Text(ticket.status.toUpperCase()),
-                    backgroundColor: _getStatusColor(ticket.status)
-                        .withOpacity(0.2),
+                    backgroundColor: _getStatusColor(
+                      ticket.status,
+                    ).withOpacity(0.2),
                     labelStyle: TextStyle(
                       color: _getStatusColor(ticket.status),
                       fontWeight: FontWeight.w500,
@@ -462,8 +461,9 @@ class _TicketCard extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: _getPriorityColor(ticket.priority)
-                          .withOpacity(0.2),
+                      color: _getPriorityColor(
+                        ticket.priority,
+                      ).withOpacity(0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(

@@ -35,7 +35,7 @@ class _TicketCreateScreenState extends ConsumerState<TicketCreateScreen> {
 
     try {
       await ref.read(ticketListProvider.notifier).createTicket(ticket);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Ticket created successfully')),
@@ -45,9 +45,9 @@ class _TicketCreateScreenState extends ConsumerState<TicketCreateScreen> {
       }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $error')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $error')));
       }
     } finally {
       if (mounted) {
