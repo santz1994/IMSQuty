@@ -1,0 +1,40 @@
+// lib/utils/logger.dart
+
+import 'package:logger/logger.dart';
+
+class AppLogger {
+  static final Logger _logger = Logger(
+    printer: PrettyPrinter(
+      methodCount: 2,
+      errorMethodCount: 8,
+      lineLength: 120,
+      colors: true,
+      printEmojis: true,
+      dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
+    ),
+  );
+
+  static void debug(String message) => _logger.d(message);
+
+  static void info(String message) => _logger.i(message);
+
+  static void warning(String message) => _logger.w(message);
+
+  static void error(String message, {dynamic error, StackTrace? stackTrace}) {
+    _logger.e(message, error: error, stackTrace: stackTrace);
+  }
+
+  static void verbose(String message) => _logger.v(message);
+
+  static void logApiCall(String method, String endpoint) {
+    info('API CALL: $method $endpoint');
+  }
+
+  static void logApiResponse(String endpoint, int statusCode) {
+    info('API RESPONSE: $endpoint - Status: $statusCode');
+  }
+
+  static void logApiError(String endpoint, int? statusCode, String error) {
+    warning('API ERROR: $endpoint - Status: $statusCode - Error: $error');
+  }
+}
