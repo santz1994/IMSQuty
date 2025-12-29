@@ -3,235 +3,216 @@ import {
     Alert,
     Box,
     Button,
-    FormControl,
+    CircularProgress,
     Grid,
-    InputLabel,
-    MenuItem,
     Paper,
-    Select,
-    TextField,
     Typography,
 } from '@mui/material'
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { useNavigate } from 'react-router-dom'
+import { ControlledFormSelect, FormField, FormGroup } from '../../components/FormField'
+import { useTicketForm, useTicketFormSubmit } from '../../hooks/useTicketForm'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
-import { fetchTicketPriorities } from '../../store/slices/ticketPrioritySlice'
 import { createTicket } from '../../store/slices/ticketSlice'
-import { fetchTicketStatuses } from '../../store/slices/ticketStatusSlice'
-
-interface CreateTicketFormData {
-  ticket_number?: string
-  title: string
-  description: string
-  ticket_type_id?: number
-  ticket_status_id?: number
-  priority: string
-  created_by?: number
-  assigned_to?: number
-  location_id?: number
-  asset_id?: number
-  due_date?: string
-}
 
 const TicketCreate: React.FC = () => {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
-  const { loading, error } = useAppSelector((state) => state.ticket)
-  const { priorities } = useAppSelector((state) => state.ticketPriority)
-  const { statuses } = useAppSelector((state) => state.ticketStatus)
-  const [formData, setFormData] = useState<CreateTicketFormData>({
-    title: '',
-    description: '',
-    priority: 'medium',
+  const { loading, error: ticketError } = useAppSelector((state) => state.ticket)
+
+  const { register, handleSubmit, errors, isSubmitting, control } = useTicketForm()
+
+  const submitHandler = useTicketFormSubmit(async (data) => {
+    try {
+      const result = await dispatch(
+        createTicket({
+          ...data,
+          assigned_to: data.assigned_to ? Number(data.assigned_to) : undefined,
+          asset_id: data.asset_id ? Number(data.asset_id) : undefined,
+        } as any),
+      )
+
+      if (result.payload) {
+        navigate('/tickets')
+      }
+    } catch (err) {
+      console.error('Failed to create ticket:', err)
+    }
   })
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
 
-  // Load priorities and statuses on mount
-  useEffect(() => {
-    dispatch(fetchTicketPriorities() as any)
-    dispatch(fetchTicketStatuses() as any)
-  }, [dispatch])
-
-  const validateForm = (): boolean => {
-    const errors: Record<string, string> = {}
-
-    if (!formData.title.trim()) {
-      errors.title = 'Title is required'
-    }
-    if (!formData.description.trim()) {
-      errors.description = 'Description is required'
-    }
-
-    setValidationErrors(errors)
-    return Object.keys(errors).length === 0
-  }
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-    // Clear validation error for this field
-    if (validationErrors[name]) {
-      setValidationErrors((prev) => ({
-        ...prev,
-        [name]: '',
-      }))
-    }
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (validateForm()) {
-      dispatch(createTicket(formData))
-      navigate('/tickets')
-    }
+  const onSubmit = async (data: any) => {
+    await submitHandler(data)
   }
 
   return (
-    <Box>
-      <Button
-        startIcon={<ArrowBack />}
-        onClick={() => navigate('/tickets')}
-        sx={{ mb: 2 }}
-      >
-        Back
-      </Button>
+    <Box sx={{ p: 3 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+        <Button
+          startIcon={<ArrowBack />}
+          onClick={() => navigate('/tickets')}
+          sx={{ mr: 2 }}
+        >
+          Back
+        </Button>
+        <Typography variant="h4">Create New Ticket</Typography>
+      </Box>
+
+      {ticketError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {ticketError}
+        </Alert>
+      )}
 
       <Paper sx={{ p: 3 }}>
-        <Typography variant="h5" sx={{ mb: 3 }}>
-          Create New Ticket
-        </Typography>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <FormGroup spacing={2.5}>
+            {/* Basic Information */}
+            <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
+              Basic Information
+            </Typography>
 
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+            <FormField
+              label="Ticket Number"
+              placeholder="e.g., TKT-001"
+              error={errors.ticket_number}
+              required
+              {...register('ticket_number')}
+            />
 
-        <Box component="form" onSubmit={handleSubmit}>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Title"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                error={!!validationErrors.title}
-                helperText={validationErrors.title}
-                required
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                multiline
-                rows={4}
-                label="Description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                error={!!validationErrors.description}
-                helperText={validationErrors.description}
-                required
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Priority</InputLabel>
-                <Select
+            <FormField
+              label="Title"
+              placeholder="e.g., Hardware Issue"
+              error={errors.title}
+              required
+              {...register('title')}
+            />
+
+            <FormField
+              label="Description"
+              multiline
+              rows={4}
+              placeholder="Describe the issue in detail..."
+              error={errors.description}
+              required
+              {...register('description')}
+            />
+
+            {/* Ticket Details */}
+            <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
+              Ticket Details
+            </Typography>
+
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <ControlledFormSelect
+                  control={control}
                   name="priority"
                   label="Priority"
-                  value={formData.priority || 'medium'}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      priority: e.target.value,
-                    }))
-                  }
-                >
-                  {priorities.map((p) => (
-                    <MenuItem key={p.id} value={p.name}>
-                      {p.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Status</InputLabel>
-                <Select
-                  name="ticket_status_id"
+                  options={[
+                    { label: 'Low', value: 'Low' },
+                    { label: 'Medium', value: 'Medium' },
+                    { label: 'High', value: 'High' },
+                    { label: 'Critical', value: 'Critical' },
+                  ]}
+                  error={errors.priority}
+                  required
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <ControlledFormSelect
+                  control={control}
+                  name="status"
                   label="Status"
-                  value={formData.ticket_status_id || ''}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      ticket_status_id: Number(e.target.value) || undefined,
-                    }))
-                  }
-                >
-                  <MenuItem value="">None</MenuItem>
-                  {statuses.map((s) => (
-                    <MenuItem key={s.id} value={s.id}>
-                      {s.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+                  options={[
+                    { label: 'Open', value: 'Open' },
+                    { label: 'In Progress', value: 'In Progress' },
+                    { label: 'Pending Info', value: 'Pending Info' },
+                    { label: 'Resolved', value: 'Resolved' },
+                    { label: 'Closed', value: 'Closed' },
+                  ]}
+                  error={errors.status}
+                  required
+                />
+              </Grid>
             </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Assigned To"
-                name="assigned_to"
-                type="number"
-                value={formData.assigned_to || ''}
-                onChange={handleChange}
-              />
+
+            {/* Assignment & Dates */}
+            <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
+              Assignment & Due Date
+            </Typography>
+
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <FormField
+                  label="Assigned To"
+                  type="number"
+                  placeholder="User ID (optional)"
+                  error={errors.assigned_to}
+                  {...register('assigned_to')}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <FormField
+                  label="Due Date"
+                  type="date"
+                  InputLabelProps={{ shrink: true }}
+                  error={errors.due_date}
+                  required
+                  {...register('due_date')}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <FormField
+                  label="Asset ID"
+                  type="number"
+                  placeholder="Asset ID (optional)"
+                  error={errors.asset_id}
+                  {...register('asset_id')}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <FormField
+                  label="Tags"
+                  placeholder="e.g., urgent, hardware, network"
+                  error={errors.tags}
+                  {...register('tags')}
+                />
+              </Grid>
             </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Location"
-                name="location_id"
-                type="number"
-                value={formData.location_id || ''}
-                onChange={handleChange}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Asset"
-                name="asset_id"
-                type="number"
-                value={formData.asset_id || ''}
-                onChange={handleChange}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Due Date"
-                name="due_date"
-                type="date"
-                value={formData.due_date || ''}
-                onChange={handleChange}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid item xs={12}>
+
+            {/* Form Actions */}
+            <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
               <Button
                 variant="contained"
+                color="primary"
                 type="submit"
-                startIcon={<Add />}
-                disabled={loading}
+                startIcon={
+                  isSubmitting ? (
+                    <CircularProgress size={20} />
+                  ) : (
+                    <Add />
+                  )
+                }
+                disabled={isSubmitting || loading}
               >
-                {loading ? 'Creating...' : 'Create Ticket'}
+                {isSubmitting || loading ? 'Creating...' : 'Create Ticket'}
               </Button>
-            </Grid>
-          </Grid>
-        </Box>
+
+              <Button
+                variant="outlined"
+                color="secondary"
+                onClick={() => navigate('/tickets')}
+                disabled={isSubmitting || loading}
+              >
+                Cancel
+              </Button>
+            </Box>
+          </FormGroup>
+        </form>
       </Paper>
     </Box>
   )

@@ -16,6 +16,7 @@ import {
 } from '@mui/material'
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { PaginationControls } from '../../components/PaginationControls'
 import SearchFilter from '../../components/SearchFilter'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { deleteAsset, fetchAssets } from '../../store/slices/assetSlice'
@@ -23,13 +24,16 @@ import { deleteAsset, fetchAssets } from '../../store/slices/assetSlice'
 const AssetList: React.FC = () => {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
-  const { assets, loading, error } = useAppSelector((state) => state.asset)
+  const { assets, loading, error, pagination } = useAppSelector((state) => state.asset)
   const [searchValue, setSearchValue] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
+  // Fetch assets when page or pageSize changes
   useEffect(() => {
-    dispatch(fetchAssets())
-  }, [dispatch])
+    dispatch(fetchAssets({ page, perPage: pageSize }))
+  }, [dispatch, page, pageSize])
 
   const handleDelete = (id: number) => {
     if (window.confirm('Are you sure you want to delete this asset?')) {
@@ -37,17 +41,11 @@ const AssetList: React.FC = () => {
     }
   }
 
-  // Filter assets based on search and status
-  const filteredAssets = assets.filter((asset) => {
-    const searchMatch =
-      asset.asset_tag.toLowerCase().includes(searchValue.toLowerCase()) ||
-      asset.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-      asset.serial_number.toLowerCase().includes(searchValue.toLowerCase())
-    
-    const statusMatch = !filterStatus || asset.status_id === Number(filterStatus)
-    
-    return searchMatch && statusMatch
-  })
+  const handleClearFilters = () => {
+    setSearchValue('')
+    setFilterStatus('')
+    setPage(1)
+  }
 
   if (loading) return <CircularProgress />
   if (error) return <Alert severity="error">{error}</Alert>
@@ -76,13 +74,10 @@ const AssetList: React.FC = () => {
           { label: 'Inactive', value: '2' },
           { label: 'Maintenance', value: '3' },
         ]}
-        onClear={() => {
-          setSearchValue('')
-          setFilterStatus('')
-        }}
+        onClear={handleClearFilters}
       />
 
-      {filteredAssets.length === 0 && (
+      {assets.length === 0 && (
         <Alert severity="info">No assets found</Alert>
       )}
 
@@ -98,7 +93,16 @@ const AssetList: React.FC = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredAssets.map((asset) => (
+            {assets.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} align="center">
+                  <Alert severity="info" sx={{ border: 'none' }}>
+                    No assets found
+                  </Alert>
+                </TableCell>
+              </TableRow>
+            )}
+            {assets.map((asset) => (
               <TableRow key={asset.id}>
                 <TableCell>{asset.asset_tag}</TableCell>
                 <TableCell>{asset.name}</TableCell>
@@ -130,6 +134,16 @@ const AssetList: React.FC = () => {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Pagination Controls */}
+      <PaginationControls
+        page={page}
+        pageSize={pageSize}
+        total={pagination.total}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+        pageSizes={[5, 10, 25, 50]}
+      />
     </Box>
   )
 }

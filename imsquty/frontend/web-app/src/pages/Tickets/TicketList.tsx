@@ -16,6 +16,7 @@ import {
 } from '@mui/material'
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { PaginationControls } from '../../components/PaginationControls'
 import SearchFilter from '../../components/SearchFilter'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { deleteTicket, fetchTickets } from '../../store/slices/ticketSlice'
@@ -23,15 +24,18 @@ import { deleteTicket, fetchTickets } from '../../store/slices/ticketSlice'
 const TicketList: React.FC = () => {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
-  const { tickets, loading, error } = useAppSelector((state) => state.ticket)
+  const { tickets, loading, error, pagination } = useAppSelector((state) => state.ticket)
   const { priorities } = useAppSelector((state) => state.ticketPriority)
   const { statuses } = useAppSelector((state) => state.ticketStatus)
   const [searchValue, setSearchValue] = useState('')
   const [filterPriority, setFilterPriority] = useState('')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
+  // Fetch tickets when page or pageSize changes
   useEffect(() => {
-    dispatch(fetchTickets({ page: 1, perPage: 10 }))
-  }, [dispatch])
+    dispatch(fetchTickets({ page, perPage: pageSize }))
+  }, [dispatch, page, pageSize])
 
   const handleDelete = (id: number) => {
     if (window.confirm('Are you sure you want to delete this ticket?')) {
@@ -39,17 +43,11 @@ const TicketList: React.FC = () => {
     }
   }
 
-  // Filter tickets based on search and priority
-  const filteredTickets = tickets.filter((ticket) => {
-    const searchMatch =
-      ticket.ticket_number?.toLowerCase().includes(searchValue.toLowerCase()) ||
-      ticket.title.toLowerCase().includes(searchValue.toLowerCase()) ||
-      ticket.description?.toLowerCase().includes(searchValue.toLowerCase())
-    
-    const priorityMatch = !filterPriority || ticket.priority === filterPriority
-    
-    return searchMatch && priorityMatch
-  })
+  const handleClearFilters = () => {
+    setSearchValue('')
+    setFilterPriority('')
+    setPage(1)
+  }
 
   return (
     <Box>
@@ -76,74 +74,85 @@ const TicketList: React.FC = () => {
           label: p.label,
           value: p.name,
         }))}
-        onClear={() => {
-          setSearchValue('')
-          setFilterPriority('')
-        }}
+        onClear={handleClearFilters}
       />
+
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
       {loading ? (
         <CircularProgress />
       ) : (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                <TableCell>Ticket Number</TableCell>
-                <TableCell>Title</TableCell>
-                <TableCell>Priority</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Created By</TableCell>
-                <TableCell>Assigned To</TableCell>
-                <TableCell align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredTickets.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
-                    {tickets.length === 0 ? 'No tickets found' : 'No tickets match your search'}
-                  </TableCell>
+        <>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                  <TableCell>Ticket Number</TableCell>
+                  <TableCell>Title</TableCell>
+                  <TableCell>Priority</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Created By</TableCell>
+                  <TableCell>Assigned To</TableCell>
+                  <TableCell align="right">Actions</TableCell>
                 </TableRow>
-              ) : (
-                filteredTickets.map((ticket) => (
-                  <TableRow key={ticket.id} hover>
-                    <TableCell>{ticket.ticket_number}</TableCell>
-                    <TableCell>{ticket.title}</TableCell>
-                    <TableCell>{ticket.priority}</TableCell>
-                    <TableCell>{ticket.ticket_status_id}</TableCell>
-                    <TableCell>{ticket.created_by}</TableCell>
-                    <TableCell>{ticket.assigned_to || '-'}</TableCell>
-                    <TableCell align="right">
-                      <IconButton
-                        size="small"
-                        onClick={() => navigate(`/tickets/${ticket.id}`)}
-                        title="View details"
-                      >
-                        <Info fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => navigate(`/tickets/${ticket.id}`)}
-                        title="Edit ticket"
-                      >
-                        <Edit fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => handleDelete(ticket.id)}
-                        title="Delete ticket"
-                      >
-                        <Delete fontSize="small" />
-                      </IconButton>
+              </TableHead>
+              <TableBody>
+                {tickets.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
+                      No tickets found
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                ) : (
+                  tickets.map((ticket) => (
+                    <TableRow key={ticket.id} hover>
+                      <TableCell>{ticket.ticket_number}</TableCell>
+                      <TableCell>{ticket.title}</TableCell>
+                      <TableCell>{ticket.priority}</TableCell>
+                      <TableCell>{ticket.ticket_status_id}</TableCell>
+                      <TableCell>{ticket.created_by}</TableCell>
+                      <TableCell>{ticket.assigned_to || '-'}</TableCell>
+                      <TableCell align="right">
+                        <IconButton
+                          size="small"
+                          onClick={() => navigate(`/tickets/${ticket.id}`)}
+                          title="View details"
+                        >
+                          <Info fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          onClick={() => navigate(`/tickets/${ticket.id}`)}
+                          title="Edit ticket"
+                        >
+                          <Edit fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => handleDelete(ticket.id)}
+                          title="Delete ticket"
+                        >
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          {/* Pagination Controls */}
+          <PaginationControls
+            page={page}
+            pageSize={pageSize}
+            total={pagination.total}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            pageSizes={[5, 10, 25, 50]}
+          />
+        </>
       )}
     </Box>
   )

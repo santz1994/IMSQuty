@@ -3,17 +3,15 @@ import {
     Alert,
     Box,
     Button,
-    FormControl,
+    CircularProgress,
     Grid,
-    InputLabel,
-    MenuItem,
     Paper,
-    Select,
-    TextField,
-    Typography
+    Typography,
 } from '@mui/material'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { ControlledFormSelect, FormField, FormGroup } from '../../components/FormField'
+import { useAssetForm, useAssetFormSubmit } from '../../hooks/useAssetForm'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { createAsset } from '../../store/slices/assetSlice'
 import { fetchActiveDivisions } from '../../store/slices/divisionSlice'
@@ -21,43 +19,40 @@ import { fetchActiveLocations } from '../../store/slices/locationSlice'
 import { fetchActiveManufacturers } from '../../store/slices/manufacturerSlice'
 import { fetchActiveWarrantyTypes } from '../../store/slices/warrantyTypeSlice'
 
-interface CreateAssetFormData {
-  asset_tag: string
-  name: string
-  serial_number: string
-  asset_type_id?: number
-  model_id?: number
-  division_id?: number
-  location_id?: number
-  supplier_id?: number
-  purchase_date?: string
-  warranty_months?: number
-  warranty_type_id?: number
-  invoice_id?: number
-  purchase_order_id?: number
-  ip_address?: string
-  mac_address?: string
-  status_id?: number
-  assigned_to?: number
-  notes?: string
-}
-
 const AssetCreate: React.FC = () => {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
-  const { loading, error } = useAppSelector((state) => state.asset)
+  const { loading, error: assetError } = useAppSelector(
+    (state) => state.asset,
+  )
   const { divisions } = useAppSelector((state) => state.division)
   const { locations } = useAppSelector((state) => state.location)
   const { manufacturers } = useAppSelector((state) => state.manufacturer)
   const { warrantyTypes } = useAppSelector((state) => state.warrantyType)
-  
-  const [formData, setFormData] = useState<CreateAssetFormData>({
-    asset_tag: '',
-    name: '',
-    serial_number: '',
-    notes: '',
+
+  const { register, handleSubmit, errors, isSubmitting, control } = useAssetForm()
+
+  const submitHandler = useAssetFormSubmit(async (data) => {
+    try {
+      const result = await dispatch(
+        createAsset({
+          ...data,
+          asset_type_id: Number(data.asset_type_id),
+          division_id: Number(data.division_id),
+          location_id: Number(data.location_id),
+          manufacturer_id: Number(data.manufacturer_id),
+          warranty_type_id: Number(data.warranty_type_id),
+          cost: Number(data.cost),
+        } as any),
+      )
+
+      if (result.payload) {
+        navigate('/assets')
+      }
+    } catch (err) {
+      console.error('Failed to create asset:', err)
+    }
   })
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
 
   // Load master data on mount
   useEffect(() => {
@@ -67,225 +62,217 @@ const AssetCreate: React.FC = () => {
     dispatch(fetchActiveWarrantyTypes() as any)
   }, [dispatch])
 
-  const validateForm = (): boolean => {
-    const errors: Record<string, string> = {}
-
-    if (!formData.asset_tag.trim()) {
-      errors.asset_tag = 'Asset Tag is required'
-    }
-    if (!formData.name.trim()) {
-      errors.name = 'Name is required'
-    }
-    if (!formData.serial_number.trim()) {
-      errors.serial_number = 'Serial Number is required'
-    }
-
-    setValidationErrors(errors)
-    return Object.keys(errors).length === 0
-  }
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-    // Clear validation error for this field
-    if (validationErrors[name]) {
-      setValidationErrors((prev) => ({
-        ...prev,
-        [name]: '',
-      }))
-    }
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (validateForm()) {
-      dispatch(createAsset(formData))
-      navigate('/assets')
-    }
+  const onSubmit = async (data: any) => {
+    await submitHandler(data)
   }
 
   return (
-    <Box>
-      <Button
-        startIcon={<ArrowBack />}
-        onClick={() => navigate('/assets')}
-        sx={{ mb: 2 }}
-      >
-        Back
-      </Button>
+    <Box sx={{ p: 3 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+        <Button
+          startIcon={<ArrowBack />}
+          onClick={() => navigate('/assets')}
+          sx={{ mr: 2 }}
+        >
+          Back
+        </Button>
+        <Typography variant="h4">Create New Asset</Typography>
+      </Box>
+
+      {assetError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {assetError}
+        </Alert>
+      )}
 
       <Paper sx={{ p: 3 }}>
-        <Typography variant="h5" sx={{ mb: 3 }}>
-          Create New Asset
-        </Typography>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <FormGroup spacing={2.5}>
+            {/* Basic Information */}
+            <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
+              Basic Information
+            </Typography>
 
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+            <FormField
+              label="Asset Tag"
+              placeholder="e.g., AST-001"
+              error={errors.asset_tag}
+              required
+              {...register('asset_tag')}
+            />
 
-        <Box component="form" onSubmit={handleSubmit}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Asset Tag"
-                name="asset_tag"
-                value={formData.asset_tag}
-                onChange={handleChange}
-                error={!!validationErrors.asset_tag}
-                helperText={validationErrors.asset_tag}
-                required
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                error={!!validationErrors.name}
-                helperText={validationErrors.name}
-                required
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Serial Number"
-                name="serial_number"
-                value={formData.serial_number}
-                onChange={handleChange}
-                error={!!validationErrors.serial_number}
-                helperText={validationErrors.serial_number}
-                required
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="IP Address"
-                name="ip_address"
-                value={formData.ip_address || ''}
-                onChange={handleChange}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Division</InputLabel>
-                <Select
+            <FormField
+              label="Asset Name"
+              placeholder="e.g., Dell Laptop"
+              error={errors.name}
+              required
+              {...register('name')}
+            />
+
+            <FormField
+              label="Serial Number"
+              placeholder="e.g., SN123456789"
+              error={errors.serial_number}
+              required
+              {...register('serial_number')}
+            />
+
+            {/* Master Data Selection */}
+            <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
+              Asset Details
+            </Typography>
+
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <ControlledFormSelect
+                  control={control}
                   name="division_id"
                   label="Division"
-                  value={formData.division_id || ''}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      division_id: Number(e.target.value) || undefined,
-                    }))
-                  }
-                >
-                  <MenuItem value="">None</MenuItem>
-                  {divisions.map((div) => (
-                    <MenuItem key={div.id} value={div.id}>
-                      {div.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Location</InputLabel>
-                <Select
+                  options={divisions.map((d) => ({ label: d.name, value: d.id }))}
+                  error={errors.division_id}
+                  required
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <ControlledFormSelect
+                  control={control}
                   name="location_id"
                   label="Location"
-                  value={formData.location_id || ''}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      location_id: Number(e.target.value) || undefined,
-                    }))
-                  }
-                >
-                  <MenuItem value="">None</MenuItem>
-                  {locations.map((loc) => (
-                    <MenuItem key={loc.id} value={loc.id}>
-                      {loc.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Manufacturer</InputLabel>
-                <Select
-                  name="model_id"
+                  options={locations.map((l) => ({ label: l.name, value: l.id }))}
+                  error={errors.location_id}
+                  required
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <ControlledFormSelect
+                  control={control}
+                  name="manufacturer_id"
                   label="Manufacturer"
-                  value={formData.model_id || ''}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      model_id: Number(e.target.value) || undefined,
-                    }))
-                  }
-                >
-                  <MenuItem value="">None</MenuItem>
-                  {manufacturers.map((mfr) => (
-                    <MenuItem key={mfr.id} value={mfr.id}>
-                      {mfr.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Warranty Type</InputLabel>
-                <Select
+                  options={manufacturers.map((m) => ({
+                    label: m.name,
+                    value: m.id,
+                  }))}
+                  error={errors.manufacturer_id}
+                  required
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <ControlledFormSelect
+                  control={control}
                   name="warranty_type_id"
                   label="Warranty Type"
-                  value={formData.warranty_type_id || ''}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      warranty_type_id: Number(e.target.value) || undefined,
-                    }))
-                  }
-                >
-                  <MenuItem value="">None</MenuItem>
-                  {warrantyTypes.map((wt) => (
-                    <MenuItem key={wt.id} value={wt.id}>
-                      {wt.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+                  options={warrantyTypes.map((w) => ({
+                    label: w.name,
+                    value: w.id,
+                  }))}
+                  error={errors.warranty_type_id}
+                  required
+                />
+              </Grid>
             </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                multiline
-                rows={4}
-                label="Notes"
-                name="notes"
-                value={formData.notes || ''}
-                onChange={handleChange}
-              />
+
+            {/* Date & Cost Information */}
+            <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
+              Purchase Information
+            </Typography>
+
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <FormField
+                  label="Purchase Date"
+                  type="date"
+                  InputLabelProps={{ shrink: true }}
+                  error={errors.purchase_date}
+                  required
+                  {...register('purchase_date')}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <FormField
+                  label="Warranty Expiry Date"
+                  type="date"
+                  InputLabelProps={{ shrink: true }}
+                  error={errors.warranty_expiry_date}
+                  required
+                  {...register('warranty_expiry_date')}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <FormField
+                  label="Cost"
+                  type="number"
+                  inputProps={{ step: '0.01', min: '0' }}
+                  error={errors.cost}
+                  required
+                  {...register('cost')}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <ControlledFormSelect
+                  control={control}
+                  name="status"
+                  label="Status"
+                  options={[
+                    { label: 'Active', value: 'active' },
+                    { label: 'Inactive', value: 'inactive' },
+                    { label: 'Maintenance', value: 'maintenance' },
+                    { label: 'Retired', value: 'retired' },
+                  ]}
+                  error={errors.status}
+                  required
+                />
+              </Grid>
             </Grid>
-            <Grid item xs={12}>
+
+            {/* Additional Information */}
+            <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
+              Additional Information
+            </Typography>
+
+            <FormField
+              label="Notes"
+              multiline
+              rows={4}
+              placeholder="Enter any additional notes about this asset..."
+              error={errors.notes}
+              {...register('notes')}
+            />
+
+            {/* Form Actions */}
+            <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
               <Button
                 variant="contained"
+                color="primary"
                 type="submit"
-                startIcon={<Add />}
-                disabled={loading}
+                startIcon={
+                  isSubmitting ? (
+                    <CircularProgress size={20} />
+                  ) : (
+                    <Add />
+                  )
+                }
+                disabled={isSubmitting || loading}
               >
-                {loading ? 'Creating...' : 'Create Asset'}
+                {isSubmitting || loading ? 'Creating...' : 'Create Asset'}
               </Button>
-            </Grid>
-          </Grid>
-        </Box>
+
+              <Button
+                variant="outlined"
+                color="secondary"
+                onClick={() => navigate('/assets')}
+                disabled={isSubmitting || loading}
+              >
+                Cancel
+              </Button>
+            </Box>
+          </FormGroup>
+        </form>
       </Paper>
     </Box>
   )
