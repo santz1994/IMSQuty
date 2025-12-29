@@ -47,3 +47,4 @@ yarn.lock
 # Testing
 .phpunit.result.cache
 coverage/
+node_modules
