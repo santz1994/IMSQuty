@@ -1,5 +1,4 @@
-import { renderHook, act } from '@testing-library/react'
-import * as yup from 'yup'
+import { act, renderHook } from '@testing-library/react'
 import { useAssetForm } from '../hooks/useAssetForm'
 import { useTicketForm } from '../hooks/useTicketForm'
 
