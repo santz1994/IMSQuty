@@ -16,8 +16,8 @@ import {
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
-import { deleteTicket, fetchTicket, updateTicket } from '../../store/slices/ticketSlice'
 import { fetchTicketPriorities } from '../../store/slices/ticketPrioritySlice'
+import { deleteTicket, fetchTicket, updateTicket } from '../../store/slices/ticketSlice'
 import { fetchTicketStatuses } from '../../store/slices/ticketStatusSlice'
 
 const TicketDetail: React.FC = () => {

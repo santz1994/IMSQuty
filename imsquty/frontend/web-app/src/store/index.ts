@@ -1,13 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit'
 import assetReducer from './slices/assetSlice'
 import authReducer from './slices/authSlice'
-import ticketReducer from './slices/ticketSlice'
 import divisionReducer from './slices/divisionSlice'
 import locationReducer from './slices/locationSlice'
 import manufacturerReducer from './slices/manufacturerSlice'
-import warrantyTypeReducer from './slices/warrantyTypeSlice'
 import ticketPriorityReducer from './slices/ticketPrioritySlice'
+import ticketReducer from './slices/ticketSlice'
 import ticketStatusReducer from './slices/ticketStatusSlice'
+import warrantyTypeReducer from './slices/warrantyTypeSlice'
 
 export const store = configureStore({
   reducer: {

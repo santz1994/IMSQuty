@@ -1,6 +1,6 @@
+import { Clear, Search } from '@mui/icons-material'
+import { Box, Button, FormControl, InputLabel, MenuItem, Select, TextField } from '@mui/material'
 import React from 'react'
-import { Box, TextField, Select, MenuItem, FormControl, InputLabel, Button } from '@mui/material'
-import { Search, Clear } from '@mui/icons-material'
 
 interface SearchFilterProps {
   searchValue: string

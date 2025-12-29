@@ -16,9 +16,9 @@ import {
 } from '@mui/material'
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import SearchFilter from '../../components/SearchFilter'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { deleteAsset, fetchAssets } from '../../store/slices/assetSlice'
-import SearchFilter from '../../components/SearchFilter'
 
 const AssetList: React.FC = () => {
   const dispatch = useAppDispatch()
