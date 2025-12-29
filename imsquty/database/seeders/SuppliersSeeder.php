@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use App\Models\Supplier;
 
 /**
  * SuppliersSeeder
@@ -25,7 +24,7 @@ class SuppliersSeeder extends Seeder
     public function run(): void
     {
         // Prevent duplicate execution
-        if (Supplier::count() > 0) {
+        if (DB::table('suppliers')->count() > 0) {
             $this->command->warn('Suppliers table already populated. Skipping migration.');
             return;
         }
@@ -46,20 +45,20 @@ class SuppliersSeeder extends Seeder
             foreach ($legacySuppliers as $legacySup) {
                 try {
                     // Field mapping
-                    Supplier::create([
+                    // Schema: id, name, code, contact_email, contact_phone, address, city, state, country, postal_code, notes, created_at, updated_at, deleted_at
+                    DB::table('suppliers')->insert([
                         'name' => $legacySup->supplier_name ?? $legacySup->name,
                         'code' => $legacySup->supplier_code ?? $legacySup->code,
-                        'contact_person' => $legacySup->contact_person ?? null,
-                        'phone' => $legacySup->phone ?? null,
-                        'email' => $legacySup->email ?? null,
+                        'contact_email' => $legacySup->email ?? null,
+                        'contact_phone' => $legacySup->phone ?? null,
                         'address' => $legacySup->address ?? null,
                         'city' => $legacySup->city ?? null,
                         'state' => $legacySup->state ?? null,
                         'country' => $legacySup->country ?? null,
                         'postal_code' => $legacySup->postal_code ?? null,
-                        'website' => $legacySup->website ?? null,
-                        'description' => $legacySup->description ?? null,
-                        'is_active' => $legacySup->is_active ?? true,
+                        'notes' => $legacySup->notes ?? null,
+                        'created_at' => now(),
+                        'updated_at' => now(),
                     ]);
                     
                     $inserted++;

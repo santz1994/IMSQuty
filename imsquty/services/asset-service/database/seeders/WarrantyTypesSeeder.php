@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use App\Models\WarrantyType;
 
 /**
  * WarrantyTypesSeeder
@@ -26,7 +25,7 @@ class WarrantyTypesSeeder extends Seeder
     public function run(): void
     {
         // Prevent duplicate execution
-        if (WarrantyType::count() > 0) {
+        if (DB::table('warranty_types')->count() > 0) {
             $this->command->warn('Warranty Types table already populated. Skipping migration.');
             return;
         }
@@ -46,13 +45,12 @@ class WarrantyTypesSeeder extends Seeder
 
             foreach ($legacyWarrantyTypes as $legacyWT) {
                 try {
-                    // Field mapping with naming standardization
-                    WarrantyType::create([
+                    // Field mapping with naming standardization (use correct schema)
+                    DB::table('warranty_types')->insert([
                         'name' => $legacyWT->warranty_name ?? $legacyWT->name,
-                        'code' => $legacyWT->code ?? null,
-                        'description' => $legacyWT->description ?? null,
-                        'duration_months' => $legacyWT->duration_months ?? 12,
-                        'is_active' => $legacyWT->is_active ?? true,
+                        'coverage_months' => $legacyWT->coverage_months ?? $legacyWT->duration_months ?? 12,
+                        'created_at' => now(),
+                        'updated_at' => now(),
                     ]);
                     
                     $inserted++;

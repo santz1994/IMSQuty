@@ -50,8 +50,8 @@ class PcspecsSeeder extends Seeder
 
             $this->command->info("Importing " . count($legacyPcspecs) . " PC specifications...\n");
 
-            // Build asset code to ID map
-            $assetMap = Asset::pluck('id', 'asset_code')->toArray();
+            // Build asset tag to ID map
+            $assetMap = Asset::pluck('id', 'asset_tag')->toArray();
 
             $inserted = 0;
             $failed = 0;

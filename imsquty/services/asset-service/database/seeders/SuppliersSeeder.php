@@ -45,21 +45,20 @@ class SuppliersSeeder extends Seeder
 
             foreach ($legacySuppliers as $legacySup) {
                 try {
-                    // Field mapping
-                    Supplier::create([
+                    // Field mapping (use correct schema)
+                    DB::table('suppliers')->insert([
                         'name' => $legacySup->supplier_name ?? $legacySup->name,
-                        'code' => $legacySup->supplier_code ?? $legacySup->code,
-                        'contact_person' => $legacySup->contact_person ?? null,
-                        'phone' => $legacySup->phone ?? null,
-                        'email' => $legacySup->email ?? null,
+                        'code' => $legacySup->supplier_code ?? $legacySup->code ?? null,
+                        'contact_email' => $legacySup->email ?? $legacySup->contact_email ?? null,
+                        'contact_phone' => $legacySup->phone ?? $legacySup->contact_phone ?? null,
                         'address' => $legacySup->address ?? null,
                         'city' => $legacySup->city ?? null,
                         'state' => $legacySup->state ?? null,
                         'country' => $legacySup->country ?? null,
                         'postal_code' => $legacySup->postal_code ?? null,
-                        'website' => $legacySup->website ?? null,
-                        'description' => $legacySup->description ?? null,
-                        'is_active' => $legacySup->is_active ?? true,
+                        'notes' => $legacySup->notes ?? $legacySup->description ?? null,
+                        'created_at' => now(),
+                        'updated_at' => now(),
                     ]);
                     
                     $inserted++;

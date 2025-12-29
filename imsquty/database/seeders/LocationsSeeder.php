@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use App\Models\Location;
 
 /**
  * LocationsSeeder
@@ -27,7 +26,7 @@ class LocationsSeeder extends Seeder
     public function run(): void
     {
         // Prevent duplicate execution
-        if (Location::count() > 0) {
+        if (DB::table('locations')->count() > 0) {
             $this->command->warn('Locations table already populated. Skipping migration.');
             return;
         }
@@ -49,13 +48,21 @@ class LocationsSeeder extends Seeder
             foreach ($legacyLocations as $legacyLoc) {
                 try {
                     // Field mapping with naming standardization
-                    Location::create([
+                    // Schema: id, name, code, type, address, city, state, country, postal_code, phone, parent_id, is_active, description, created_at, updated_at, deleted_at
+                    DB::table('locations')->insert([
                         'name' => $legacyLoc->location_name ?? $legacyLoc->name,
                         'code' => $legacyLoc->location_code ?? $legacyLoc->code,
-                        'building' => $legacyLoc->building ?? null,
-                        'floor' => $legacyLoc->floor ?? null,
-                        'room_number' => $legacyLoc->room_number ?? null,
+                        'type' => $legacyLoc->type ?? 'office',
+                        'address' => $legacyLoc->address ?? null,
+                        'city' => $legacyLoc->city ?? null,
+                        'state' => $legacyLoc->state ?? null,
+                        'country' => $legacyLoc->country ?? null,
+                        'postal_code' => $legacyLoc->postal_code ?? null,
+                        'phone' => $legacyLoc->phone ?? null,
                         'is_active' => $legacyLoc->is_active ?? true,
+                        'description' => $legacyLoc->description ?? null,
+                        'created_at' => now(),
+                        'updated_at' => now(),
                     ]);
                     
                     $inserted++;

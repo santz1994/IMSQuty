@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use App\Models\Division;
 
 /**
  * DivisionsSeeder
@@ -27,7 +26,7 @@ class DivisionsSeeder extends Seeder
     public function run(): void
     {
         // Prevent duplicate execution
-        if (Division::count() > 0) {
+        if (DB::table('divisions')->count() > 0) {
             $this->command->warn('Divisions table already populated. Skipping migration.');
             return;
         }
@@ -49,11 +48,12 @@ class DivisionsSeeder extends Seeder
             foreach ($legacyDivisions as $legacyDiv) {
                 try {
                     // Field mapping with naming standardization
-                    Division::create([
+                    // Schema: id, name, code, created_at, updated_at, deleted_at
+                    DB::table('divisions')->insert([
                         'name' => $legacyDiv->division_name ?? $legacyDiv->name,
                         'code' => $legacyDiv->abbreviation ?? $legacyDiv->code,
-                        'description' => $legacyDiv->description ?? null,
-                        'is_active' => $legacyDiv->is_active ?? true,
+                        'created_at' => now(),
+                        'updated_at' => now(),
                     ]);
                     
                     $inserted++;

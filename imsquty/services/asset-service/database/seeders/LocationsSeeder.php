@@ -48,14 +48,22 @@ class LocationsSeeder extends Seeder
 
             foreach ($legacyLocations as $legacyLoc) {
                 try {
-                    // Field mapping with naming standardization
-                    Location::create([
+                    // Field mapping with naming standardization (use correct schema)
+                    DB::table('locations')->insert([
                         'name' => $legacyLoc->location_name ?? $legacyLoc->name,
                         'code' => $legacyLoc->location_code ?? $legacyLoc->code,
-                        'building' => $legacyLoc->building ?? null,
-                        'floor' => $legacyLoc->floor ?? null,
-                        'room_number' => $legacyLoc->room_number ?? null,
+                        'type' => $legacyLoc->type ?? 'office',
+                        'address' => $legacyLoc->address ?? null,
+                        'city' => $legacyLoc->city ?? null,
+                        'state' => $legacyLoc->state ?? null,
+                        'country' => $legacyLoc->country ?? null,
+                        'postal_code' => $legacyLoc->postal_code ?? null,
+                        'phone' => $legacyLoc->phone ?? null,
+                        'parent_id' => $legacyLoc->parent_id ?? null,
                         'is_active' => $legacyLoc->is_active ?? true,
+                        'description' => $legacyLoc->description ?? null,
+                        'created_at' => now(),
+                        'updated_at' => now(),
                     ]);
                     
                     $inserted++;

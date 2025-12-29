@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use App\Models\Manufacturer;
 
 /**
  * ManufacturersSeeder
@@ -27,7 +26,7 @@ class ManufacturersSeeder extends Seeder
     public function run(): void
     {
         // Prevent duplicate execution
-        if (Manufacturer::count() > 0) {
+        if (DB::table('manufacturers')->count() > 0) {
             $this->command->warn('Manufacturers table already populated. Skipping migration.');
             return;
         }
@@ -49,17 +48,14 @@ class ManufacturersSeeder extends Seeder
             foreach ($legacyManufacturers as $legacyMfg) {
                 try {
                     // Field mapping with naming standardization
-                    Manufacturer::create([
+                    // Schema: id, name, country, contact_email, notes, created_at, updated_at, deleted_at
+                    DB::table('manufacturers')->insert([
                         'name' => $legacyMfg->manufacturer_name ?? $legacyMfg->name,
-                        'code' => $legacyMfg->abbreviation ?? $legacyMfg->code,
-                        'contact_person' => $legacyMfg->contact_person ?? null,
-                        'phone' => $legacyMfg->phone ?? null,
-                        'email' => $legacyMfg->email ?? null,
-                        'address' => $legacyMfg->address ?? null,
-                        'city' => $legacyMfg->city ?? null,
                         'country' => $legacyMfg->country ?? null,
-                        'website' => $legacyMfg->website ?? null,
-                        'is_active' => $legacyMfg->is_active ?? true,
+                        'contact_email' => $legacyMfg->email ?? null,
+                        'notes' => $legacyMfg->notes ?? null,
+                        'created_at' => now(),
+                        'updated_at' => now(),
                     ]);
                     
                     $inserted++;

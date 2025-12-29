@@ -48,18 +48,14 @@ class ManufacturersSeeder extends Seeder
 
             foreach ($legacyManufacturers as $legacyMfg) {
                 try {
-                    // Field mapping with naming standardization
-                    Manufacturer::create([
+                    // Field mapping with naming standardization (use correct schema)
+                    DB::table('manufacturers')->insert([
                         'name' => $legacyMfg->manufacturer_name ?? $legacyMfg->name,
-                        'code' => $legacyMfg->abbreviation ?? $legacyMfg->code,
-                        'contact_person' => $legacyMfg->contact_person ?? null,
-                        'phone' => $legacyMfg->phone ?? null,
-                        'email' => $legacyMfg->email ?? null,
-                        'address' => $legacyMfg->address ?? null,
-                        'city' => $legacyMfg->city ?? null,
                         'country' => $legacyMfg->country ?? null,
-                        'website' => $legacyMfg->website ?? null,
-                        'is_active' => $legacyMfg->is_active ?? true,
+                        'contact_email' => $legacyMfg->email ?? $legacyMfg->contact_email ?? null,
+                        'notes' => $legacyMfg->notes ?? null,
+                        'created_at' => now(),
+                        'updated_at' => now(),
                     ]);
                     
                     $inserted++;
