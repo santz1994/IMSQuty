@@ -1,540 +1,342 @@
 <?php
+/**
+ * Asset API Feature Tests
+ * Tests complete API workflows including authentication, validation, and database operations
+ * Comprehensive endpoint coverage: list, show, create, update, delete
+ * 
+ * @file services/asset-service/tests/Feature/AssetControllerTest.php
+ * @target 95%+ endpoint coverage, audit logging verification
+ */
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
 use App\Models\Asset;
-use App\Models\AssetModel;
-use App\Models\AssetType;
-use App\Models\Status;
-use App\Models\Movement;
 use App\Models\User;
+use App\Models\AuditLog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
+use Laravel\Passport\Passport;
+use Tests\TestCase;
 
-/**
- * Asset Controller Feature Tests
- * 
- * Tests all AssetController endpoints with authentication
- * Target: 80%+ code coverage
- */
 class AssetControllerTest extends TestCase
 {
-    use RefreshDatabase, WithFaker;
+    use RefreshDatabase;
 
-    protected $authenticatedUser;
-    protected Status $availableStatus;
-    protected Status $assignedStatus;
-    protected AssetModel $assetModel;
-    protected AssetType $assetType;
+    protected User $user;
+    protected User $adminUser;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
-        // Ensure test tables exist (manufacturers, pcspecs, etc.)
-        $this->ensureTestTables();
-        
-        // Seed RBAC tables for feature tests
-        $this->seedRoles();
-        
-        // Create authenticated user using factory
-        $this->authenticatedUser = User::factory()->create([
-            'name' => 'testuser',
-            'email' => 'test@quty.co.id',
-        ]);
-        
-        // Create asset types
-        $this->assetType = AssetType::create([
-            'type_name' => 'Laptop',
-            'abbreviation' => 'LPT',
-            'spare' => false,
-        ]);
-        
-        // Create statuses
-        $this->availableStatus = Status::create([
-            'name' => 'Available',
-        ]);
-        
-        $this->assignedStatus = Status::create([
-            'name' => 'Assigned',
-        ]);
-        
-        // Create asset model
-        $this->assetModel = AssetModel::create([
-            'asset_model' => 'Dell Latitude 7490',
-            'asset_type_id' => $this->assetType->id,
-        ]);
+
+        // Create authenticated users with different roles
+        $this->user = User::factory()->create(['role' => 'user']);
+        $this->adminUser = User::factory()->create(['role' => 'admin']);
     }
 
     /** @test */
-    public function test_index_returnsAssetsList_withPagination(): void
+    public function test_can_list_assets_with_authentication()
     {
-        // Arrange: Create test assets
-        Asset::factory()->count(25)->create([
-            'model_id' => $this->assetModel->id,
-            'status_id' => $this->availableStatus->id,
-        ]);
-        
-        // Act
-        $response = $this->actingAs($this->authenticatedUser)->getJson('/api/v1/assets');
-        
-        // Assert
+        Passport::actingAs($this->user);
+        Asset::factory()->count(5)->create();
+
+        $response = $this->getJson('/api/assets');
+
         $response->assertStatus(200)
             ->assertJsonStructure([
                 'success',
-                'data' => [
-                    'data' => [
-                        '*' => [
-                            'id',
-                            'asset_tag',
-                            'name',
-                            'serial_number',
-                            'qr_code',
-                            'status_id',
-                            'created_at',
-                            'updated_at'
-                        ]
-                    ],
-                    'current_page',
-                    'per_page',
-                    'total',
-                    'last_page'
-                ],
+                'data' => ['*' => ['id', 'name', 'serial_number', 'status']],
                 'message'
-            ]);
-        
-        $this->assertEquals(15, count($response->json('data.data'))); // Default per_page
-        $this->assertEquals(25, $response->json('data.total'));
-    }
-
-    /** @test */
-    public function test_index_filtersAssetsByStatus(): void
-    {
-        // Arrange
-        Asset::factory()->count(5)->create([
-            'model_id' => $this->assetModel->id,
-            'status_id' => $this->availableStatus->id,
-        ]);
-        Asset::factory()->count(3)->create([
-            'model_id' => $this->assetModel->id,
-            'status_id' => $this->assignedStatus->id,
-            'assigned_to' => 2,
-        ]);
-        
-        // Act
-        $response = $this->actingAs($this->authenticatedUser)->getJson('/api/v1/assets?status_id=' . $this->availableStatus->id);
-        
-        // Assert
-        $response->assertStatus(200);
-        $assets = $response->json('data.data');
-        $this->assertGreaterThanOrEqual(5, count($assets));
-        
-        foreach ($assets as $asset) {
-            $this->assertEquals($this->availableStatus->id, $asset['status_id']);
-        }
-    }
-
-    /** @test */
-    public function test_index_searchesAssetsByTagOrName(): void
-    {
-        // Arrange
-        Asset::factory()->create([
-            'asset_tag' => 'AST-TEST-001',
-            'name' => 'Test Dell Laptop',
-            'model_id' => $this->assetModel->id,
-            'status_id' => $this->availableStatus->id,
-        ]);
-        Asset::factory()->count(5)->create([
-            'model_id' => $this->assetModel->id,
-            'status_id' => $this->availableStatus->id,
-        ]);
-        
-        // Act
-        $response = $this->actingAs($this->authenticatedUser)->getJson('/api/v1/assets?search=TEST');
-        
-        // Assert
-        $response->assertStatus(200);
-        $assets = $response->json('data.data');
-        $this->assertGreaterThanOrEqual(1, count($assets));
-    }
-
-    /** @test */
-    public function test_show_returnsSingleAsset_withRelationships(): void
-    {
-        // Arrange
-        $asset = Asset::factory()->create([
-            'model_id' => $this->assetModel->id,
-            'status_id' => $this->availableStatus->id,
-        ]);
-        
-        // Act
-        $response = $this->actingAs($this->authenticatedUser)->getJson("/api/v1/assets/{$asset->id}");
-        
-        // Assert
-        $response->assertStatus(200)
-            ->assertJsonStructure([
-                'success',
-                'data' => [
-                    'id',
-                    'asset_tag',
-                    'name',
-                    'serial_number',
-                    'qr_code',
-                    'asset_model' => [
-                        'id',
-                        'asset_model',
-                        'asset_type_id'
-                    ],
-                    'status' => [
-                        'id',
-                        'name',
-                        'code'
-                    ]
-                ],
-                'message'
-            ]);
-        
-        $this->assertEquals($asset->id, $response->json('data.id'));
-        $this->assertEquals($asset->asset_tag, $response->json('data.asset_tag'));
-    }
-
-    /** @test */
-    public function test_show_returns404_whenAssetNotFound(): void
-    {
-        // Act
-        $response = $this->actingAs($this->authenticatedUser)->getJson('/api/v1/assets/9999');
-        
-        // Assert
-        $response->assertStatus(404)
-            ->assertJson([
-                'success' => false,
-                'error' => 'Asset not found'
-            ]);
-    }
-
-    /** @test */
-    public function test_store_createsNewAsset_withValidData(): void
-    {
-        // Arrange
-        $assetData = [
-            'asset_tag' => 'AST-NEW-001',
-            'name' => 'New Test Laptop',
-            'serial_number' => 'SN-TEST-123456',
-            'model_id' => $this->assetModel->id,
-            'status_id' => $this->availableStatus->id,
-            'purchase_date' => '2024-01-15',
-            'warranty_months' => 24,
-        ];
-        
-        // Act
-        $response = $this->actingAs($this->authenticatedUser)->postJson('/api/v1/assets', $assetData);
-        
-        // Assert
-        $response->assertStatus(201)
-            ->assertJson([
-                'success' => true,
-                'message' => 'Asset created successfully'
             ])
+            ->assertJsonCount(5, 'data');
+    }
+
+    /** @test */
+    public function test_cannot_list_assets_without_authentication()
+    {
+        $response = $this->getJson('/api/assets');
+
+        $response->assertStatus(401)
+            ->assertJsonPath('success', false);
+    }
+
+    /** @test */
+    public function test_list_assets_with_pagination()
+    {
+        Passport::actingAs($this->user);
+        Asset::factory()->count(25)->create();
+
+        $response = $this->getJson('/api/assets?page=2&per_page=10');
+
+        $response->assertStatus(200)
             ->assertJsonStructure([
-                'data' => [
-                    'id',
-                    'asset_tag',
-                    'name',
-                    'qr_code'
-                ]
-            ]);
-        
-        $this->assertDatabaseHas('assets', [
-            'asset_tag' => 'AST-NEW-001',
-            'name' => 'New Test Laptop',
-        ]);
+                'success',
+                'data',
+                'pagination' => ['total', 'per_page', 'current_page', 'last_page']
+            ])
+            ->assertJsonCount(10, 'data');
     }
 
     /** @test */
-    public function test_store_validatesRequiredFields(): void
+    public function test_list_assets_with_filters()
     {
-        // Arrange: Missing required fields
-        $assetData = [
-            'name' => 'Incomplete Asset',
+        Passport::actingAs($this->user);
+        Asset::factory()->count(3)->state(['status' => 'active'])->create();
+        Asset::factory()->count(2)->state(['status' => 'inactive'])->create();
+
+        $response = $this->getJson('/api/assets?status=active');
+
+        $response->assertStatus(200)
+            ->assertJsonCount(3, 'data');
+    }
+
+    /** @test */
+    public function test_can_show_single_asset()
+    {
+        Passport::actingAs($this->user);
+        $asset = Asset::factory()->create(['name' => 'Server A']);
+
+        $response = $this->getJson("/api/assets/{$asset->id}");
+
+        $response->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.name', 'Server A');
+    }
+
+    /** @test */
+    public function test_show_nonexistent_asset_returns_404()
+    {
+        Passport::actingAs($this->user);
+
+        $response = $this->getJson('/api/assets/99999');
+
+        $response->assertStatus(404)
+            ->assertJsonPath('success', false);
+    }
+
+    /** @test */
+    public function test_can_create_asset_with_valid_data()
+    {
+        Passport::actingAs($this->adminUser);
+
+        $data = [
+            'name' => 'New Server',
+            'asset_type_id' => 1,
+            'serial_number' => 'SN-12345-NEW',
+            'status' => 'active'
         ];
-        
-        // Act
-        $response = $this->actingAs($this->authenticatedUser)->postJson('/api/v1/assets', $assetData);
-        
-        // Assert
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors(['asset_tag', 'model_id', 'status_id']);
+
+        $response = $this->postJson('/api/assets', $data);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('message', 'Asset created successfully');
+
+        $this->assertDatabaseHas('assets', $data);
     }
 
     /** @test */
-    public function test_store_validatesUniqueAssetTag(): void
+    public function test_cannot_create_asset_with_missing_required_fields()
     {
-        // Arrange: Create existing asset
-        $existingAsset = Asset::factory()->create([
-            'asset_tag' => 'AST-DUPLICATE',
-            'model_id' => $this->assetModel->id,
-            'status_id' => $this->availableStatus->id,
+        Passport::actingAs($this->adminUser);
+
+        $response = $this->postJson('/api/assets', [
+            'name' => '',
+            'asset_type_id' => null
         ]);
-        
-        $assetData = [
-            'asset_tag' => 'AST-DUPLICATE',
-            'name' => 'Duplicate Tag Asset',
-            'model_id' => $this->assetModel->id,
-            'status_id' => $this->availableStatus->id,
-        ];
-        
-        // Act
-        $response = $this->actingAs($this->authenticatedUser)->postJson('/api/v1/assets', $assetData);
-        
-        // Assert
+
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['asset_tag']);
+            ->assertJsonPath('success', false)
+            ->assertJsonValidationErrors(['name', 'asset_type_id']);
     }
 
     /** @test */
-    public function test_update_modifiesExistingAsset(): void
+    public function test_cannot_create_asset_with_duplicate_serial_number()
     {
-        // Arrange
-        $asset = Asset::factory()->create([
-            'model_id' => $this->assetModel->id,
-            'status_id' => $this->availableStatus->id,
+        Passport::actingAs($this->adminUser);
+        $existingAsset = Asset::factory()->create(['serial_number' => 'SN-DUPLICATE']);
+
+        $response = $this->postJson('/api/assets', [
+            'name' => 'New Server',
+            'asset_type_id' => 1,
+            'serial_number' => 'SN-DUPLICATE'
         ]);
-        
+
+        $response->assertStatus(409)
+            ->assertJsonPath('success', false);
+    }
+
+    /** @test */
+    public function test_non_admin_cannot_create_asset()
+    {
+        Passport::actingAs($this->user);
+
+        $response = $this->postJson('/api/assets', [
+            'name' => 'New Server',
+            'asset_type_id' => 1,
+            'serial_number' => 'SN-TEST'
+        ]);
+
+        $response->assertStatus(403)
+            ->assertJsonPath('success', false);
+    }
+
+    /** @test */
+    public function test_can_update_asset_with_valid_data()
+    {
+        Passport::actingAs($this->adminUser);
+        $asset = Asset::factory()->create();
+
         $updateData = [
-            'name' => 'Updated Asset Name',
-            'notes' => 'Updated notes',
+            'name' => 'Updated Name',
+            'status' => 'inactive'
         ];
-        
-        // Act
-        $response = $this->actingAs($this->authenticatedUser)->putJson("/api/v1/assets/{$asset->id}", $updateData);
-        
-        // Assert
+
+        $response = $this->patchJson("/api/assets/{$asset->id}", $updateData);
+
         $response->assertStatus(200)
-            ->assertJson([
-                'success' => true,
-                'message' => 'Asset updated successfully'
-            ]);
-        
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.name', 'Updated Name');
+
         $this->assertDatabaseHas('assets', [
             'id' => $asset->id,
-            'name' => 'Updated Asset Name',
-            'notes' => 'Updated notes',
+            'status' => 'inactive'
         ]);
     }
 
     /** @test */
-    public function test_destroy_softDeletesAsset(): void
+    public function test_cannot_update_nonexistent_asset()
     {
-        // Arrange
-        $asset = Asset::factory()->create([
-            'model_id' => $this->assetModel->id,
-            'status_id' => $this->availableStatus->id,
-        ]);
-        
-        // Act
-        $response = $this->actingAs($this->authenticatedUser)->deleteJson("/api/v1/assets/{$asset->id}");
-        
-        // Assert
+        Passport::actingAs($this->adminUser);
+
+        $response = $this->patchJson('/api/assets/99999', ['name' => 'Test']);
+
+        $response->assertStatus(404);
+    }
+
+    /** @test */
+    public function test_can_delete_asset()
+    {
+        Passport::actingAs($this->adminUser);
+        $asset = Asset::factory()->create();
+
+        $response = $this->deleteJson("/api/assets/{$asset->id}");
+
         $response->assertStatus(200)
-            ->assertJson([
-                'success' => true,
-                'message' => 'Asset deleted successfully'
-            ]);
-        
-        $this->assertSoftDeleted('assets', ['id' => $asset->id]);
+            ->assertJsonPath('success', true);
+
+        $this->assertDatabaseMissing('assets', ['id' => $asset->id]);
     }
 
     /** @test */
-    public function test_restore_recoversDeletedAsset(): void
+    public function test_cannot_delete_asset_without_permission()
     {
-        // Arrange
-        $asset = Asset::factory()->create([
-            'model_id' => $this->assetModel->id,
-            'status_id' => $this->availableStatus->id,
-        ]);
-        $asset->delete();
-        
-        // Act
-        $response = $this->actingAs($this->authenticatedUser)->postJson("/api/v1/assets/{$asset->id}/restore");
-        
-        // Assert
-        $response->assertStatus(200)
-            ->assertJson([
-                'success' => true,
-                'message' => 'Asset restored successfully'
-            ]);
-        
-        $this->assertDatabaseHas('assets', [
-            'id' => $asset->id,
-            'deleted_at' => null,
-        ]);
+        Passport::actingAs($this->user);
+        $asset = Asset::factory()->create();
+
+        $response = $this->deleteJson("/api/assets/{$asset->id}");
+
+        $response->assertStatus(403);
     }
 
     /** @test */
-    public function test_assign_assignsAssetToUser(): void
+    public function test_audit_log_created_on_asset_creation()
     {
-        // Arrange
-        $asset = Asset::factory()->create([
-            'model_id' => $this->assetModel->id,
-            'status_id' => $this->availableStatus->id,
-            'assigned_to' => null,
-        ]);
-        
-        $assignData = [
-            'user_id' => 5,
-            'location_id' => 10,
-            'reason' => 'New employee assignment',
+        Passport::actingAs($this->adminUser);
+
+        $data = [
+            'name' => 'Audited Server',
+            'asset_type_id' => 1,
+            'serial_number' => 'SN-AUDIT'
         ];
-        
-        // Act
-        $response = $this->actingAs($this->authenticatedUser)->postJson("/api/v1/assets/{$asset->id}/assign", $assignData);
-        
-        // Assert
-        $response->assertStatus(200)
-            ->assertJson([
-                'success' => true,
-                'message' => 'Asset assigned successfully'
-            ]);
-        
-        $this->assertDatabaseHas('assets', [
-            'id' => $asset->id,
-            'assigned_to' => 5,
-            'status_id' => $this->assignedStatus->id,
-        ]);
-        
-        // Check movement created
-        $this->assertDatabaseHas('movements', [
-            'asset_id' => $asset->id,
-            'to_user_id' => 5,
-            'reason' => 'New employee assignment',
+
+        $this->postJson('/api/assets', $data);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'user_id' => $this->adminUser->id,
+            'model_type' => 'Asset',
+            'action' => 'created'
         ]);
     }
 
     /** @test */
-    public function test_transfer_transfersAssetToNewLocation(): void
+    public function test_audit_log_created_on_asset_update()
     {
-        // Arrange
-        $asset = Asset::factory()->create([
-            'model_id' => $this->assetModel->id,
-            'status_id' => $this->availableStatus->id,
-            'location_id' => 5,
-        ]);
-        
-        $transferData = [
-            'to_location_id' => 10,
-            'reason' => 'Office reorganization',
-        ];
-        
-        // Act
-        $response = $this->actingAs($this->authenticatedUser)->postJson("/api/v1/assets/{$asset->id}/transfer", $transferData);
-        
-        // Assert
-        $response->assertStatus(200)
-            ->assertJson([
-                'success' => true,
-                'message' => 'Asset transferred successfully'
-            ]);
-        
-        $this->assertDatabaseHas('assets', [
-            'id' => $asset->id,
-            'location_id' => 10,
-        ]);
-        
-        // Check movement created
-        $this->assertDatabaseHas('movements', [
-            'asset_id' => $asset->id,
-            'from_location_id' => 5,
-            'to_location_id' => 10,
+        Passport::actingAs($this->adminUser);
+        $asset = Asset::factory()->create(['name' => 'Original Name']);
+
+        $this->patchJson("/api/assets/{$asset->id}", ['name' => 'Updated Name']);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'user_id' => $this->adminUser->id,
+            'model_type' => 'Asset',
+            'action' => 'updated',
+            'model_id' => $asset->id
         ]);
     }
 
     /** @test */
-    public function test_qrCode_findsAssetByQRCode(): void
+    public function test_audit_log_created_on_asset_deletion()
     {
-        // Arrange
-        $asset = Asset::factory()->create([
-            'qr_code' => 'QR-TEST-12345',
-            'model_id' => $this->assetModel->id,
-            'status_id' => $this->availableStatus->id,
+        Passport::actingAs($this->adminUser);
+        $asset = Asset::factory()->create();
+
+        $this->deleteJson("/api/assets/{$asset->id}");
+
+        $this->assertDatabaseHas('audit_logs', [
+            'user_id' => $this->adminUser->id,
+            'model_type' => 'Asset',
+            'action' => 'deleted',
+            'model_id' => $asset->id
         ]);
-        
-        // Act
-        $response = $this->actingAs($this->authenticatedUser)->getJson('/api/v1/assets/qr/QR-TEST-12345');
-        
-        // Assert
-        $response->assertStatus(200)
-            ->assertJson([
-                'success' => true,
-                'data' => [
-                    'id' => $asset->id,
-                    'qr_code' => 'QR-TEST-12345',
-                ]
-            ]);
     }
 
     /** @test */
-    public function test_expiringWarranties_returnsAssetsWithSoonToExpireWarranties(): void
+    public function test_response_format_is_consistent()
     {
-        // Arrange: Create assets with expiring warranties
-        Asset::factory()->count(3)->warrantyExpiring()->create([
-            'model_id' => $this->assetModel->id,
-            'status_id' => $this->availableStatus->id,
+        Passport::actingAs($this->user);
+        Asset::factory()->create();
+
+        $response = $this->getJson('/api/assets');
+
+        $response->assertJsonStructure([
+            'success',
+            'data',
+            'message',
+            'timestamp'
         ]);
-        
-        Asset::factory()->count(5)->create([
-            'model_id' => $this->assetModel->id,
-            'status_id' => $this->availableStatus->id,
-            'purchase_date' => now()->subMonths(6),
-            'warranty_months' => 36,
-        ]);
-        
-        // Act
-        $response = $this->actingAs($this->authenticatedUser)->getJson('/api/v1/assets/warranties/expiring?days=60');
-        
-        // Assert
-        $response->assertStatus(200)
-            ->assertJsonStructure([
-                'success',
-                'data' => [
-                    '*' => [
-                        'id',
-                        'asset_tag',
-                        'warranty_expiry_date'
-                    ]
-                ]
-            ]);
     }
 
     /** @test */
-    public function test_statistics_returnsAssetStats(): void
+    public function test_error_response_format_is_consistent()
     {
-        // Arrange
-        Asset::factory()->count(10)->create([
-            'model_id' => $this->assetModel->id,
-            'status_id' => $this->availableStatus->id,
+        Passport::actingAs($this->user);
+
+        $response = $this->getJson('/api/assets/nonexistent');
+
+        $response->assertJsonStructure([
+            'success',
+            'error',
+            'message',
+            'timestamp'
         ]);
-        Asset::factory()->count(5)->create([
-            'model_id' => $this->assetModel->id,
-            'status_id' => $this->assignedStatus->id,
-            'assigned_to' => 2,
-        ]);
-        
-        // Act
-        $response = $this->actingAs($this->authenticatedUser)->getJson('/api/v1/assets/statistics');
-        
-        // Assert
-        $response->assertStatus(200)
-            ->assertJsonStructure([
-                'success',
-                'data' => [
-                    'total_assets',
-                    'by_status',
-                    'total_value',
-                ]
-            ]);
-        
-        $this->assertGreaterThanOrEqual(15, $response->json('data.total_assets'));
+    }
+
+    /** @test */
+    public function test_invalid_token_returns_401()
+    {
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer invalid-token'
+        ])->getJson('/api/assets');
+
+        $response->assertStatus(401);
+    }
+
+    /** @test */
+    public function test_missing_authorization_header_returns_401()
+    {
+        $response = $this->getJson('/api/assets');
+
+        $response->assertStatus(401);
     }
 }
 

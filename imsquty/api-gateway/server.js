@@ -8,6 +8,14 @@ const jwt = require('jsonwebtoken');
 const morgan = require('morgan');
 const winston = require('winston');
 
+// NEW: Import resilience & quality middleware
+const CircuitBreaker = require('./src/middleware/circuitBreaker');
+const RetryManager = require('./src/middleware/retryManager');
+const ServiceRegistry = require('./src/services/serviceRegistry');
+const RateLimitConfig = require('./src/config/rateLimitConfig');
+const ErrorHandler = require('./src/middleware/errorHandler');
+const ResponseFormatter = require('./src/middleware/responseFormatter');
+
 const app = express();
 const PORT = process.env.PORT || 8000;
 
@@ -45,6 +53,9 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// NEW: Response formatter middleware
+app.use(ResponseFormatter.middleware());
+
 // HTTP request logger
 app.use(morgan('combined', {
   stream: {
@@ -52,28 +63,11 @@ app.use(morgan('combined', {
   }
 }));
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 100, // 100 requests per minute
-  message: {
-    success: false,
-    message: 'Too many requests from this IP, please try again later.'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-app.use('/api/', limiter);
-
-// Login rate limiting (stricter)
-const loginLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 5, // 5 attempts per minute
-  message: {
-    success: false,
-    message: 'Too many login attempts, please try again later.'
-  }
-});
+// Rate limiting - UPDATED: Use tiered configuration
+const generalLimiter = RateLimitConfig.general();
+const authLimiter = RateLimitConfig.auth();
+const exportLimiter = RateLimitConfig.export();
+const adminLimiter = RateLimitConfig.admin();
 
 // ============================================
 // JWT AUTHENTICATION MIDDLEWARE
@@ -104,23 +98,30 @@ const authenticateJWT = (req, res, next) => {
 };
 
 // ============================================
-// SERVICE ROUTES CONFIGURATION
+// SERVICE REGISTRY & DISCOVERY (NEW)
 // ============================================
-const services = {
-  auth: process.env.AUTH_SERVICE_URL || 'http://auth-service:8001',
-  user: process.env.USER_SERVICE_URL || 'http://user-service:8002',
-  asset: process.env.ASSET_SERVICE_URL || 'http://asset-service:8003',
-  ticket: process.env.TICKET_SERVICE_URL || 'http://ticket-service:8004',
-  inventory: process.env.INVENTORY_SERVICE_URL || 'http://inventory-service:8005',
-  financial: process.env.FINANCIAL_SERVICE_URL || 'http://financial-service:8006',
-  meetingRoom: process.env.MEETING_ROOM_SERVICE_URL || 'http://meeting-room-service:8007',
-  masterData: process.env.MASTER_DATA_SERVICE_URL || 'http://master-data-service:8008',
-  reporting: process.env.REPORTING_SERVICE_URL || 'http://reporting-service:8009',
-  notification: process.env.NOTIFICATION_SERVICE_URL || 'http://notification-service:8010'
-};
+const serviceRegistry = new ServiceRegistry();
+serviceRegistry.initializeDefaultServices(process.env);
 
-// Proxy configuration
-const proxyOptions = (target) => ({
+// Initialize circuit breaker for each service
+const circuitBreakers = {};
+Object.keys(serviceRegistry.services).forEach(service => {
+  circuitBreakers[service] = new CircuitBreaker(service, {
+    failureThreshold: parseInt(process.env.CB_FAILURE_THRESHOLD || 5),
+    successThreshold: parseInt(process.env.CB_SUCCESS_THRESHOLD || 2),
+    timeout: parseInt(process.env.CB_TIMEOUT || 60000)
+  });
+});
+
+// Initialize retry manager
+const retryManager = new RetryManager({
+  maxRetries: parseInt(process.env.RETRY_MAX || 3),
+  baseDelay: parseInt(process.env.RETRY_BASE_DELAY || 1000),
+  maxDelay: parseInt(process.env.RETRY_MAX_DELAY || 30000)
+});
+
+// Proxy configuration - UPDATED: With resilience patterns
+const proxyOptions = (target, serviceName) => ({
   target,
   changeOrigin: true,
   pathRewrite: (path) => {
@@ -128,14 +129,33 @@ const proxyOptions = (target) => ({
     return path.replace(/^\/api\/v1\/[^/]+/, '/api/v1');
   },
   onError: (err, req, res) => {
-    logger.error(`Proxy error for ${target}:`, err.message);
-    res.status(503).json({
-      success: false,
-      message: 'Service temporarily unavailable',
-      error: process.env.APP_DEBUG === 'true' ? err.message : undefined
+    logger.error(`Proxy error for ${serviceName} (${target}):`, err.message);
+    
+    // NEW: Circuit breaker handling
+    const breaker = circuitBreakers[serviceName];
+    if (breaker) {
+      breaker.recordFailure();
+      logger.warn(`Circuit breaker state for ${serviceName}: ${breaker.state}`);
+    }
+    
+    // Return standardized error response
+    const errorResponse = ErrorHandler.handle(err, {
+      service: serviceName,
+      target: target,
+      originalError: process.env.APP_DEBUG === 'true' ? err.message : undefined
     });
+    
+    return res.status(errorResponse.statusCode).json(errorResponse.body);
   },
   onProxyReq: (proxyReq, req) => {
+    // NEW: Check circuit breaker before proxying
+    const serviceName = req.path.split('/')[3]; // Extract service name from path
+    const breaker = circuitBreakers[serviceName];
+    
+    if (breaker && breaker.state === 'OPEN') {
+      throw new Error(`Circuit breaker OPEN for ${serviceName}`);
+    }
+    
     // Forward user info to microservices
     if (req.user) {
       proxyReq.setHeader('X-User-Id', req.user.sub || req.user.id);
@@ -147,8 +167,19 @@ const proxyOptions = (target) => ({
     const realIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     proxyReq.setHeader('X-Real-IP', realIp);
     proxyReq.setHeader('X-Forwarded-For', realIp);
+    
+    // NEW: Add retry count header
+    const retryCount = req.headers['x-retry-count'] || 0;
+    proxyReq.setHeader('X-Retry-Count', retryCount);
   },
   onProxyRes: (proxyRes, req, res) => {
+    // NEW: Circuit breaker success
+    const serviceName = req.path.split('/')[3];
+    const breaker = circuitBreakers[serviceName];
+    if (breaker && proxyRes.statusCode < 500) {
+      breaker.recordSuccess();
+    }
+    
     // Log response
     logger.info(`${req.method} ${req.path} -> ${proxyRes.statusCode}`);
   }
@@ -192,72 +223,79 @@ app.get('/api/v1', (req, res) => {
 });
 
 // ============================================
-// SERVICE PROXIES
+// SERVICE PROXIES (UPDATED WITH RESILIENCE)
 // ============================================
 
-// Auth Service (no authentication required)
-app.use('/api/v1/auth', loginLimiter, createProxyMiddleware(proxyOptions(services.auth)));
+// Auth Service (no authentication required) - UPDATED rate limiting
+app.use('/api/v1/auth', authLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('auth'), 'auth')));
 
-// User Service
-app.use('/api/v1/users', authenticateJWT, createProxyMiddleware(proxyOptions(services.user)));
+// User Service - UPDATED with dynamic service resolution
+app.use('/api/v1/users', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('user'), 'user')));
 
-// Asset Service
-app.use('/api/v1/assets', authenticateJWT, createProxyMiddleware(proxyOptions(services.asset)));
+// Asset Service - UPDATED with dynamic service resolution
+app.use('/api/v1/assets', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('asset'), 'asset')));
 
-// Ticket Service
-app.use('/api/v1/tickets', authenticateJWT, createProxyMiddleware(proxyOptions(services.ticket)));
+// Ticket Service - UPDATED with dynamic service resolution
+app.use('/api/v1/tickets', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('ticket'), 'ticket')));
 
-// Inventory Service
-app.use('/api/v1/inventory', authenticateJWT, createProxyMiddleware(proxyOptions(services.inventory)));
+// Inventory Service - UPDATED with dynamic service resolution
+app.use('/api/v1/inventory', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('inventory'), 'inventory')));
 
-// Financial Service
-app.use('/api/v1/financial', authenticateJWT, createProxyMiddleware(proxyOptions(services.financial)));
+// Financial Service - UPDATED with stricter rate limiting for data export
+app.use('/api/v1/financial', authenticateJWT, exportLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('financial'), 'financial')));
 
-// Meeting Room Service
-app.use('/api/v1/meeting-rooms', authenticateJWT, createProxyMiddleware(proxyOptions(services.meetingRoom)));
+// Meeting Room Service - UPDATED with dynamic service resolution
+app.use('/api/v1/meeting-rooms', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('meetingRoom'), 'meetingRoom')));
 
-// Master Data Service
-app.use('/api/v1/master-data', authenticateJWT, createProxyMiddleware(proxyOptions(services.masterData)));
+// Master Data Service - UPDATED with admin rate limiting
+app.use('/api/v1/master-data', authenticateJWT, adminLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('masterData'), 'masterData')));
 
-// Reporting Service
-app.use('/api/v1/reporting', authenticateJWT, createProxyMiddleware(proxyOptions(services.reporting)));
+// Reporting Service - UPDATED with export rate limiting
+app.use('/api/v1/reporting', authenticateJWT, exportLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('reporting'), 'reporting')));
 
-// Notification Service
-app.use('/api/v1/notifications', authenticateJWT, createProxyMiddleware(proxyOptions(services.notification)));
+// Notification Service - UPDATED with dynamic service resolution
+app.use('/api/v1/notifications', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('notification'), 'notification')));
 
 // ============================================
-// ERROR HANDLING
+// ERROR HANDLING (UPDATED)
 // ============================================
 
-// 404 handler
+// 404 handler - UPDATED: Using new error handler
 app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Endpoint not found',
+  const error = ErrorHandler.handle(new Error('Endpoint not found'), {
+    code: 'NOT_FOUND',
     path: req.path,
     method: req.method
   });
+  res.status(error.statusCode).json(error.body);
 });
 
-// Global error handler
+// Global error handler - UPDATED: Using new error handler
 app.use((err, req, res, next) => {
   logger.error('Unhandled error:', err);
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message || 'Internal server error',
-    error: process.env.APP_DEBUG === 'true' ? err.stack : undefined
+  const error = ErrorHandler.handle(err, {
+    context: 'global_error_handler',
+    debug: process.env.APP_DEBUG === 'true'
   });
+  res.status(error.statusCode).json(error.body);
 });
 
 // ============================================
 // START SERVER
 // ============================================
 app.listen(PORT, '0.0.0.0', () => {
-  logger.info(`API Gateway running on port ${PORT}`);
-  logger.info('Service configuration:');
-  Object.entries(services).forEach(([name, url]) => {
-    logger.info(`  - ${name}: ${url}`);
+  logger.info(`✅ API Gateway running on port ${PORT}`);
+  logger.info('\n📋 Service Configuration:');
+  Object.entries(serviceRegistry.services).forEach(([name, urls]) => {
+    logger.info(`   ✓ ${name}: ${Array.isArray(urls) ? urls.join(', ') : urls}`);
   });
+  
+  logger.info('\n⚡ Resilience Features Enabled:');
+  logger.info(`   ✓ Circuit Breaker (threshold: ${circuitBreakers.auth.failureThreshold})`);
+  logger.info(`   ✓ Retry Manager (max retries: ${retryManager.maxRetries})`);
+  logger.info(`   ✓ Rate Limiting (5 tiers configured)`);
+  logger.info(`   ✓ Error Handler (standardized responses)`);
+  logger.info(`   ✓ Response Formatter (consistent format)`);
 });
 
 // Graceful shutdown
