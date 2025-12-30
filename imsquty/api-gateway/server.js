@@ -64,10 +64,10 @@ app.use(morgan('combined', {
 }));
 
 // Rate limiting - UPDATED: Use tiered configuration
-const generalLimiter = RateLimitConfig.general();
-const authLimiter = RateLimitConfig.auth();
-const exportLimiter = RateLimitConfig.export();
-const adminLimiter = RateLimitConfig.admin();
+const generalLimiter = RateLimitConfig.generalLimiter();
+const authLimiter = RateLimitConfig.authLimiter();
+const exportLimiter = RateLimitConfig.exportLimiter();
+const adminLimiter = RateLimitConfig.strictLimiter(); // Use strict limiter for admin
 
 // ============================================
 // JWT AUTHENTICATION MIDDLEWARE

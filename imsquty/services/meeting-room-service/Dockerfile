@@ -57,17 +57,13 @@ RUN chown -R www-data:www-data /var/www/meeting-room-service \
     && chmod -R 755 /var/www/meeting-room-service/bootstrap/cache
 
 # Configure PHP
-COPY docker/php.ini /usr/local/etc/php/conf.d/custom.ini
-
-# Create PHP configuration if not exists
-RUN mkdir -p /var/www/meeting-room-service/docker && \
-    echo "memory_limit = 256M" > /var/www/meeting-room-service/docker/php.ini && \
-    echo "upload_max_filesize = 20M" >> /var/www/meeting-room-service/docker/php.ini && \
-    echo "post_max_size = 20M" >> /var/www/meeting-room-service/docker/php.ini && \
-    echo "max_execution_time = 300" >> /var/www/meeting-room-service/docker/php.ini && \
-    echo "opcache.enable = 1" >> /var/www/meeting-room-service/docker/php.ini && \
-    echo "opcache.memory_consumption = 128" >> /var/www/meeting-room-service/docker/php.ini && \
-    echo "opcache.interned_strings_buffer = 8" >> /var/www/meeting-room-service/docker/php.ini && \
+RUN echo "memory_limit = 256M" > /usr/local/etc/php/conf.d/custom.ini && \
+    echo "upload_max_filesize = 20M" >> /usr/local/etc/php/conf.d/custom.ini && \
+    echo "post_max_size = 20M" >> /usr/local/etc/php/conf.d/custom.ini && \
+    echo "max_execution_time = 300" >> /usr/local/etc/php/conf.d/custom.ini && \
+    echo "opcache.enable = 1" >> /usr/local/etc/php/conf.d/custom.ini && \
+    echo "opcache.memory_consumption = 128" >> /usr/local/etc/php/conf.d/custom.ini && \
+    echo "opcache.interned_strings_buffer = 8" >> /usr/local/etc/php/conf.d/custom.ini && \
     echo "opcache.max_accelerated_files = 10000" >> /var/www/meeting-room-service/docker/php.ini && \
     echo "opcache.revalidate_freq = 2" >> /var/www/meeting-room-service/docker/php.ini && \
     cp /var/www/meeting-room-service/docker/php.ini /usr/local/etc/php/conf.d/custom.ini

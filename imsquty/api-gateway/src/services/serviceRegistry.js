@@ -17,15 +17,18 @@ class ServiceRegistry {
    * Register service endpoints
    */
   register(serviceKey, urls = []) {
+    // Ensure urls is always an array
+    const urlArray = Array.isArray(urls) ? urls : [urls];
+    
     this.services.set(serviceKey, {
-      urls: Array.isArray(urls) ? urls : [urls],
+      urls: urlArray,
       currentIndex: 0,
       healthy: new Map(),
       lastUpdated: Date.now()
     });
 
     // Mark all URLs as healthy initially
-    urls.forEach(url => {
+    urlArray.forEach(url => {
       this.services.get(serviceKey).healthy.set(url, true);
     });
 
@@ -134,6 +137,13 @@ class ServiceRegistry {
       };
     });
     return status;
+  }
+
+  /**
+   * Get service URL by key (alias for getNext)
+   */
+  getServiceUrl(serviceKey) {
+    return this.getNext(serviceKey);
   }
 }
 
