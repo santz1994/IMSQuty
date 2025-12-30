@@ -139,13 +139,10 @@ const proxyOptions = (target, serviceName) => ({
     }
 
     // Return standardized error response
-    const errorResponse = ErrorHandler.handle(err, {
-      service: serviceName,
-      target: target,
-      originalError: process.env.APP_DEBUG === 'true' ? err.message : undefined
-    });
+    const statusCode = ErrorHandler.getStatusCode(err);
+    const errorBody = ErrorHandler.format(err, `proxy-${serviceName}`);
 
-    return res.status(errorResponse.statusCode).json(errorResponse.body);
+    return res.status(statusCode).json(errorBody);
   },
   onProxyReq: (proxyReq, req) => {
     // NEW: Check circuit breaker before proxying
@@ -236,25 +233,25 @@ app.use('/api/v1/users', authenticateJWT, generalLimiter, createProxyMiddleware(
 app.use('/api/v1/assets', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('asset-service'), 'asset')));
 
 // Ticket Service - UPDATED with dynamic service resolution
-app.use('/api/v1/tickets', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('ticket'), 'ticket')));
+app.use('/api/v1/tickets', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('ticket-service'), 'ticket')));
 
 // Inventory Service - UPDATED with dynamic service resolution
-app.use('/api/v1/inventory', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('inventory'), 'inventory')));
+app.use('/api/v1/inventory', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('inventory-service'), 'inventory')));
 
 // Financial Service - UPDATED with stricter rate limiting for data export
-app.use('/api/v1/financial', authenticateJWT, exportLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('financial'), 'financial')));
+app.use('/api/v1/financial', authenticateJWT, exportLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('financial-service'), 'financial')));
 
 // Meeting Room Service - UPDATED with dynamic service resolution
-app.use('/api/v1/meeting-rooms', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('meetingRoom'), 'meetingRoom')));
+app.use('/api/v1/meeting-rooms', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('meeting-room-service'), 'meetingRoom')));
 
 // Master Data Service - UPDATED with admin rate limiting
-app.use('/api/v1/master-data', authenticateJWT, adminLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('masterData'), 'masterData')));
+app.use('/api/v1/master-data', authenticateJWT, adminLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('master-data-service'), 'masterData')));
 
 // Reporting Service - UPDATED with export rate limiting
-app.use('/api/v1/reporting', authenticateJWT, exportLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('reporting'), 'reporting')));
+app.use('/api/v1/reporting', authenticateJWT, exportLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('reporting-service'), 'reporting')));
 
 // Notification Service - UPDATED with dynamic service resolution
-app.use('/api/v1/notifications', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('notification'), 'notification')));
+app.use('/api/v1/notifications', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('notification-service'), 'notification')));
 
 // ============================================
 // ERROR HANDLING (UPDATED)
@@ -262,36 +259,35 @@ app.use('/api/v1/notifications', authenticateJWT, generalLimiter, createProxyMid
 
 // 404 handler - UPDATED: Using new error handler
 app.use((req, res) => {
-  const error = ErrorHandler.handle(new Error('Endpoint not found'), {
-    code: 'NOT_FOUND',
-    path: req.path,
-    method: req.method
-  });
-  res.status(error.statusCode).json(error.body);
+  const notFoundError = new Error('Endpoint not found');
+  notFoundError.code = 'NOT_FOUND';
+  const statusCode = ErrorHandler.getStatusCode(notFoundError);
+  const errorBody = ErrorHandler.format(notFoundError, `404_${req.method}_${req.path}`);
+  res.status(statusCode).json(errorBody);
 });
 
 // Global error handler - UPDATED: Using new error handler
 app.use((err, req, res, next) => {
   logger.error('Unhandled error:', err);
-  const error = ErrorHandler.handle(err, {
-    context: 'global_error_handler',
-    debug: process.env.APP_DEBUG === 'true'
-  });
-  res.status(error.statusCode).json(error.body);
+  const statusCode = ErrorHandler.getStatusCode(err);
+  const errorBody = ErrorHandler.format(err, 'global_error_handler');
+  res.status(statusCode).json(errorBody);
 });
 
 // ============================================
 // START SERVER
 // ============================================
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   logger.info(`✅ API Gateway running on port ${PORT}`);
   logger.info('\n📋 Service Configuration:');
-  Object.entries(serviceRegistry.services).forEach(([name, urls]) => {
-    logger.info(`   ✓ ${name}: ${Array.isArray(urls) ? urls.join(', ') : urls}`);
+  Object.entries(serviceRegistry.services).forEach(([name, service]) => {
+    logger.info(`   ✓ ${name}: ${service.urls.join(', ')}`);
   });
 
   logger.info('\n⚡ Resilience Features Enabled:');
-  logger.info(`   ✓ Circuit Breaker (threshold: ${circuitBreakers.auth.failureThreshold})`);
+  const breakers = Object.keys(circuitBreakers);
+  const authBreaker = circuitBreakers[breakers[0]] || { failureThreshold: 5 };
+  logger.info(`   ✓ Circuit Breaker (threshold: ${authBreaker.failureThreshold || 5}, ${breakers.length} services)`);
   logger.info(`   ✓ Retry Manager (max retries: ${retryManager.maxRetries})`);
   logger.info(`   ✓ Rate Limiting (5 tiers configured)`);
   logger.info(`   ✓ Error Handler (standardized responses)`);
@@ -301,8 +297,9 @@ app.listen(PORT, '0.0.0.0', () => {
 // Graceful shutdown
 process.on('SIGTERM', () => {
   logger.info('SIGTERM signal received: closing HTTP server');
-  app.close(() => {
+  server.close(() => {
     logger.info('HTTP server closed');
+    process.exit(0);
   });
 });
 
