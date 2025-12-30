@@ -130,44 +130,44 @@ const proxyOptions = (target, serviceName) => ({
   },
   onError: (err, req, res) => {
     logger.error(`Proxy error for ${serviceName} (${target}):`, err.message);
-    
+
     // NEW: Circuit breaker handling
     const breaker = circuitBreakers[serviceName];
     if (breaker) {
       breaker.recordFailure();
       logger.warn(`Circuit breaker state for ${serviceName}: ${breaker.state}`);
     }
-    
+
     // Return standardized error response
     const errorResponse = ErrorHandler.handle(err, {
       service: serviceName,
       target: target,
       originalError: process.env.APP_DEBUG === 'true' ? err.message : undefined
     });
-    
+
     return res.status(errorResponse.statusCode).json(errorResponse.body);
   },
   onProxyReq: (proxyReq, req) => {
     // NEW: Check circuit breaker before proxying
     const serviceName = req.path.split('/')[3]; // Extract service name from path
     const breaker = circuitBreakers[serviceName];
-    
+
     if (breaker && breaker.state === 'OPEN') {
       throw new Error(`Circuit breaker OPEN for ${serviceName}`);
     }
-    
+
     // Forward user info to microservices
     if (req.user) {
       proxyReq.setHeader('X-User-Id', req.user.sub || req.user.id);
       proxyReq.setHeader('X-User-Email', req.user.email);
       proxyReq.setHeader('X-User-Roles', JSON.stringify(req.user.roles || []));
     }
-    
+
     // Forward real IP
     const realIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     proxyReq.setHeader('X-Real-IP', realIp);
     proxyReq.setHeader('X-Forwarded-For', realIp);
-    
+
     // NEW: Add retry count header
     const retryCount = req.headers['x-retry-count'] || 0;
     proxyReq.setHeader('X-Retry-Count', retryCount);
@@ -179,7 +179,7 @@ const proxyOptions = (target, serviceName) => ({
     if (breaker && proxyRes.statusCode < 500) {
       breaker.recordSuccess();
     }
-    
+
     // Log response
     logger.info(`${req.method} ${req.path} -> ${proxyRes.statusCode}`);
   }
@@ -227,13 +227,13 @@ app.get('/api/v1', (req, res) => {
 // ============================================
 
 // Auth Service (no authentication required) - UPDATED rate limiting
-app.use('/api/v1/auth', authLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('auth'), 'auth')));
+app.use('/api/v1/auth', authLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('auth-service'), 'auth')));
 
 // User Service - UPDATED with dynamic service resolution
-app.use('/api/v1/users', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('user'), 'user')));
+app.use('/api/v1/users', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('user-service'), 'user')));
 
 // Asset Service - UPDATED with dynamic service resolution
-app.use('/api/v1/assets', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('asset'), 'asset')));
+app.use('/api/v1/assets', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('asset-service'), 'asset')));
 
 // Ticket Service - UPDATED with dynamic service resolution
 app.use('/api/v1/tickets', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('ticket'), 'ticket')));
@@ -289,7 +289,7 @@ app.listen(PORT, '0.0.0.0', () => {
   Object.entries(serviceRegistry.services).forEach(([name, urls]) => {
     logger.info(`   ✓ ${name}: ${Array.isArray(urls) ? urls.join(', ') : urls}`);
   });
-  
+
   logger.info('\n⚡ Resilience Features Enabled:');
   logger.info(`   ✓ Circuit Breaker (threshold: ${circuitBreakers.auth.failureThreshold})`);
   logger.info(`   ✓ Retry Manager (max retries: ${retryManager.maxRetries})`);

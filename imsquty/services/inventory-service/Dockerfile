@@ -45,7 +45,7 @@ EXPOSE 8005
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8005/health || exit 1
+    CMD curl -f http://localhost:8005/health || exit 1
 
 # Start PHP FPM
 CMD ["php-fpm"]

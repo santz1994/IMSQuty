@@ -19,7 +19,7 @@ class ServiceRegistry {
   register(serviceKey, urls = []) {
     // Ensure urls is always an array
     const urlArray = Array.isArray(urls) ? urls : [urls];
-    
+
     this.services.set(serviceKey, {
       urls: urlArray,
       currentIndex: 0,
@@ -45,10 +45,10 @@ class ServiceRegistry {
     }
 
     const { urls, healthy } = service;
-    
+
     // Find healthy instances
     const healthyInstances = urls.filter(url => healthy.get(url) !== false);
-    
+
     if (healthyInstances.length === 0) {
       throw new Error(`No healthy instances available for service: ${serviceKey}`);
     }
