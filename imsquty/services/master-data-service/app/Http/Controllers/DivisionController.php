@@ -9,73 +9,60 @@ use App\Services\DivisionService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Shared\Traits\ApiResponses;
 
 class DivisionController extends Controller
 {
+    use ApiResponses;
+
     public function __construct(private DivisionService $service) {}
 
     public function index(Request $request): JsonResponse
     {
-        try {
-            $filters = $request->only(['search', 'is_active', 'parent_id', 'manager_id', 'with_trashed', 'sort_by', 'sort_order']);
-            $divisions = $this->service->getAllDivisions($filters, $request->input('per_page', 15));
-            
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'data' => DivisionResource::collection($divisions->items()),
-                    'meta' => [
-                        'current_page' => $divisions->currentPage(),
-                        'total' => $divisions->total(),
-                        'per_page' => $divisions->perPage(),
-                        'last_page' => $divisions->lastPage(),
-                    ]
-                ],
-                'message' => 'Divisions retrieved successfully'
-            ]);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
-        }
+        $filters = $request->only(['search', 'is_active', 'parent_id', 'manager_id', 'with_trashed', 'sort_by', 'sort_order']);
+        $perPage = $request->input('per_page', 15);
+        
+        $divisions = $this->service->getAllDivisions($filters, $perPage);
+        
+        return $this->paginatedResponse(
+            DivisionResource::collection($divisions->items())->resolve(),
+            $divisions,
+            'Divisions retrieved successfully'
+        );
     }
 
     public function show(int $id): JsonResponse
     {
         try {
-            return response()->json([
-                'success' => true,
-                'data' => new DivisionResource($this->service->getDivisionById($id)),
-                'message' => 'Division retrieved successfully'
-            ]);
+            $division = $this->service->getDivisionById($id);
+            return $this->successResponse(
+                (new DivisionResource($division))->resolve(),
+                'Division retrieved successfully'
+            );
         } catch (ModelNotFoundException $e) {
-            return response()->json(['success' => false, 'error' => $e->getMessage()], 404);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+            return $this->notFoundResponse('Division not found');
         }
     }
 
     public function store(CreateDivisionRequest $request): JsonResponse
     {
-        try {
-            return response()->json([
-                'success' => true,
-                'data' => new DivisionResource($this->service->createDivision($request->validated())),
-                'message' => 'Division created successfully'
-            ], 201);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'error' => $e->getMessage()], $e->getCode() ?: 500);
-        }
+        $division = $this->service->createDivision($request->validated());
+        return $this->createdResponse(
+            (new DivisionResource($division))->resolve(),
+            'Division created successfully'
+        );
     }
 
     public function update(UpdateDivisionRequest $request, int $id): JsonResponse
     {
         try {
-            return response()->json([
-                'success' => true,
-                'data' => new DivisionResource($this->service->updateDivision($id, $request->validated())),
-                'message' => 'Division updated successfully'
-            ]);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'error' => $e->getMessage()], $e->getCode() ?: 500);
+            $division = $this->service->updateDivision($id, $request->validated());
+            return $this->successResponse(
+                (new DivisionResource($division))->resolve(),
+                'Division updated successfully'
+            );
+        } catch (ModelNotFoundException $e) {
+            return $this->notFoundResponse('Division not found');
         }
     }
 
@@ -83,9 +70,9 @@ class DivisionController extends Controller
     {
         try {
             $this->service->deleteDivision($id);
-            return response()->json(['success' => true, 'message' => 'Division deleted successfully']);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'error' => $e->getMessage()], $e->getCode() ?: 500);
+            return $this->deletedResponse('Division deleted successfully');
+        } catch (ModelNotFoundException $e) {
+            return $this->notFoundResponse('Division not found');
         }
     }
 
@@ -93,35 +80,24 @@ class DivisionController extends Controller
     {
         try {
             $this->service->restoreDivision($id);
-            return response()->json(['success' => true, 'message' => 'Division restored successfully']);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'error' => $e->getMessage()], $e->getCode() ?: 500);
+            return $this->successResponse(null, 'Division restored successfully');
+        } catch (ModelNotFoundException $e) {
+            return $this->notFoundResponse('Division not found');
         }
     }
 
     public function active(): JsonResponse
     {
-        try {
-            return response()->json([
-                'success' => true,
-                'data' => DivisionResource::collection($this->service->getActiveDivisions()),
-                'message' => 'Active divisions retrieved successfully'
-            ]);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
-        }
+        $divisions = $this->service->getActiveDivisions();
+        return $this->successResponse(
+            DivisionResource::collection($divisions)->resolve(),
+            'Active divisions retrieved successfully'
+        );
     }
 
     public function hierarchy(): JsonResponse
     {
-        try {
-            return response()->json([
-                'success' => true,
-                'data' => $this->service->getDivisionsHierarchy(),
-                'message' => 'Divisions hierarchy retrieved successfully'
-            ]);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
-        }
+        $hierarchy = $this->service->getDivisionsHierarchy();
+        return $this->successResponse($hierarchy, 'Divisions hierarchy retrieved successfully');
     }
 }

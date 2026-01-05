@@ -4,51 +4,21 @@ namespace App\Repositories;
 
 use App\Models\MeetingRoomBooking;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Pagination\LengthAwarePaginator;
+use Shared\Repositories\BaseRepository;
 use Carbon\Carbon;
 
-class BookingRepository
+/**
+ * Booking Repository
+ * Extends BaseRepository for common CRUD operations
+ */
+class BookingRepository extends BaseRepository
 {
     /**
-     * Get all bookings with pagination.
+     * Specify the model class for this repository
      */
-    public function getAll(int $perPage = 15, array $filters = []): LengthAwarePaginator
+    protected function model(): string
     {
-        $query = MeetingRoomBooking::with(['meetingRoom', 'user', 'approver']);
-
-        // Apply filters
-        if (isset($filters['status'])) {
-            $query->byStatus($filters['status']);
-        }
-
-        if (isset($filters['meeting_room_id'])) {
-            $query->where('meeting_room_id', $filters['meeting_room_id']);
-        }
-
-        if (isset($filters['user_id'])) {
-            $query->where('user_id', $filters['user_id']);
-        }
-
-        if (isset($filters['start_date']) && isset($filters['end_date'])) {
-            $query->byDateRange($filters['start_date'], $filters['end_date']);
-        }
-
-        if (isset($filters['search'])) {
-            $query->where(function ($q) use ($filters) {
-                $q->where('title', 'like', "%{$filters['search']}%")
-                    ->orWhere('description', 'like', "%{$filters['search']}%");
-            });
-        }
-
-        return $query->orderBy('start_time', 'desc')->paginate($perPage);
-    }
-
-    /**
-     * Find booking by ID.
-     */
-    public function findById(int $id): ?MeetingRoomBooking
-    {
-        return MeetingRoomBooking::with(['meetingRoom', 'user', 'approver'])->find($id);
+        return MeetingRoomBooking::class;
     }
 
     /**
@@ -116,41 +86,7 @@ class BookingRepository
         return $query->exists();
     }
 
-    /**
-     * Create a new booking.
-     */
-    public function create(array $data): MeetingRoomBooking
-    {
-        return MeetingRoomBooking::create($data);
-    }
 
-    /**
-     * Update a booking.
-     */
-    public function update(int $id, array $data): bool
-    {
-        $booking = $this->findById($id);
-
-        if (!$booking) {
-            return false;
-        }
-
-        return $booking->update($data);
-    }
-
-    /**
-     * Delete a booking (soft delete).
-     */
-    public function delete(int $id): bool
-    {
-        $booking = $this->findById($id);
-
-        if (!$booking) {
-            return false;
-        }
-
-        return $booking->delete();
-    }
 
     /**
      * Approve a booking.

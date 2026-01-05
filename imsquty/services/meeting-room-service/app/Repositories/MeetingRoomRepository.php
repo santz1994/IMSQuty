@@ -5,48 +5,18 @@ namespace App\Repositories;
 use App\Models\MeetingRoom;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Shared\Repositories\BaseRepository;
 
-class MeetingRoomRepository
+class MeetingRoomRepository extends BaseRepository
 {
     /**
-     * Get all meeting rooms with pagination.
+     * Specify Model class name
+     *
+     * @return string
      */
-    public function getAll(int $perPage = 15, array $filters = []): LengthAwarePaginator
+    protected function model(): string
     {
-        $query = MeetingRoom::query();
-
-        // Apply filters
-        if (isset($filters['status'])) {
-            $query->where('status', $filters['status']);
-        }
-
-        if (isset($filters['location_id'])) {
-            $query->where('location_id', $filters['location_id']);
-        }
-
-        if (isset($filters['min_capacity'])) {
-            $query->where('capacity', '>=', $filters['min_capacity']);
-        }
-
-        if (isset($filters['search'])) {
-            $query->where(function ($q) use ($filters) {
-                $q->where('name', 'like', "%{$filters['search']}%")
-                    ->orWhere('code', 'like', "%{$filters['search']}%")
-                    ->orWhere('building', 'like', "%{$filters['search']}%");
-            });
-        }
-
-        return $query->orderBy('name')->paginate($perPage);
-    }
-
-    /**
-     * Find meeting room by ID.
-     */
-    public function findById(int $id): ?MeetingRoom
-    {
-        return MeetingRoom::with(['bookings' => function ($query) {
-            $query->active()->upcoming();
-        }])->find($id);
+        return MeetingRoom::class;
     }
 
     /**
@@ -88,42 +58,6 @@ class MeetingRoomRepository
         }
 
         return $room->isAvailableForPeriod($startTime, $endTime, $excludeBookingId);
-    }
-
-    /**
-     * Create a new meeting room.
-     */
-    public function create(array $data): MeetingRoom
-    {
-        return MeetingRoom::create($data);
-    }
-
-    /**
-     * Update a meeting room.
-     */
-    public function update(int $id, array $data): bool
-    {
-        $room = $this->findById($id);
-
-        if (!$room) {
-            return false;
-        }
-
-        return $room->update($data);
-    }
-
-    /**
-     * Delete a meeting room (soft delete).
-     */
-    public function delete(int $id): bool
-    {
-        $room = $this->findById($id);
-
-        if (!$room) {
-            return false;
-        }
-
-        return $room->delete();
     }
 
     /**

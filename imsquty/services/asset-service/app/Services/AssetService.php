@@ -7,6 +7,7 @@ use App\Models\Movement;
 use App\Repositories\AssetRepository;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Log;
+use Shared\Helpers\CacheHelper;
 
 class AssetService
 {
@@ -34,6 +35,15 @@ class AssetService
         if (isset($data['asset_tag']) && $this->assetRepository->assetTagExists($data['asset_tag'])) {
             throw new \Exception("Asset tag {$data['asset_tag']} already exists.");
         }
+
+        // Cache reference data for faster lookups
+        if (isset($data['asset_type_id'])) {
+            CacheHelper::getAssetType($data['asset_type_id']);
+        }
+        if (isset($data['location_id'])) {
+            CacheHelper::getLocation($data['location_id']);
+        }
+
         return $this->assetRepository->create($data);
     }
 

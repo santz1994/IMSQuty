@@ -5,9 +5,26 @@ namespace App\Repositories;
 use App\Models\Invoice;
 use App\Models\Budget;
 use App\Models\Expense;
+use Shared\Repositories\BaseRepository;
 
-class FinancialRepository
+/**
+ * Financial Repository
+ * Handles financial data including Invoices, Budgets, and Expenses
+ * Extends BaseRepository for common CRUD operations
+ */
+class FinancialRepository extends BaseRepository
 {
+    /**
+     * Specify the primary model class for this repository (Invoice)
+     */
+    protected function model(): string
+    {
+        return Invoice::class;
+    }
+
+    /**
+     * Get all invoices with pagination and filters
+     */
     public function getAllInvoices(int $perPage = 15, array $filters = [])
     {
         $query = Invoice::query();
@@ -19,20 +36,12 @@ class FinancialRepository
         return $query->latest('due_date')->paginate($perPage);
     }
 
+    /**
+     * Find invoice by ID
+     */
     public function findInvoiceById(int $id): ?Invoice
     {
         return Invoice::find($id);
-    }
-
-    public function createInvoice(array $data): Invoice
-    {
-        return Invoice::create($data);
-    }
-
-    public function updateInvoice(int $id, array $data): bool
-    {
-        $invoice = $this->findInvoiceById($id);
-        return $invoice ? $invoice->update($data) : false;
     }
 
     public function getAllBudgets(int $perPage = 15, array $filters = [])

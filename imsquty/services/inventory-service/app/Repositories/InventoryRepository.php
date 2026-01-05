@@ -4,47 +4,18 @@ namespace App\Repositories;
 
 use App\Models\InventoryItem;
 use App\Models\StockMovement;
+use Shared\Repositories\BaseRepository;
 
-class InventoryRepository
+class InventoryRepository extends BaseRepository
 {
-    public function getAll(int $perPage = 15, array $filters = [])
+    /**
+     * Specify Model class name
+     *
+     * @return string
+     */
+    protected function model(): string
     {
-        $query = InventoryItem::with('warehouse');
-
-        if (!empty($filters['category'])) {
-            $query->where('category', $filters['category']);
-        }
-
-        if (!empty($filters['search'])) {
-            $query->where(function($q) use ($filters) {
-                $q->where('name', 'like', "%{$filters['search']}%")
-                  ->orWhere('code', 'like', "%{$filters['search']}%");
-            });
-        }
-
-        return $query->latest()->paginate($perPage);
-    }
-
-    public function findById(int $id): ?InventoryItem
-    {
-        return InventoryItem::with('warehouse', 'movements')->find($id);
-    }
-
-    public function create(array $data): InventoryItem
-    {
-        return InventoryItem::create($data);
-    }
-
-    public function update(int $id, array $data): bool
-    {
-        $item = $this->findById($id);
-        return $item ? $item->update($data) : false;
-    }
-
-    public function delete(int $id): bool
-    {
-        $item = $this->findById($id);
-        return $item ? $item->delete() : false;
+        return InventoryItem::class;
     }
 
     public function getLowStock()

@@ -1,16 +1,38 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const jwt = require('jsonwebtoken');
+const jwtLibrary = require('jsonwebtoken');
 
-const app = express();
+const expressApp = express();
 const PORT = process.env.MOCK_BACKEND_PORT || 3000;
 
 // Middleware
-app.use(cors());
-app.use(express.json());
+expressApp.use(cors());
+expressApp.use(express.json());
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+
+/**
+ * Paginate data helper - Eliminates duplicate pagination logic
+ * @param {Array} data - Array of items to paginate
+ * @param {number} page - Current page number
+ * @param {number} perPage - Items per page
+ * @returns {Object} Paginated result with items and pagination metadata
+ */
+function paginateData(data, page, perPage) {
+  const startIndex = (page - 1) * perPage;
+  const paginatedItems = data.slice(startIndex, startIndex + perPage);
+
+  return {
+    items: paginatedItems,
+    pagination: {
+      page,
+      per_page: perPage,
+      total: data.length,
+      total_pages: Math.ceil(data.length / perPage)
+    }
+  };
+}
 
 // Mock users database
 const mockUsers = {
@@ -33,7 +55,7 @@ const mockUsers = {
 };
 
 // Auth endpoint
-app.post('/api/v1/auth/login', (req, res) => {
+expressApp.post('/api/v1/auth/login', (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -53,7 +75,7 @@ app.post('/api/v1/auth/login', (req, res) => {
   }
 
   // Generate JWT token
-  const token = jwt.sign(
+  const authToken = jwtLibrary.sign(
     {
       id: user.id,
       email: user.email,
@@ -66,7 +88,7 @@ app.post('/api/v1/auth/login', (req, res) => {
   return res.status(200).json({
     success: true,
     data: {
-      token,
+      token: authToken,
       user: {
         id: user.id,
         email: user.email,
@@ -79,7 +101,7 @@ app.post('/api/v1/auth/login', (req, res) => {
 });
 
 // Mock Assets endpoint
-app.get('/api/v1/assets', (req, res) => {
+expressApp.get('/api/v1/assets', (req, res) => {
   const page = parseInt(req.query.page || 1);
   const perPage = parseInt(req.query.per_page || 10);
 
@@ -96,26 +118,16 @@ app.get('/api/v1/assets', (req, res) => {
     { id: 10, name: 'Network Switch Cisco', category: 'IT Equipment', status: 'Active', location: 'Server Room' }
   ];
 
-  const start = (page - 1) * perPage;
-  const end = start + perPage;
-  const paginatedAssets = mockAssets.slice(start, end);
+  const result = paginateData(mockAssets, page, perPage);
 
   res.json({
     success: true,
-    data: {
-      items: paginatedAssets,
-      pagination: {
-        page,
-        per_page: perPage,
-        total: mockAssets.length,
-        total_pages: Math.ceil(mockAssets.length / perPage)
-      }
-    }
+    data: result
   });
 });
 
 // Mock Tickets endpoint
-app.get('/api/v1/tickets', (req, res) => {
+expressApp.get('/api/v1/tickets', (req, res) => {
   const page = parseInt(req.query.page || 1);
   const perPage = parseInt(req.query.per_page || 10);
 
@@ -132,26 +144,16 @@ app.get('/api/v1/tickets', (req, res) => {
     { id: 10, title: 'Inventory Check', description: 'Quarterly IT asset inventory check', status: 'Pending', priority: 'Medium', created_at: '2025-12-24' }
   ];
 
-  const start = (page - 1) * perPage;
-  const end = start + perPage;
-  const paginatedTickets = mockTickets.slice(start, end);
+  const result = paginateData(mockTickets, page, perPage);
 
   res.json({
     success: true,
-    data: {
-      items: paginatedTickets,
-      pagination: {
-        page,
-        per_page: perPage,
-        total: mockTickets.length,
-        total_pages: Math.ceil(mockTickets.length / perPage)
-      }
-    }
+    data: result
   });
 });
 
-// Health check
-app.get('/health', (req, res) => {
+// Health check endpoint
+expressApp.get('/health', (req, res) => {
   res.status(200).json({
     success: true,
     status: 'healthy',
@@ -159,9 +161,8 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+// Start server
+expressApp.listen(PORT, '0.0.0.0', () => {
   console.log(`Mock backend running on port ${PORT}`);
-  console.log(`Try logging in with:`);
-  console.log(`  Email: admin@example.com`);
-  console.log(`  Password: password`);
+  console.log(`Health check available at http://localhost:${PORT}/health`);
 });

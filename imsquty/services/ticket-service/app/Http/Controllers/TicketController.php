@@ -12,10 +12,12 @@ use App\Http\Resources\TicketResource;
 use App\Http\Resources\TicketCollection;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Shared\Traits\ApiResponses;
 use Exception;
 
 class TicketController extends Controller
 {
+    use ApiResponses;
     protected $ticketService;
 
     public function __construct(TicketService $ticketService)
@@ -47,17 +49,12 @@ class TicketController extends Controller
             $perPage = $request->input('per_page', 15);
             $tickets = $this->ticketService->getAllTickets($filters, $perPage);
 
-            return response()->json([
-                'success' => true,
-                'data' => new TicketCollection($tickets),
-                'message' => 'Tickets retrieved successfully'
-            ]);
+            return $this->paginatedResponse(
+                new TicketCollection($tickets),
+                'Tickets retrieved successfully'
+            );
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Failed to retrieve tickets'
-            ], 500);
+            return $this->errorResponse('Failed to retrieve tickets: ' . $e->getMessage(), 500);
         }
     }
 
@@ -75,17 +72,12 @@ class TicketController extends Controller
 
             $ticket = $this->ticketService->createTicket($data);
 
-            return response()->json([
-                'success' => true,
-                'data' => new TicketResource($ticket),
-                'message' => 'Ticket created successfully'
-            ], 201);
+            return $this->createdResponse(
+                new TicketResource($ticket),
+                'Ticket created successfully'
+            );
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Failed to create ticket'
-            ], 500);
+            return $this->errorResponse('Failed to create ticket: ' . $e->getMessage(), 500);
         }
     }
 
@@ -101,24 +93,15 @@ class TicketController extends Controller
             $ticket = $this->ticketService->getTicketById($id);
 
             if (!$ticket) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Ticket not found',
-                    'message' => 'The requested ticket does not exist'
-                ], 404);
+                return $this->notFoundResponse('Ticket not found');
             }
 
-            return response()->json([
-                'success' => true,
-                'data' => new TicketResource($ticket),
-                'message' => 'Ticket retrieved successfully'
-            ]);
+            return $this->successResponse(
+                new TicketResource($ticket),
+                'Ticket retrieved successfully'
+            );
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Failed to retrieve ticket'
-            ], 500);
+            return $this->errorResponse('Failed to retrieve ticket: ' . $e->getMessage(), 500);
         }
     }
 
@@ -135,27 +118,18 @@ class TicketController extends Controller
             $ticket = $this->ticketService->getTicketById($id);
 
             if (!$ticket) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Ticket not found',
-                    'message' => 'The requested ticket does not exist'
-                ], 404);
+                return $this->notFoundResponse('Ticket not found');
             }
 
             $data = $request->validated();
             $ticket = $this->ticketService->updateTicket($ticket, $data);
 
-            return response()->json([
-                'success' => true,
-                'data' => new TicketResource($ticket),
-                'message' => 'Ticket updated successfully'
-            ]);
+            return $this->successResponse(
+                new TicketResource($ticket),
+                'Ticket updated successfully'
+            );
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Failed to update ticket'
-            ], 500);
+            return $this->errorResponse('Failed to update ticket: ' . $e->getMessage(), 500);
         }
     }
 
@@ -171,25 +145,14 @@ class TicketController extends Controller
             $ticket = $this->ticketService->getTicketById($id);
 
             if (!$ticket) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Ticket not found',
-                    'message' => 'The requested ticket does not exist'
-                ], 404);
+                return $this->notFoundResponse('Ticket not found');
             }
 
             $this->ticketService->deleteTicket($ticket);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Ticket deleted successfully'
-            ]);
+            return $this->deletedResponse('Ticket deleted successfully');
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Failed to delete ticket'
-            ], 500);
+            return $this->errorResponse('Failed to delete ticket: ' . $e->getMessage(), 500);
         }
     }
 
@@ -205,26 +168,17 @@ class TicketController extends Controller
             $result = $this->ticketService->restoreTicket($id);
 
             if (!$result) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Ticket not found or not deleted',
-                    'message' => 'Unable to restore ticket'
-                ], 404);
+                return $this->notFoundResponse('Ticket not found or not deleted');
             }
 
             $ticket = $this->ticketService->getTicketById($id);
 
-            return response()->json([
-                'success' => true,
-                'data' => new TicketResource($ticket),
-                'message' => 'Ticket restored successfully'
-            ]);
+            return $this->successResponse(
+                new TicketResource($ticket),
+                'Ticket restored successfully'
+            );
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Failed to restore ticket'
-            ], 500);
+            return $this->errorResponse('Failed to restore ticket: ' . $e->getMessage(), 500);
         }
     }
 
@@ -241,11 +195,7 @@ class TicketController extends Controller
             $ticket = $this->ticketService->getTicketById($id);
 
             if (!$ticket) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Ticket not found',
-                    'message' => 'The requested ticket does not exist'
-                ], 404);
+                return $this->notFoundResponse('Ticket not found');
             }
 
             $userId = $request->input('assigned_to');
@@ -253,17 +203,12 @@ class TicketController extends Controller
 
             $ticket = $this->ticketService->assignTicket($ticket, $userId, $assignmentType);
 
-            return response()->json([
-                'success' => true,
-                'data' => new TicketResource($ticket),
-                'message' => 'Ticket assigned successfully'
-            ]);
+            return $this->successResponse(
+                new TicketResource($ticket),
+                'Ticket assigned successfully'
+            );
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Failed to assign ticket'
-            ], 500);
+            return $this->errorResponse('Failed to assign ticket: ' . $e->getMessage(), 500);
         }
     }
 
@@ -280,11 +225,7 @@ class TicketController extends Controller
             $ticket = $this->ticketService->getTicketById($id);
 
             if (!$ticket) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Ticket not found',
-                    'message' => 'The requested ticket does not exist'
-                ], 404);
+                return $this->notFoundResponse('Ticket not found');
             }
 
             $comment = $request->input('comment');

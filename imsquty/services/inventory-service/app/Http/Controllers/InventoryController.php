@@ -9,9 +9,11 @@ use App\Http\Resources\InventoryItemResource;
 use App\Services\InventoryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Shared\Traits\ApiResponses;
 
 class InventoryController extends Controller
 {
+    use ApiResponses;
     public function __construct(private InventoryService $service) {}
 
     public function index(Request $request): JsonResponse
@@ -21,83 +23,34 @@ class InventoryController extends Controller
             $request->only(['category', 'search'])
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'data' => InventoryItemResource::collection($items->items()),
-                'current_page' => $items->currentPage(),
-                'total' => $items->total(),
-                'per_page' => $items->perPage(),
-                'last_page' => $items->lastPage(),
-            ],
-            'message' => 'Inventory items retrieved successfully'
-        ]);
+        return $this->paginatedResponse($items, 'Inventory items retrieved successfully', InventoryItemResource::class);
     }
 
     public function show(int $id): JsonResponse
     {
         $item = $this->service->getById($id);
-
-        if (!$item) {
-            return response()->json([
-                'success' => false,
-                'error' => ['code' => 'NOT_FOUND'],
-                'message' => 'Item not found'
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'data' => new InventoryItemResource($item),
-            'message' => 'Item retrieved successfully'
-        ]);
+        if (!$item) return $this->notFoundResponse('Item not found');
+        return $this->successResponse(new InventoryItemResource($item), 'Item retrieved successfully');
     }
 
     public function store(CreateInventoryItemRequest $request): JsonResponse
     {
         $item = $this->service->create($request->validated());
-
-        return response()->json([
-            'success' => true,
-            'data' => new InventoryItemResource($item),
-            'message' => 'Item created successfully'
-        ], 201);
+        return $this->createdResponse(new InventoryItemResource($item), 'Item created successfully');
     }
 
     public function update(int $id, UpdateInventoryItemRequest $request): JsonResponse
     {
         $result = $this->service->update($id, $request->validated());
-
-        if (!$result) {
-            return response()->json([
-                'success' => false,
-                'error' => ['code' => 'NOT_FOUND'],
-                'message' => 'Item not found'
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Item updated successfully'
-        ]);
+        if (!$result) return $this->notFoundResponse('Item not found');
+        return $this->successResponse(null, 'Item updated successfully');
     }
 
     public function destroy(int $id): JsonResponse
     {
         $result = $this->service->delete($id);
-
-        if (!$result) {
-            return response()->json([
-                'success' => false,
-                'error' => ['code' => 'NOT_FOUND'],
-                'message' => 'Item not found'
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Item deleted successfully'
-        ]);
+        if (!$result) return $this->notFoundResponse('Item not found');
+        return $this->deletedResponse('Item deleted successfully');
     }
 
     public function lowStock(): JsonResponse

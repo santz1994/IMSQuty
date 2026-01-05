@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Models\AssetModel;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Shared\Repositories\BaseRepository;
 
 /**
  * AssetModel Repository
@@ -12,80 +13,16 @@ use Illuminate\Pagination\LengthAwarePaginator;
  * Handles all database interactions for the AssetModel model.
  * Implements data access layer following Repository pattern.
  */
-class AssetModelRepository
+class AssetModelRepository extends BaseRepository
 {
     /**
-     * Create a new asset model
+     * Specify Model class name
      *
-     * @param array $data
-     * @return AssetModel
+     * @return string
      */
-    public function create(array $data): AssetModel
+    protected function model(): string
     {
-        return AssetModel::create($data);
-    }
-
-    /**
-     * Find asset model by ID
-     *
-     * @param int $id
-     * @param bool $withTrashed Include soft-deleted records
-     * @return AssetModel|null
-     */
-    public function findById(int $id, bool $withTrashed = false): ?AssetModel
-    {
-        $query = AssetModel::query();
-        
-        if ($withTrashed) {
-            $query->withTrashed();
-        }
-        
-        return $query->with(['assetType', 'manufacturer', 'pcspec'])
-            ->find($id);
-    }
-
-    /**
-     * Get all asset models with filters and pagination
-     *
-     * @param array $filters
-     * @param int $perPage
-     * @return LengthAwarePaginator
-     */
-    public function getAll(array $filters = [], int $perPage = 15): LengthAwarePaginator
-    {
-        $query = AssetModel::query()->with(['assetType', 'manufacturer', 'pcspec']);
-
-        // Search filter
-        if (!empty($filters['search'])) {
-            $query->search($filters['search']);
-        }
-
-        // Asset type filter
-        if (!empty($filters['asset_type_id'])) {
-            $query->where('asset_type_id', $filters['asset_type_id']);
-        }
-
-        // Manufacturer filter
-        if (!empty($filters['manufacturer_id'])) {
-            $query->where('manufacturer_id', $filters['manufacturer_id']);
-        }
-
-        // PC spec filter
-        if (!empty($filters['pcspec_id'])) {
-            $query->where('pcspec_id', $filters['pcspec_id']);
-        }
-
-        // Include trashed
-        if (!empty($filters['with_trashed'])) {
-            $query->withTrashed();
-        }
-
-        // Sorting
-        $sortField = $filters['sort_by'] ?? 'asset_model';
-        $sortOrder = $filters['sort_order'] ?? 'asc';
-        $query->orderBy($sortField, $sortOrder);
-
-        return $query->paginate($perPage);
+        return AssetModel::class;
     }
 
     /**
@@ -126,69 +63,6 @@ class AssetModelRepository
             ->with(['assetType', 'pcspec'])
             ->orderBy('asset_model')
             ->get();
-    }
-
-    /**
-     * Update asset model
-     *
-     * @param int $id
-     * @param array $data
-     * @return bool
-     */
-    public function update(int $id, array $data): bool
-    {
-        $model = AssetModel::findOrFail($id);
-        return $model->update($data);
-    }
-
-    /**
-     * Soft delete asset model
-     *
-     * @param int $id
-     * @return bool
-     * @throws \Exception
-     */
-    public function delete(int $id): bool
-    {
-        $model = AssetModel::findOrFail($id);
-        
-        // Check if model has associated assets
-        if ($model->assets()->count() > 0) {
-            throw new \Exception('Cannot delete asset model with associated assets.');
-        }
-        
-        return $model->delete();
-    }
-
-    /**
-     * Restore soft-deleted asset model
-     *
-     * @param int $id
-     * @return bool
-     */
-    public function restore(int $id): bool
-    {
-        $model = AssetModel::withTrashed()->findOrFail($id);
-        return $model->restore();
-    }
-
-    /**
-     * Force delete asset model permanently
-     *
-     * @param int $id
-     * @return bool
-     * @throws \Exception
-     */
-    public function forceDelete(int $id): bool
-    {
-        $model = AssetModel::withTrashed()->findOrFail($id);
-        
-        // Check if model has associated assets
-        if ($model->assets()->count() > 0) {
-            throw new \Exception('Cannot permanently delete asset model with associated assets.');
-        }
-        
-        return $model->forceDelete();
     }
 
     /**

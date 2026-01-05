@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateAssetModelRequest;
 use App\Http\Resources\AssetModelResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Shared\Traits\ApiResponses;
 
 /**
  * AssetModel Controller
@@ -17,6 +18,7 @@ use Illuminate\Http\Request;
  */
 class AssetModelController extends Controller
 {
+    use ApiResponses;
     /**
      * @var AssetModelService
      */
@@ -51,107 +53,31 @@ class AssetModelController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        try {
-            $filters = $request->only([
-                'search',
-                'asset_type_id',
-                'manufacturer_id',
-                'pcspec_id',
-                'with_trashed',
-                'sort_by',
-                'sort_order',
-            ]);
-
-            $perPage = $request->input('per_page', 15);
-            
-            $models = $this->assetModelService->getAllAssetModels($filters, $perPage);
-
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'data' => AssetModelResource::collection($models->items()),
-                    'current_page' => $models->currentPage(),
-                    'per_page' => $models->perPage(),
-                    'total' => $models->total(),
-                    'last_page' => $models->lastPage(),
-                ],
-                'message' => 'Asset models retrieved successfully',
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Failed to retrieve asset models',
-            ], 500);
-        }
+        $filters = $request->only([
+            'search', 'asset_type_id', 'manufacturer_id',
+            'pcspec_id', 'with_trashed', 'sort_by', 'sort_order',
+        ]);
+        $perPage = $request->input('per_page', 15);
+        $models = $this->assetModelService->getAllAssetModels($filters, $perPage);
+        return $this->paginatedResponse($models, 'Asset models retrieved successfully', AssetModelResource::class);
     }
 
     /**
      * Get asset model by ID
-     * 
-     * @OA\Get(
-     *     path="/api/v1/asset-models/{id}",
-     *     summary="Get asset model by ID",
-     *     tags={"Asset Models"},
-     *     @OA\Parameter(name="id", in="path", required=true, description="Asset Model ID"),
-     *     @OA\Response(response=200, description="Success"),
-     *     @OA\Response(response=404, description="Not found")
-     * )
-     *
-     * @param int $id
-     * @return JsonResponse
      */
     public function show(int $id): JsonResponse
     {
-        try {
-            $model = $this->assetModelService->getAssetModelById($id);
-
-            return response()->json([
-                'success' => true,
-                'data' => new AssetModelResource($model),
-                'message' => 'Asset model retrieved successfully',
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Asset model not found',
-            ], 404);
-        }
+        $model = $this->assetModelService->getAssetModelById($id);
+        return $this->successResponse(new AssetModelResource($model), 'Asset model retrieved successfully');
     }
 
     /**
      * Create new asset model
-     * 
-     * @OA\Post(
-     *     path="/api/v1/asset-models",
-     *     summary="Create new asset model",
-     *     tags={"Asset Models"},
-     *     @OA\RequestBody(required=true, description="Asset model data"),
-     *     @OA\Response(response=201, description="Created"),
-     *     @OA\Response(response=422, description="Validation error")
-     * )
-     *
-     * @param CreateAssetModelRequest $request
-     * @return JsonResponse
      */
     public function store(CreateAssetModelRequest $request): JsonResponse
     {
-        try {
-            $model = $this->assetModelService->createAssetModel($request->validated());
-
-            return response()->json([
-                'success' => true,
-                'data' => new AssetModelResource($model),
-                'message' => 'Asset model created successfully',
-            ], 201);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Failed to create asset model',
-            ], 500);
-        }
+        $model = $this->assetModelService->createAssetModel($request->validated());
+        return $this->createdResponse(new AssetModelResource($model), 'Asset model created successfully');
     }
 
     /**
@@ -173,21 +99,8 @@ class AssetModelController extends Controller
      */
     public function update(UpdateAssetModelRequest $request, int $id): JsonResponse
     {
-        try {
-            $model = $this->assetModelService->updateAssetModel($id, $request->validated());
-
-            return response()->json([
-                'success' => true,
-                'data' => new AssetModelResource($model),
-                'message' => 'Asset model updated successfully',
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Failed to update asset model',
-            ], 500);
-        }
+        $model = $this->assetModelService->updateAssetModel($id, $request->validated());
+        return $this->successResponse(new AssetModelResource($model), 'Asset model updated successfully');
     }
 
     /**
@@ -208,20 +121,8 @@ class AssetModelController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
-        try {
-            $this->assetModelService->deleteAssetModel($id);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Asset model deleted successfully',
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Failed to delete asset model',
-            ], 400);
-        }
+        $this->assetModelService->deleteAssetModel($id);
+        return $this->deletedResponse('Asset model deleted successfully');
     }
 
     /**

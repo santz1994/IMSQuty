@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Services\ReportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Shared\Traits\ApiResponses;
 
 class ReportController extends Controller
 {
+    use ApiResponses;
+
     public function __construct(private ReportService $service) {}
 
     public function index(Request $request): JsonResponse
@@ -17,11 +20,7 @@ class ReportController extends Controller
             $request->only(['type', 'status'])
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => $reports,
-            'message' => 'Reports retrieved successfully'
-        ]);
+        return $this->successResponse($reports, 'Reports retrieved successfully');
     }
 
     public function show(int $id): JsonResponse
@@ -29,70 +28,42 @@ class ReportController extends Controller
         $report = $this->service->getById($id);
 
         if (!$report) {
-            return response()->json([
-                'success' => false,
-                'error' => ['code' => 'NOT_FOUND'],
-                'message' => 'Report not found'
-            ], 404);
+            return $this->notFoundResponse('Report not found');
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => $report,
-            'message' => 'Report retrieved successfully'
-        ]);
+        return $this->successResponse($report, 'Report retrieved successfully');
     }
 
     public function generate(Request $request): JsonResponse
     {
         $report = $this->service->generate($request->all());
 
-        return response()->json([
-            'success' => true,
-            'data' => $report,
-            'message' => 'Report generation initiated'
-        ], 201);
+        return $this->createdResponse($report, 'Report generation initiated');
     }
 
     public function schedules(Request $request): JsonResponse
     {
         $schedules = $this->service->getSchedules($request->input('per_page', 15));
 
-        return response()->json([
-            'success' => true,
-            'data' => $schedules,
-            'message' => 'Schedules retrieved successfully'
-        ]);
+        return $this->successResponse($schedules, 'Schedules retrieved successfully');
     }
 
     public function createSchedule(Request $request): JsonResponse
     {
         $schedule = $this->service->createSchedule($request->all());
 
-        return response()->json([
-            'success' => true,
-            'data' => $schedule,
-            'message' => 'Schedule created successfully'
-        ], 201);
+        return $this->createdResponse($schedule, 'Schedule created successfully');
     }
 
     public function processDue(): JsonResponse
     {
         $processed = $this->service->processDueSchedules();
 
-        return response()->json([
-            'success' => true,
-            'data' => ['processed' => $processed],
-            'message' => "{$processed} schedules processed"
-        ]);
+        return $this->successResponse(['processed' => $processed], "{$processed} schedules processed");
     }
 
     public function statistics(): JsonResponse
     {
-        return response()->json([
-            'success' => true,
-            'data' => $this->service->getStatistics(),
-            'message' => 'Statistics retrieved successfully'
-        ]);
+        return $this->successResponse($this->service->getStatistics(), 'Statistics retrieved successfully');
     }
 }

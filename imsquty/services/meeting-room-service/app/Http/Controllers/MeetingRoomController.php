@@ -8,9 +8,11 @@ use App\Http\Resources\MeetingRoomResource;
 use App\Services\MeetingRoomService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Shared\Traits\ApiResponses;
 
 class MeetingRoomController extends Controller
 {
+    use ApiResponses;
     public function __construct(
         private MeetingRoomService $meetingRoomService
     ) {}
@@ -22,19 +24,8 @@ class MeetingRoomController extends Controller
     {
         $perPage = $request->input('per_page', 15);
         $filters = $request->only(['status', 'location_id', 'min_capacity', 'search']);
-
         $rooms = $this->meetingRoomService->getAllRooms($perPage, $filters);
-
-        return response()->json([
-            'success' => true,
-            'data' => MeetingRoomResource::collection($rooms),
-            'meta' => [
-                'current_page' => $rooms->currentPage(),
-                'per_page' => $rooms->perPage(),
-                'total' => $rooms->total(),
-                'last_page' => $rooms->lastPage(),
-            ],
-        ]);
+        return $this->paginatedResponse($rooms, 'Meeting rooms retrieved successfully', MeetingRoomResource::class);
     }
 
     /**
@@ -42,20 +33,8 @@ class MeetingRoomController extends Controller
      */
     public function store(CreateMeetingRoomRequest $request): JsonResponse
     {
-        try {
-            $result = $this->meetingRoomService->createRoom($request->validated());
-
-            return response()->json([
-                'success' => $result['success'],
-                'message' => $result['message'],
-                'data' => new MeetingRoomResource($result['data']),
-            ], 201);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 400);
-        }
+        $result = $this->meetingRoomService->createRoom($request->validated());
+        return $this->createdResponse(new MeetingRoomResource($result['data']), $result['message']);
     }
 
     /**
@@ -64,19 +43,11 @@ class MeetingRoomController extends Controller
     public function show(int $id): JsonResponse
     {
         $result = $this->meetingRoomService->getRoomById($id);
-
-        if (!$result) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Meeting room not found',
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'data' => new MeetingRoomResource($result['room']),
-            'statistics' => $result['statistics'],
-        ]);
+        if (!$result) return $this->notFoundResponse('Meeting room not found');
+        return $this->successResponse([
+            'room' => new MeetingRoomResource($result['room']),
+            'statistics' => $result['statistics']
+        ], 'Meeting room retrieved successfully');
     }
 
     /**

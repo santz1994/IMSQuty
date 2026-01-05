@@ -12,9 +12,11 @@ use App\Services\BookingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Shared\Traits\ApiResponses;
 
 class BookingController extends Controller
 {
+    use ApiResponses;
     public function __construct(
         private BookingService $bookingService
     ) {}
@@ -26,19 +28,8 @@ class BookingController extends Controller
     {
         $perPage = $request->input('per_page', 15);
         $filters = $request->only(['status', 'meeting_room_id', 'user_id', 'start_date', 'end_date', 'search']);
-
         $bookings = $this->bookingService->getAllBookings($perPage, $filters);
-
-        return response()->json([
-            'success' => true,
-            'data' => BookingResource::collection($bookings),
-            'meta' => [
-                'current_page' => $bookings->currentPage(),
-                'per_page' => $bookings->perPage(),
-                'total' => $bookings->total(),
-                'last_page' => $bookings->lastPage(),
-            ],
-        ]);
+        return $this->paginatedResponse($bookings, 'Bookings retrieved successfully', BookingResource::class);
     }
 
     /**
@@ -47,19 +38,10 @@ class BookingController extends Controller
     public function store(CreateBookingRequest $request): JsonResponse
     {
         $data = $request->validated();
-        $data['user_id'] = Auth::id(); // Set authenticated user as creator
-
+        $data['user_id'] = Auth::id();
         $result = $this->bookingService->createBooking($data);
-
-        if (!$result['success']) {
-            return response()->json($result, 400);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => $result['message'],
-            'data' => new BookingResource($result['data']),
-        ], 201);
+        if (!$result['success']) return $this->errorResponse($result['message'], 400);
+        return $this->createdResponse(new BookingResource($result['data']), $result['message']);
     }
 
     /**
@@ -68,18 +50,8 @@ class BookingController extends Controller
     public function show(int $id): JsonResponse
     {
         $booking = $this->bookingService->getBookingById($id);
-
-        if (!$booking) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Booking not found',
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'data' => new BookingResource($booking),
-        ]);
+        if (!$booking) return $this->notFoundResponse('Booking not found');
+        return $this->successResponse(new BookingResource($booking), 'Booking retrieved successfully');
     }
 
     /**

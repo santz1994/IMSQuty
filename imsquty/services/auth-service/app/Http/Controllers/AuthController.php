@@ -9,6 +9,7 @@ use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Shared\Traits\ApiResponses;
 
 /**
  * Auth Controller
@@ -20,6 +21,7 @@ use Illuminate\Support\Facades\Log;
  */
 class AuthController extends Controller
 {
+    use ApiResponses;
     /**
      * @param AuthService $authService
      */
@@ -84,34 +86,11 @@ class AuthController extends Controller
     /**
      * Logout current user
      * Invalidates and blacklists the JWT token
-     * 
-     * @param Request $request
-     * @return JsonResponse
      */
     public function logout(Request $request): JsonResponse
     {
-        try {
-            $this->authService->logout($request->user());
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Successfully logged out'
-            ], 200);
-
-        } catch (\Exception $e) {
-            Log::error('Logout error: ' . $e->getMessage(), [
-                'user_id' => $request->user()?->id,
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'error' => [
-                    'code' => 'SERVER_ERROR',
-                    'message' => 'An error occurred during logout'
-                ]
-            ], 500);
-        }
+        $this->authService->logout($request->user());
+        return $this->successResponse(null, 'Successfully logged out');
     }
 
     /**

@@ -64,9 +64,8 @@ RUN echo "memory_limit = 256M" > /usr/local/etc/php/conf.d/custom.ini && \
     echo "opcache.enable = 1" >> /usr/local/etc/php/conf.d/custom.ini && \
     echo "opcache.memory_consumption = 128" >> /usr/local/etc/php/conf.d/custom.ini && \
     echo "opcache.interned_strings_buffer = 8" >> /usr/local/etc/php/conf.d/custom.ini && \
-    echo "opcache.max_accelerated_files = 10000" >> /var/www/meeting-room-service/docker/php.ini && \
-    echo "opcache.revalidate_freq = 2" >> /var/www/meeting-room-service/docker/php.ini && \
-    cp /var/www/meeting-room-service/docker/php.ini /usr/local/etc/php/conf.d/custom.ini
+    echo "opcache.max_accelerated_files = 10000" >> /usr/local/etc/php/conf.d/custom.ini && \
+    echo "opcache.revalidate_freq = 2" >> /usr/local/etc/php/conf.d/custom.ini
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \

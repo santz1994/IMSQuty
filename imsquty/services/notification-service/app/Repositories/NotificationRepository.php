@@ -5,14 +5,25 @@ namespace App\Repositories;
 use App\Models\Notification;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
+use Shared\Repositories\BaseRepository;
 
 /**
  * Notification Repository
  * 
  * Data access layer for notifications
  */
-class NotificationRepository
+class NotificationRepository extends BaseRepository
 {
+    /**
+     * Specify Model class name
+     *
+     * @return string
+     */
+    protected function model(): string
+    {
+        return Notification::class;
+    }
+
     /**
      * Get all notifications with pagination and filtering
      */
@@ -102,40 +113,6 @@ class NotificationRepository
                           ->orderBy('priority', 'desc')
                           ->limit(50)
                           ->get();
-    }
-
-    /**
-     * Create new notification
-     */
-    public function create(array $data): Notification
-    {
-        return Notification::create($data);
-    }
-
-    /**
-     * Update notification
-     */
-    public function update(int $id, array $data): bool
-    {
-        $notification = $this->findById($id);
-        if (!$notification) {
-            return false;
-        }
-
-        return $notification->update($data);
-    }
-
-    /**
-     * Delete notification (soft delete)
-     */
-    public function delete(int $id): bool
-    {
-        $notification = $this->findById($id);
-        if (!$notification) {
-            return false;
-        }
-
-        return $notification->delete();
     }
 
     /**

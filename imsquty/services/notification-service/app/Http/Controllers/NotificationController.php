@@ -9,6 +9,7 @@ use App\Http\Resources\NotificationCollection;
 use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Shared\Traits\ApiResponses;
 
 /**
  * Notification Controller
@@ -17,6 +18,8 @@ use Illuminate\Http\Request;
  */
 class NotificationController extends Controller
 {
+    use ApiResponses;
+
     public function __construct(
         private NotificationService $notificationService
     ) {}
@@ -32,11 +35,10 @@ class NotificationController extends Controller
         
         $notifications = $this->notificationService->getAll($perPage, $filters);
         
-        return response()->json([
-            'success' => true,
-            'data' => new NotificationCollection($notifications),
-            'message' => 'Notifications retrieved successfully'
-        ]);
+        return $this->successResponse(
+            new NotificationCollection($notifications),
+            'Notifications retrieved successfully'
+        );
     }
 
     /**
@@ -48,18 +50,13 @@ class NotificationController extends Controller
         $notification = $this->notificationService->getById($id);
         
         if (!$notification) {
-            return response()->json([
-                'success' => false,
-                'error' => ['code' => 'NOT_FOUND', 'message' => 'Notification not found'],
-                'message' => 'Notification not found'
-            ], 404);
+            return $this->notFoundResponse('Notification not found');
         }
         
-        return response()->json([
-            'success' => true,
-            'data' => new NotificationResource($notification),
-            'message' => 'Notification retrieved successfully'
-        ]);
+        return $this->successResponse(
+            new NotificationResource($notification),
+            'Notification retrieved successfully'
+        );
     }
 
     /**
@@ -70,11 +67,10 @@ class NotificationController extends Controller
     {
         $notification = $this->notificationService->create($request->validated());
         
-        return response()->json([
-            'success' => true,
-            'data' => new NotificationResource($notification),
-            'message' => 'Notification created successfully'
-        ], 201);
+        return $this->createdResponse(
+            new NotificationResource($notification),
+            'Notification created successfully'
+        );
     }
 
     /**
@@ -86,17 +82,10 @@ class NotificationController extends Controller
         $result = $this->notificationService->send($id);
         
         if (!$result) {
-            return response()->json([
-                'success' => false,
-                'error' => ['code' => 'SEND_FAILED', 'message' => 'Failed to send notification'],
-                'message' => 'Failed to send notification'
-            ], 400);
+            return $this->errorResponse('Failed to send notification', 400);
         }
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Notification sent successfully'
-        ]);
+        return $this->successResponse(null, 'Notification sent successfully');
     }
 
     /**
@@ -108,11 +97,10 @@ class NotificationController extends Controller
         $limit = $request->input('limit', 100);
         $sent = $this->notificationService->processPending($limit);
         
-        return response()->json([
-            'success' => true,
-            'data' => ['sent' => $sent],
-            'message' => "{$sent} notifications processed successfully"
-        ]);
+        return $this->successResponse(
+            ['sent' => $sent],
+            "{$sent} notifications processed successfully"
+        );
     }
 
     /**
@@ -124,11 +112,10 @@ class NotificationController extends Controller
         $maxRetries = $request->input('max_retries', 3);
         $retried = $this->notificationService->retryFailed($maxRetries);
         
-        return response()->json([
-            'success' => true,
-            'data' => ['retried' => $retried],
-            'message' => "{$retried} notifications retried successfully"
-        ]);
+        return $this->successResponse(
+            ['retried' => $retried],
+            "{$retried} notifications retried successfully"
+        );
     }
 
     /**
@@ -140,17 +127,10 @@ class NotificationController extends Controller
         $result = $this->notificationService->cancel($id);
         
         if (!$result) {
-            return response()->json([
-                'success' => false,
-                'error' => ['code' => 'CANCEL_FAILED', 'message' => 'Failed to cancel notification'],
-                'message' => 'Failed to cancel notification'
-            ], 400);
+            return $this->errorResponse('Failed to cancel notification', 400);
         }
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Notification cancelled successfully'
-        ]);
+        return $this->successResponse(null, 'Notification cancelled successfully');
     }
 
     /**
@@ -161,11 +141,7 @@ class NotificationController extends Controller
     {
         $stats = $this->notificationService->getStatistics();
         
-        return response()->json([
-            'success' => true,
-            'data' => $stats,
-            'message' => 'Statistics retrieved successfully'
-        ]);
+        return $this->successResponse($stats, 'Statistics retrieved successfully');
     }
 
     /**
@@ -177,11 +153,10 @@ class NotificationController extends Controller
         $perPage = $request->input('per_page', 15);
         $notifications = $this->notificationService->getUserNotifications($userId, $perPage);
         
-        return response()->json([
-            'success' => true,
-            'data' => new NotificationCollection($notifications),
-            'message' => 'User notifications retrieved successfully'
-        ]);
+        return $this->successResponse(
+            new NotificationCollection($notifications),
+            'User notifications retrieved successfully'
+        );
     }
 
     /**
@@ -193,17 +168,10 @@ class NotificationController extends Controller
         $result = $this->notificationService->delete($id);
         
         if (!$result) {
-            return response()->json([
-                'success' => false,
-                'error' => ['code' => 'NOT_FOUND', 'message' => 'Notification not found'],
-                'message' => 'Notification not found'
-            ], 404);
+            return $this->notFoundResponse('Notification not found');
         }
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Notification deleted successfully'
-        ]);
+        return $this->deletedResponse('Notification deleted successfully');
     }
     /**
      * Update notification
@@ -222,18 +190,13 @@ class NotificationController extends Controller
         $notification = $this->notificationService->update($id, $data);
         
         if (!$notification) {
-            return response()->json([
-                'success' => false,
-                'error' => ['code' => 'NOT_FOUND', 'message' => 'Notification not found'],
-                'message' => 'Notification not found'
-            ], 404);
+            return $this->notFoundResponse('Notification not found');
         }
         
-        return response()->json([
-            'success' => true,
-            'data' => new NotificationResource($notification),
-            'message' => 'Notification updated successfully'
-        ]);
+        return $this->successResponse(
+            new NotificationResource($notification),
+            'Notification updated successfully'
+        );
     }
 
     /**

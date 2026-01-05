@@ -11,7 +11,8 @@
         "laravel/framework": "^10.10",
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
-        "spatie/laravel-permission": "^6.24"
+        "spatie/laravel-permission": "^6.24",
+        "symfony/css-selector": "7.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
@@ -51,7 +52,11 @@
     },
     "extra": {
         "laravel": {
-            "dont-discover": []
+            "dont-discover": [
+                "laravel/sail",
+                "nunomaduro/collision",
+                "spatie/laravel-ignition"
+            ]
         }
     },
     "config": {

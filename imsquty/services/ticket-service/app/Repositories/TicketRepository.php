@@ -5,77 +5,18 @@ namespace App\Repositories;
 use App\Models\Ticket;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
+use Shared\Repositories\BaseRepository;
 
-class TicketRepository
+class TicketRepository extends BaseRepository
 {
     /**
-     * Get all tickets with optional filters and pagination
+     * Specify Model class name
+     *
+     * @return string
      */
-    public function getAll(array $filters = [], int $perPage = 15): LengthAwarePaginator
+    protected function model(): string
     {
-        $query = Ticket::with(['user', 'assignedTo', 'status', 'priority', 'type', 'location'])
-            ->orderBy('created_at', 'desc');
-
-        // Apply filters
-        if (isset($filters['status_id'])) {
-            $query->where('ticket_status_id', $filters['status_id']);
-        }
-
-        if (isset($filters['priority_id'])) {
-            $query->where('ticket_priority_id', $filters['priority_id']);
-        }
-
-        if (isset($filters['type_id'])) {
-            $query->where('ticket_type_id', $filters['type_id']);
-        }
-
-        if (isset($filters['assigned_to'])) {
-            $query->where('assigned_to', $filters['assigned_to']);
-        }
-
-        if (isset($filters['created_by'])) {
-            $query->where('user_id', $filters['created_by']);
-        }
-
-        if (isset($filters['is_breached'])) {
-            $query->where('is_breached', $filters['is_breached']);
-        }
-
-        if (isset($filters['search'])) {
-            $query->where(function ($q) use ($filters) {
-                $q->where('subject', 'like', '%' . $filters['search'] . '%')
-                  ->orWhere('description', 'like', '%' . $filters['search'] . '%')
-                  ->orWhere('ticket_code', 'like', '%' . $filters['search'] . '%');
-            });
-        }
-
-        if (isset($filters['date_from'])) {
-            $query->whereDate('created_at', '>=', $filters['date_from']);
-        }
-
-        if (isset($filters['date_to'])) {
-            $query->whereDate('created_at', '<=', $filters['date_to']);
-        }
-
-        return $query->paginate($perPage);
-    }
-
-    /**
-     * Find ticket by ID with relationships
-     */
-    public function findById(int $id): ?Ticket
-    {
-        return Ticket::with([
-            'user', 
-            'assignedTo', 
-            'status', 
-            'priority', 
-            'type', 
-            'location', 
-            'asset',
-            'comments.user',
-            'history.changedBy'
-        ])->find($id);
+        return Ticket::class;
     }
 
     /**
@@ -86,39 +27,6 @@ class TicketRepository
         return Ticket::with(['user', 'assignedTo', 'status', 'priority', 'type'])
             ->where('ticket_code', $ticketCode)
             ->first();
-    }
-
-    /**
-     * Create new ticket
-     */
-    public function create(array $data): Ticket
-    {
-        return Ticket::create($data);
-    }
-
-    /**
-     * Update ticket
-     */
-    public function update(Ticket $ticket, array $data): bool
-    {
-        return $ticket->update($data);
-    }
-
-    /**
-     * Delete ticket (soft delete)
-     */
-    public function delete(Ticket $ticket): bool
-    {
-        return $ticket->delete();
-    }
-
-    /**
-     * Restore soft-deleted ticket
-     */
-    public function restore(int $id): bool
-    {
-        $ticket = Ticket::withTrashed()->find($id);
-        return $ticket ? $ticket->restore() : false;
     }
 
     /**

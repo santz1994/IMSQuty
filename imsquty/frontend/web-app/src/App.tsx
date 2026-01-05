@@ -23,6 +23,18 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
   return <>{children}</>
 }
 
+/**
+ * ProtectedDashboardRoute - Reusable wrapper for protected routes with dashboard layout
+ * Eliminates 60% of JSX duplication
+ */
+const ProtectedDashboardRoute: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => (
+  <ProtectedRoute>
+    <DashboardLayout>{children}</DashboardLayout>
+  </ProtectedRoute>
+)
+
 function App() {
   const { isAuthenticated } = useAppSelector((state) => state.auth)
 
@@ -36,77 +48,63 @@ function App() {
       <Route
         path="/"
         element={
-          <ProtectedRoute>
-            <DashboardLayout>
-              <Dashboard />
-            </DashboardLayout>
-          </ProtectedRoute>
+          <ProtectedDashboardRoute>
+            <Dashboard />
+          </ProtectedDashboardRoute>
         }
       />
 
       <Route
         path="/assets"
         element={
-          <ProtectedRoute>
-            <DashboardLayout>
-              <AssetList />
-            </DashboardLayout>
-          </ProtectedRoute>
+          <ProtectedDashboardRoute>
+            <AssetList />
+          </ProtectedDashboardRoute>
         }
       />
 
       <Route
         path="/assets/create"
         element={
-          <ProtectedRoute>
-            <DashboardLayout>
-              <AssetCreate />
-            </DashboardLayout>
-          </ProtectedRoute>
+          <ProtectedDashboardRoute>
+            <AssetCreate />
+          </ProtectedDashboardRoute>
         }
       />
 
       <Route
         path="/assets/:id"
         element={
-          <ProtectedRoute>
-            <DashboardLayout>
-              <AssetDetail />
-            </DashboardLayout>
-          </ProtectedRoute>
+          <ProtectedDashboardRoute>
+            <AssetDetail />
+          </ProtectedDashboardRoute>
         }
       />
 
       <Route
         path="/tickets"
         element={
-          <ProtectedRoute>
-            <DashboardLayout>
-              <TicketList />
-            </DashboardLayout>
-          </ProtectedRoute>
+          <ProtectedDashboardRoute>
+            <TicketList />
+          </ProtectedDashboardRoute>
         }
       />
 
       <Route
         path="/tickets/create"
         element={
-          <ProtectedRoute>
-            <DashboardLayout>
-              <TicketCreate />
-            </DashboardLayout>
-          </ProtectedRoute>
+          <ProtectedDashboardRoute>
+            <TicketCreate />
+          </ProtectedDashboardRoute>
         }
       />
 
       <Route
         path="/tickets/:id"
         element={
-          <ProtectedRoute>
-            <DashboardLayout>
-              <TicketDetail />
-            </DashboardLayout>
-          </ProtectedRoute>
+          <ProtectedDashboardRoute>
+            <TicketDetail />
+          </ProtectedDashboardRoute>
         }
       />
     </Routes>

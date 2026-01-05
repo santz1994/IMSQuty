@@ -4,9 +4,20 @@ namespace App\Repositories;
 
 use App\Models\Report;
 use App\Models\ReportSchedule;
+use Shared\Repositories\BaseRepository;
 
-class ReportRepository
+class ReportRepository extends BaseRepository
 {
+    /**
+     * Specify Model class name
+     *
+     * @return string
+     */
+    protected function model(): string
+    {
+        return Report::class;
+    }
+
     public function getAll(int $perPage = 15, array $filters = [])
     {
         $query = Report::query();
@@ -20,22 +31,6 @@ class ReportRepository
         }
 
         return $query->latest()->paginate($perPage);
-    }
-
-    public function findById(int $id): ?Report
-    {
-        return Report::find($id);
-    }
-
-    public function create(array $data): Report
-    {
-        return Report::create($data);
-    }
-
-    public function update(int $id, array $data): bool
-    {
-        $report = $this->findById($id);
-        return $report ? $report->update($data) : false;
     }
 
     public function getAllSchedules(int $perPage = 15)

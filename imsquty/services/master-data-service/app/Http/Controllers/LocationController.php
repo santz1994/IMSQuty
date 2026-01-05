@@ -9,6 +9,7 @@ use App\Services\LocationService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Shared\Traits\ApiResponses;
 
 /**
  * Location Controller
@@ -18,6 +19,8 @@ use Illuminate\Http\Request;
  */
 class LocationController extends Controller
 {
+    use ApiResponses;
+
     public function __construct(
         private LocationService $service
     ) {}
@@ -30,32 +33,16 @@ class LocationController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        try {
-            $filters = $request->only(['search', 'is_active', 'parent_id', 'city', 'country', 'with_trashed', 'sort_by', 'sort_order']);
-            $perPage = $request->input('per_page', 15);
-            
-            $locations = $this->service->getAllLocations($filters, $perPage);
-            
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'data' => LocationResource::collection($locations->items()),
-                    'meta' => [
-                        'current_page' => $locations->currentPage(),
-                        'total' => $locations->total(),
-                        'per_page' => $locations->perPage(),
-                        'last_page' => $locations->lastPage(),
-                    ]
-                ],
-                'message' => 'Locations retrieved successfully'
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Failed to retrieve locations'
-            ], 500);
-        }
+        $filters = $request->only(['search', 'is_active', 'parent_id', 'city', 'country', 'with_trashed', 'sort_by', 'sort_order']);
+        $perPage = $request->input('per_page', 15);
+        
+        $locations = $this->service->getAllLocations($filters, $perPage);
+        
+        return $this->paginatedResponse(
+            LocationResource::collection($locations->items())->resolve(),
+            $locations,
+            'Locations retrieved successfully'
+        );
     }
 
     /**
@@ -68,25 +55,12 @@ class LocationController extends Controller
     {
         try {
             $location = $this->service->getLocationById($id);
-            
-            return response()->json([
-                'success' => true,
-                'data' => new LocationResource($location),
-                'message' => 'Location retrieved successfully'
-            ]);
+            return $this->successResponse(
+                (new LocationResource($location))->resolve(),
+                'Location retrieved successfully'
+            );
         } catch (ModelNotFoundException $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Location not found'
-            ], 404);
-        } catch (\Exception $e) {
-            $status = $e->getCode() === 404 ? 404 : 500;
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Failed to retrieve location'
-            ], $status);
+            return $this->notFoundResponse('Location not found');
         }
     }
 
@@ -98,22 +72,11 @@ class LocationController extends Controller
      */
     public function store(CreateLocationRequest $request): JsonResponse
     {
-        try {
-            $location = $this->service->createLocation($request->validated());
-            
-            return response()->json([
-                'success' => true,
-                'data' => new LocationResource($location),
-                'message' => 'Location created successfully'
-            ], 201);
-        } catch (\Exception $e) {
-            $status = $e->getCode() === 422 ? 422 : 500;
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Failed to create location'
-            ], $status);
-        }
+        $location = $this->service->createLocation($request->validated());
+        return $this->createdResponse(
+            (new LocationResource($location))->resolve(),
+            'Location created successfully'
+        );
     }
 
     /**
@@ -127,23 +90,12 @@ class LocationController extends Controller
     {
         try {
             $location = $this->service->updateLocation($id, $request->validated());
-            
-            return response()->json([
-                'success' => true,
-                'data' => new LocationResource($location),
-                'message' => 'Location updated successfully'
-            ]);
-        } catch (\Exception $e) {
-            $status = match($e->getCode()) {
-                404 => 404,
-                422 => 422,
-                default => 500
-            };
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Failed to update location'
-            ], $status);
+            return $this->successResponse(
+                (new LocationResource($location))->resolve(),
+                'Location updated successfully'
+            );
+        } catch (ModelNotFoundException $e) {
+            return $this->notFoundResponse('Location not found');
         }
     }
 
@@ -157,22 +109,9 @@ class LocationController extends Controller
     {
         try {
             $this->service->deleteLocation($id);
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Location deleted successfully'
-            ]);
-        } catch (\Exception $e) {
-            $status = match($e->getCode()) {
-                404 => 404,
-                422 => 422,
-                default => 500
-            };
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Failed to delete location'
-            ], $status);
+            return $this->deletedResponse('Location deleted successfully');
+        } catch (ModelNotFoundException $e) {
+            return $this->notFoundResponse('Location not found');
         }
     }
 
@@ -186,18 +125,9 @@ class LocationController extends Controller
     {
         try {
             $this->service->restoreLocation($id);
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Location restored successfully'
-            ]);
-        } catch (\Exception $e) {
-            $status = $e->getCode() === 404 ? 404 : 500;
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Failed to restore location'
-            ], $status);
+            return $this->successResponse(null, 'Location restored successfully');
+        } catch (ModelNotFoundException $e) {
+            return $this->notFoundResponse('Location not found');
         }
     }
 
@@ -208,21 +138,11 @@ class LocationController extends Controller
      */
     public function active(): JsonResponse
     {
-        try {
-            $locations = $this->service->getActiveLocations();
-            
-            return response()->json([
-                'success' => true,
-                'data' => LocationResource::collection($locations),
-                'message' => 'Active locations retrieved successfully'
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Failed to retrieve active locations'
-            ], 500);
-        }
+        $locations = $this->service->getActiveLocations();
+        return $this->successResponse(
+            LocationResource::collection($locations)->resolve(),
+            'Active locations retrieved successfully'
+        );
     }
 
     /**
@@ -232,20 +152,7 @@ class LocationController extends Controller
      */
     public function hierarchy(): JsonResponse
     {
-        try {
-            $locations = $this->service->getLocationsHierarchy();
-            
-            return response()->json([
-                'success' => true,
-                'data' => $locations,
-                'message' => 'Locations hierarchy retrieved successfully'
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Failed to retrieve locations hierarchy'
-            ], 500);
-        }
+        $locations = $this->service->getLocationsHierarchy();
+        return $this->successResponse($locations, 'Locations hierarchy retrieved successfully');
     }
 }

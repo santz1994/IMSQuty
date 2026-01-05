@@ -9,6 +9,7 @@ use App\Models\AuditLog;
 use App\Repositories\TicketRepository;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Shared\Helpers\CacheHelper;
 use Exception;
 
 class TicketService
@@ -46,7 +47,7 @@ class TicketService
         try {
             // Calculate SLA due date based on priority
             if (isset($data['ticket_priority_id'])) {
-                $priority = \App\Models\TicketsPriority::find($data['ticket_priority_id']);
+                $priority = CacheHelper::getTicketPriority($data['ticket_priority_id']);
                 if ($priority) {
                     $data['sla_due'] = now()->addHours($priority->sla_hours);
                 }
@@ -54,7 +55,7 @@ class TicketService
 
             // Set default status to "New" if not provided
             if (!isset($data['ticket_status_id'])) {
-                $newStatus = \App\Models\TicketsStatus::where('status', 'New')->first();
+                $newStatus = CacheHelper::getTicketStatusByName('New');
                 $data['ticket_status_id'] = $newStatus ? $newStatus->id : 1;
             }
 

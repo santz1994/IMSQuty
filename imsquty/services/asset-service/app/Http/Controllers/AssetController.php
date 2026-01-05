@@ -12,6 +12,7 @@ use App\Http\Resources\AssetResource;
 use App\Http\Resources\AssetCollection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Shared\Traits\ApiResponses;
 
 /**
  * Asset Controller
@@ -21,6 +22,8 @@ use Illuminate\Http\Request;
  */
 class AssetController extends Controller
 {
+    use ApiResponses;
+
     /**
      * @var AssetService
      */
@@ -80,17 +83,12 @@ class AssetController extends Controller
             
             $assets = $this->assetService->getAllAssets($filters, $perPage);
 
-            return response()->json([
-                'success' => true,
-                'data' => new AssetCollection($assets),
-                'message' => 'Assets retrieved successfully',
-            ], 200);
+            return $this->paginatedResponse(
+                new AssetCollection($assets),
+                'Assets retrieved successfully'
+            );
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Failed to retrieve assets',
-            ], 500);
+            return $this->errorResponse('Failed to retrieve assets: ' . $e->getMessage(), 500);
         }
     }
 
@@ -116,17 +114,12 @@ class AssetController extends Controller
             // Eager load relationships for resource transformation
             $asset->load(['assetModel', 'status', 'location']);
 
-            return response()->json([
-                'success' => true,
-                'data' => new AssetResource($asset),
-                'message' => 'Asset retrieved successfully',
-            ], 200);
+            return $this->successResponse(
+                new AssetResource($asset),
+                'Asset retrieved successfully'
+            );
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Asset not found',
-            ], 404);
+            return $this->notFoundResponse('Asset not found');
         }
     }
 
@@ -150,17 +143,12 @@ class AssetController extends Controller
         try {
             $asset = $this->assetService->getAssetByQrCode($qrCode);
 
-            return response()->json([
-                'success' => true,
-                'data' => new AssetResource($asset),
-                'message' => 'Asset retrieved successfully',
-            ], 200);
+            return $this->successResponse(
+                new AssetResource($asset),
+                'Asset retrieved successfully'
+            );
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Asset not found',
-            ], 404);
+            return $this->notFoundResponse('Asset not found');
         }
     }
 
@@ -184,17 +172,12 @@ class AssetController extends Controller
         try {
             $asset = $this->assetService->createAsset($request->validated());
 
-            return response()->json([
-                'success' => true,
-                'data' => new AssetResource($asset),
-                'message' => 'Asset created successfully',
-            ], 201);
+            return $this->createdResponse(
+                new AssetResource($asset),
+                'Asset created successfully'
+            );
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Failed to create asset',
-            ], 500);
+            return $this->errorResponse('Failed to create asset: ' . $e->getMessage(), 500);
         }
     }
 
@@ -220,17 +203,12 @@ class AssetController extends Controller
         try {
             $asset = $this->assetService->updateAsset($id, $request->validated());
 
-            return response()->json([
-                'success' => true,
-                'data' => new AssetResource($asset),
-                'message' => 'Asset updated successfully',
-            ], 200);
+            return $this->successResponse(
+                new AssetResource($asset),
+                'Asset updated successfully'
+            );
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Failed to update asset',
-            ], 500);
+            return $this->errorResponse('Failed to update asset: ' . $e->getMessage(), 500);
         }
     }
 
@@ -254,16 +232,9 @@ class AssetController extends Controller
         try {
             $this->assetService->deleteAsset($id);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Asset deleted successfully',
-            ], 200);
+            return $this->deletedResponse('Asset deleted successfully');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Failed to delete asset',
-            ], 500);
+            return $this->errorResponse('Failed to delete asset: ' . $e->getMessage(), 500);
         }
     }
 
@@ -287,16 +258,12 @@ class AssetController extends Controller
         try {
             $this->assetService->restoreAsset($id);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Asset restored successfully',
-            ], 200);
+            return $this->successResponse(
+                null,
+                'Asset restored successfully'
+            );
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Failed to restore asset',
-            ], 500);
+            return $this->errorResponse('Failed to restore asset: ' . $e->getMessage(), 500);
         }
     }
 

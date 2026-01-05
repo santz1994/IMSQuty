@@ -8,6 +8,7 @@ use App\Http\Resources\UserResource;
 use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Shared\Traits\ApiResponses;
 
 /**
  * User Controller
@@ -17,6 +18,7 @@ use Illuminate\Http\Request;
  */
 class UserController extends Controller
 {
+    use ApiResponses;
     public function __construct(
         private UserService $userService
     ) {}
@@ -34,17 +36,16 @@ class UserController extends Controller
         
         $users = $this->userService->getAllUsers($filters, $perPage);
         
-        return response()->json([
-            'success' => true,
-            'data' => [
+        return $this->paginatedResponse(
+            [
                 'data' => UserResource::collection($users->items()),
                 'current_page' => $users->currentPage(),
                 'total' => $users->total(),
                 'per_page' => $users->perPage(),
                 'last_page' => $users->lastPage(),
             ],
-            'message' => 'Users retrieved successfully'
-        ]);
+            'Users retrieved successfully'
+        );
     }
 
     /**
@@ -58,18 +59,13 @@ class UserController extends Controller
         $user = $this->userService->getUserById($id);
         
         if (!$user) {
-            return response()->json([
-                'success' => false,
-                'error' => 'User not found',
-                'message' => 'The requested user does not exist'
-            ], 404);
+            return $this->notFoundResponse('User not found');
         }
         
-        return response()->json([
-            'success' => true,
-            'data' => new UserResource($user),
-            'message' => 'User retrieved successfully'
-        ]);
+        return $this->successResponse(
+            new UserResource($user),
+            'User retrieved successfully'
+        );
     }
 
     /**
@@ -82,11 +78,10 @@ class UserController extends Controller
     {
         $user = $this->userService->createUser($request->validated());
         
-        return response()->json([
-            'success' => true,
-            'data' => new UserResource($user),
-            'message' => 'User created successfully'
-        ], 201);
+        return $this->createdResponse(
+            new UserResource($user),
+            'User created successfully'
+        );
     }
 
     /**
@@ -101,18 +96,13 @@ class UserController extends Controller
         $user = $this->userService->updateUser($id, $request->validated());
         
         if (!$user) {
-            return response()->json([
-                'success' => false,
-                'error' => 'User not found',
-                'message' => 'The requested user does not exist'
-            ], 404);
+            return $this->notFoundResponse('User not found');
         }
         
-        return response()->json([
-            'success' => true,
-            'data' => new UserResource($user),
-            'message' => 'User updated successfully'
-        ]);
+        return $this->successResponse(
+            new UserResource($user),
+            'User updated successfully'
+        );
     }
 
     /**
@@ -126,17 +116,10 @@ class UserController extends Controller
         $result = $this->userService->deleteUser($id);
         
         if (!$result) {
-            return response()->json([
-                'success' => false,
-                'error' => 'User not found',
-                'message' => 'The requested user does not exist'
-            ], 404);
+            return $this->notFoundResponse('User not found');
         }
         
-        return response()->json([
-            'success' => true,
-            'message' => 'User deleted successfully'
-        ]);
+        return $this->deletedResponse('User deleted successfully');
     }
 
     /**
@@ -150,18 +133,13 @@ class UserController extends Controller
         $user = $this->userService->restoreUser($id);
         
         if (!$user) {
-            return response()->json([
-                'success' => false,
-                'error' => 'User not found',
-                'message' => 'The requested user does not exist or is not deleted'
-            ], 404);
+            return $this->notFoundResponse('User not found or not deleted');
         }
         
-        return response()->json([
-            'success' => true,
-            'data' => new UserResource($user),
-            'message' => 'User restored successfully'
-        ]);
+        return $this->successResponse(
+            new UserResource($user),
+            'User restored successfully'
+        );
     }
 
     /**
@@ -181,18 +159,13 @@ class UserController extends Controller
         $user = $this->userService->assignRoles($id, $request->input('roles'));
         
         if (!$user) {
-            return response()->json([
-                'success' => false,
-                'error' => 'User not found',
-                'message' => 'The requested user does not exist'
-            ], 404);
+            return $this->notFoundResponse('User not found');
         }
         
-        return response()->json([
-            'success' => true,
-            'data' => new UserResource($user),
-            'message' => 'Roles assigned successfully'
-        ]);
+        return $this->successResponse(
+            new UserResource($user),
+            'Roles assigned successfully'
+        );
     }
 
     /**
@@ -206,17 +179,12 @@ class UserController extends Controller
         $permissions = $this->userService->getUserPermissions($id);
         
         if ($permissions === null) {
-            return response()->json([
-                'success' => false,
-                'error' => 'User not found',
-                'message' => 'The requested user does not exist'
-            ], 404);
+            return $this->notFoundResponse('User not found');
         }
         
-        return response()->json([
-            'success' => true,
-            'data' => $permissions,
-            'message' => 'User permissions retrieved successfully'
-        ]);
+        return $this->successResponse(
+            $permissions,
+            'User permissions retrieved successfully'
+        );
     }
 }
