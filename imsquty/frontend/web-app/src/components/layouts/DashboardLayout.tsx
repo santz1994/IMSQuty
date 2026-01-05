@@ -1,25 +1,25 @@
 import {
-    AccountCircle,
-    Dashboard,
-    Inventory,
-    Logout,
-    Menu as MenuIcon,
-    TicketAgent,
+  AccountCircle,
+  ConfirmationNumber,
+  Dashboard,
+  Inventory,
+  Logout,
+  Menu as MenuIcon,
 } from '@mui/icons-material'
 import {
-    AppBar,
-    Box,
-    Drawer,
-    IconButton,
-    List,
-    ListItem,
-    ListItemButton,
-    ListItemIcon,
-    ListItemText,
-    Menu,
-    MenuItem,
-    Toolbar,
-    Typography,
+  AppBar,
+  Box,
+  Drawer,
+  IconButton,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
+  Toolbar,
+  Typography,
 } from '@mui/material'
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -53,7 +53,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const menuItems = [
     { label: 'Dashboard', icon: <Dashboard />, path: '/' },
     { label: 'Assets', icon: <Inventory />, path: '/assets' },
-    { label: 'Tickets', icon: <TicketAgent />, path: '/tickets' },
+    { label: 'Tickets', icon: <ConfirmationNumber />, path: '/tickets' },
   ]
 
   return (

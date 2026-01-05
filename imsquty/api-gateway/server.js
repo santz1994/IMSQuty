@@ -38,20 +38,41 @@ const logger = winston.createLogger({
 // MIDDLEWARE
 // ============================================
 
-// Security headers
-app.use(helmet());
-
-// CORS configuration
-app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+// Security headers - disable some policies that can interfere with CORS
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+  crossOriginEmbedderPolicy: false
 }));
 
-// Body parser
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// CORS configuration - MUST come after helmet
+// Use dynamic origin to reflect the requesting origin in Access-Control-Allow-Origin header
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:3000'
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(null, false);
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 86400 // 24 hours
+}));
+
+// Don't use body parser yet - let proxies handle raw body first
+// Body parsers will be applied selectively after defining non-proxy routes
 
 // NEW: Response formatter middleware
 app.use(ResponseFormatter.middleware());
@@ -73,6 +94,11 @@ const adminLimiter = RateLimitConfig.strictLimiter(); // Use strict limiter for 
 // JWT AUTHENTICATION MIDDLEWARE
 // ============================================
 const authenticateJWT = (req, res, next) => {
+  // Skip authentication for OPTIONS preflight requests
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
+
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -121,13 +147,16 @@ const retryManager = new RetryManager({
 });
 
 // Proxy configuration - UPDATED: With resilience patterns
-const proxyOptions = (target, serviceName) => ({
+const proxyOptions = (target, serviceName, skipPathRewrite = false) => ({
   target,
   changeOrigin: true,
-  pathRewrite: (path) => {
+  timeout: 30000, // 30 seconds
+  proxyTimeout: 30000, // 30 seconds
+  pathRewrite: skipPathRewrite ? undefined : (path) => {
     // Remove /api/v1/{service} prefix
     return path.replace(/^\/api\/v1\/[^/]+/, '/api/v1');
   },
+  logLevel: 'debug', // Enable debug logging
   onError: (err, req, res) => {
     logger.error(`Proxy error for ${serviceName} (${target}):`, err.message);
 
@@ -145,6 +174,8 @@ const proxyOptions = (target, serviceName) => ({
     return res.status(statusCode).json(errorBody);
   },
   onProxyReq: (proxyReq, req) => {
+    logger.info(`Proxying ${req.method} ${req.url} to ${target}${req.url}`);
+
     // NEW: Check circuit breaker before proxying
     const serviceName = req.path.split('/')[3]; // Extract service name from path
     const breaker = circuitBreakers[serviceName];
@@ -177,6 +208,12 @@ const proxyOptions = (target, serviceName) => ({
       breaker.recordSuccess();
     }
 
+    // Ensure CORS headers are set on proxy response
+    proxyRes.headers['Access-Control-Allow-Origin'] = req.headers.origin || '*';
+    proxyRes.headers['Access-Control-Allow-Credentials'] = 'true';
+    proxyRes.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, PATCH, DELETE, OPTIONS';
+    proxyRes.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
+
     // Log response
     logger.info(`${req.method} ${req.path} -> ${proxyRes.statusCode}`);
   }
@@ -187,14 +224,6 @@ const proxyOptions = (target, serviceName) => ({
 // ============================================
 
 // Health check
-app.get('/health', (req, res) => {
-  res.json({
-    success: true,
-    message: 'API Gateway is healthy',
-    timestamp: new Date().toISOString(),
-    services: Object.keys(services)
-  });
-});
 
 // API version info
 app.get('/api/v1', (req, res) => {
@@ -223,8 +252,14 @@ app.get('/api/v1', (req, res) => {
 // SERVICE PROXIES (UPDATED WITH RESILIENCE)
 // ============================================
 
-// Auth Service (no authentication required) - UPDATED rate limiting
-app.use('/api/v1/auth', authLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('auth-service'), 'auth')));
+// Auth Service (no authentication required) - UPDATED to use mock backend
+// Use host machine IP instead of host.docker.internal for better compatibility
+const MOCK_BACKEND_URL = process.env.MOCK_BACKEND_URL || 'http://192.168.1.122:3000';
+app.use('/api/v1/auth', authLimiter, createProxyMiddleware(proxyOptions(MOCK_BACKEND_URL, 'auth', true)));
+
+// NOW add body parsers for authenticated routes (after auth proxy which handles raw body)
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // User Service - UPDATED with dynamic service resolution
 app.use('/api/v1/users', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('user-service'), 'user')));
@@ -254,6 +289,20 @@ app.use('/api/v1/reporting', authenticateJWT, exportLimiter, createProxyMiddlewa
 app.use('/api/v1/notifications', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('notification-service'), 'notification')));
 
 // ============================================
+// HEALTH CHECK ENDPOINT
+// ============================================
+app.get('/health', (req, res) => {
+  const allServices = serviceRegistry.getAllServices();
+  res.status(200).json({
+    success: true,
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    services: Object.keys(allServices)
+  });
+});
+
+// ============================================
 // ERROR HANDLING (UPDATED)
 // ============================================
 
@@ -280,8 +329,9 @@ app.use((err, req, res, next) => {
 const server = app.listen(PORT, '0.0.0.0', () => {
   logger.info(`✅ API Gateway running on port ${PORT}`);
   logger.info('\n📋 Service Configuration:');
-  Object.entries(serviceRegistry.services).forEach(([name, service]) => {
-    logger.info(`   ✓ ${name}: ${service.urls.join(', ')}`);
+  const allServices = serviceRegistry.getAllServices();
+  Object.entries(allServices).forEach(([name, service]) => {
+    logger.info(`   ✓ ${name}: ${service.instances.join(', ')}`);
   });
 
   logger.info('\n⚡ Resilience Features Enabled:');
