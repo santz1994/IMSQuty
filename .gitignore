@@ -48,3 +48,6 @@ yarn.lock
 .phpunit.result.cache
 coverage/
 node_modules
+
+# Removed directories
+quty2/
