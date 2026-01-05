@@ -1,5 +1,5 @@
 # Multi-stage build for Master Data Service
-FROM php:8.1-fpm as base
+FROM php:8.4-fpm as base
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
