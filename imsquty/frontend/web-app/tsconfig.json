@@ -1,5 +1,7 @@
 {
     "compilerOptions": {
+        "composite": true,
+        "noEmit": false,
         "target": "ES2020",
         "useDefineForClassFields": true,
         "lib": [
@@ -34,9 +36,8 @@
     "include": [
         "src"
     ],
-    "references": [
-        {
-            "path": "./tsconfig.app.json"
-        }
+    "exclude": [
+        "node_modules",
+        "dist"
     ]
 }
