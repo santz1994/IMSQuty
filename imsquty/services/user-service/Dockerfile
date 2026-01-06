@@ -51,4 +51,4 @@ USER imsquty
 EXPOSE 8002
 
 # Start PHP-FPM and Laravel serve
-CMD php artisan serve --host=0.0.0.0 --port=8002
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8002"]

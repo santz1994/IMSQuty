@@ -1,16 +1,17 @@
 import { Add, ArrowBack } from '@mui/icons-material'
 import {
-    Alert,
-    Box,
-    Button,
-    CircularProgress,
-    Grid,
-    Paper,
-    Typography,
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Grid,
+  Paper,
+  Typography,
 } from '@mui/material'
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ControlledFormSelect, FormField, FormGroup } from '../../components/FormField'
+import { useNotification } from '../../context/NotificationContext'
 import { useTicketForm, useTicketFormSubmit } from '../../hooks/useTicketForm'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { createTicket } from '../../store/slices/ticketSlice'
@@ -18,6 +19,7 @@ import { createTicket } from '../../store/slices/ticketSlice'
 const TicketCreate: React.FC = () => {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
+  const { showNotification } = useNotification()
   const { loading, error: ticketError } = useAppSelector((state) => state.ticket)
 
   const { register, handleSubmit, errors, isSubmitting, control } = useTicketForm()
@@ -33,10 +35,14 @@ const TicketCreate: React.FC = () => {
       )
 
       if (result.payload) {
+        showNotification('Ticket created successfully!', 'success')
         navigate('/tickets')
+      } else {
+        showNotification('Failed to create ticket', 'error')
       }
     } catch (err) {
       console.error('Failed to create ticket:', err)
+      showNotification('An error occurred while creating ticket', 'error')
     }
   })
 

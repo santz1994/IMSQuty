@@ -9,7 +9,7 @@ import ticketReducer from './slices/ticketSlice'
 import ticketStatusReducer from './slices/ticketStatusSlice'
 import warrantyTypeReducer from './slices/warrantyTypeSlice'
 
-export const store = configureStore({
+const store = configureStore({
   reducer: {
     auth: authReducer,
     asset: assetReducer,
@@ -22,6 +22,8 @@ export const store = configureStore({
     ticketStatus: ticketStatusReducer,
   },
 })
+
+export { store }
 
 export type RootState = ReturnType<typeof store.getState>
 export type AppDispatch = typeof store.dispatch

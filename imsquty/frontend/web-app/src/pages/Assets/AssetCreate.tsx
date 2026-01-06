@@ -1,16 +1,17 @@
 import { Add, ArrowBack } from '@mui/icons-material'
 import {
-    Alert,
-    Box,
-    Button,
-    CircularProgress,
-    Grid,
-    Paper,
-    Typography,
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Grid,
+  Paper,
+  Typography,
 } from '@mui/material'
 import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ControlledFormSelect, FormField, FormGroup } from '../../components/FormField'
+import { useNotification } from '../../context/NotificationContext'
 import { useAssetForm, useAssetFormSubmit } from '../../hooks/useAssetForm'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { createAsset } from '../../store/slices/assetSlice'
@@ -22,6 +23,7 @@ import { fetchActiveWarrantyTypes } from '../../store/slices/warrantyTypeSlice'
 const AssetCreate: React.FC = () => {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
+  const { showNotification } = useNotification()
   const { loading, error: assetError } = useAppSelector(
     (state) => state.asset,
   )
@@ -47,10 +49,14 @@ const AssetCreate: React.FC = () => {
       )
 
       if (result.payload) {
+        showNotification('Asset created successfully!', 'success')
         navigate('/assets')
+      } else {
+        showNotification('Failed to create asset', 'error')
       }
     } catch (err) {
       console.error('Failed to create asset:', err)
+      showNotification('An error occurred while creating asset', 'error')
     }
   })
 

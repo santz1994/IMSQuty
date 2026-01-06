@@ -1,16 +1,17 @@
 import { ArrowBack, Delete, Save } from '@mui/icons-material'
 import {
-    Alert,
-    Box,
-    Button,
-    CircularProgress,
-    Grid,
-    Paper,
-    Typography,
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Grid,
+  Paper,
+  Typography,
 } from '@mui/material'
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ControlledFormSelect, FormField, FormGroup } from '../../components/FormField'
+import { useNotification } from '../../context/NotificationContext'
 import { useTicketForm, useTicketFormSubmit } from '../../hooks/useTicketForm'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { deleteTicket, fetchTicket, updateTicket } from '../../store/slices/ticketSlice'
@@ -19,6 +20,7 @@ const TicketDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
+  const { showNotification } = useNotification()
   const { currentTicket, loading, error: ticketError } = useAppSelector(
     (state) => state.ticket,
   )
@@ -29,7 +31,7 @@ const TicketDetail: React.FC = () => {
   const submitHandler = useTicketFormSubmit(async (data) => {
     try {
       if (!id) throw new Error('Ticket ID not found')
-      
+
       const result = await dispatch(
         updateTicket({
           id: parseInt(id),
@@ -42,10 +44,14 @@ const TicketDetail: React.FC = () => {
       )
 
       if (result.payload) {
+        showNotification('Ticket updated successfully!', 'success')
         setIsEditing(false)
+      } else {
+        showNotification('Failed to update ticket', 'error')
       }
     } catch (err) {
       console.error('Failed to update ticket:', err)
+      showNotification('An error occurred while updating ticket', 'error')
     }
   })
 
@@ -63,19 +69,24 @@ const TicketDetail: React.FC = () => {
       setValue('title', currentTicket.title)
       setValue('description', currentTicket.description)
       setValue('priority', currentTicket.priority)
-      setValue('status', currentTicket.status)
+      setValue('status', currentTicket.status || '')
       setValue('assigned_to', currentTicket.assigned_to)
-      setValue('due_date', currentTicket.due_date)
+      setValue('due_date', new Date(currentTicket.due_date))
       setValue('asset_id', currentTicket.asset_id)
-      setValue('tags', currentTicket.tags)
+      setValue('tags', currentTicket.tags || '')
     }
   }, [currentTicket, isEditing, setValue])
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (window.confirm('Are you sure you want to delete this ticket?')) {
       if (id) {
-        dispatch(deleteTicket(parseInt(id)))
-        navigate('/tickets')
+        try {
+          await dispatch(deleteTicket(parseInt(id)))
+          showNotification('Ticket deleted successfully!', 'success')
+          navigate('/tickets')
+        } catch (err) {
+          showNotification('Failed to delete ticket', 'error')
+        }
       }
     }
   }

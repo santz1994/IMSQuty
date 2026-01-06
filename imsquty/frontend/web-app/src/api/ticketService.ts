@@ -7,11 +7,13 @@ export interface Ticket {
   description: string
   ticket_type_id: number
   ticket_status_id: number
+  status?: string
+  tags?: string
   priority: 'low' | 'medium' | 'high' | 'urgent'
   created_by: number
-  assigned_to: number
-  location_id: number
-  asset_id: number
+  assigned_to?: number
+  location_id?: number
+  asset_id?: number
   due_date: string
   created_at: string
   updated_at: string

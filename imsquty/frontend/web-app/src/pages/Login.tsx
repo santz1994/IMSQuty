@@ -1,11 +1,11 @@
 import {
-    Alert,
-    Box,
-    Button,
-    CircularProgress,
-    Container,
-    TextField,
-    Typography,
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Container,
+  TextField,
+  Typography,
 } from '@mui/material'
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -195,6 +195,9 @@ const Login: React.FC = () => {
                       borderColor: '#667eea',
                     },
                   },
+                  '& .MuiOutlinedInput-input': {
+                    color: '#1a1a1a',
+                  },
                   '& .MuiOutlinedInput-input::placeholder': {
                     color: '#999',
                     opacity: 1,
@@ -235,6 +238,9 @@ const Login: React.FC = () => {
                     '&.Mui-focused fieldset': {
                       borderColor: '#667eea',
                     },
+                  },
+                  '& .MuiOutlinedInput-input': {
+                    color: '#1a1a1a',
                   },
                   '& .MuiOutlinedInput-input::placeholder': {
                     color: '#999',

@@ -75,6 +75,7 @@ export const useTicketForm = (defaultValues?: Partial<TicketFormData>) => {
     watch,
     reset,
     setValue,
+    control,
   } = useForm<TicketFormData>({
     resolver: yupResolver(ticketValidationSchema),
     mode: 'onBlur',
@@ -96,6 +97,7 @@ export const useTicketForm = (defaultValues?: Partial<TicketFormData>) => {
     formValues,
     reset,
     setValue,
+    control,
   }
 }
 

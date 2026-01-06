@@ -1,5 +1,5 @@
 # Multi-stage build for Meeting Room Service
-FROM php:8.4-fpm-alpine AS base
+FROM php:8.4-fpm-alpine as base
 
 # Install system dependencies
 RUN apk add --no-cache \
@@ -74,6 +74,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
 EXPOSE 8000
 
 # Start PHP-FPM and Laravel server
-CMD php artisan config:cache && \
-    php artisan route:cache && \
-    php artisan serve --host=0.0.0.0 --port=8000
+CMD ["sh", "-c", "php artisan config:cache && php artisan route:cache && php artisan serve --host=0.0.0.0 --port=8000"]

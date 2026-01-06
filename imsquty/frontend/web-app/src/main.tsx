@@ -1,33 +1,28 @@
-import CssBaseline from '@mui/material/CssBaseline'
-import { ThemeProvider, createTheme } from '@mui/material/styles'
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { Provider } from 'react-redux'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
+import { DataSyncProvider } from './context/DataSyncContext'
+import { NotificationProvider } from './context/NotificationContext'
+import { SmartNotificationProvider } from './context/SmartNotificationContext'
+import { CustomThemeProvider } from './context/ThemeContext'
 import './index.css'
 import { store } from './store'
-
-const theme = createTheme({
-  palette: {
-    mode: 'light',
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
-  },
-})
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <Provider store={store}>
-      <BrowserRouter>
-        <ThemeProvider theme={theme}>
-          <CssBaseline />
-          <App />
-        </ThemeProvider>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <CustomThemeProvider>
+          <NotificationProvider>
+            <SmartNotificationProvider>
+              <DataSyncProvider>
+                <App />
+              </DataSyncProvider>
+            </SmartNotificationProvider>
+          </NotificationProvider>
+        </CustomThemeProvider>
       </BrowserRouter>
     </Provider>
   </React.StrictMode>,

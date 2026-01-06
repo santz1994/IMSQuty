@@ -7,18 +7,22 @@ export interface Asset {
   serial_number: string
   asset_type_id: number
   model_id: number
+  manufacturer_id?: number
   division_id: number
   location_id: number
   supplier_id: number
   purchase_date: string
   warranty_months: number
   warranty_type_id: number
+  warranty_expiry_date?: string
   invoice_id: string
   purchase_order_id: string
   ip_address: string
   mac_address: string
-  status_id: number
+  status_id?: number
+  status?: string
   assigned_to: number
+  cost?: number
   notes: string
   created_at: string
   updated_at: string

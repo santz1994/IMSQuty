@@ -1,16 +1,17 @@
 import { ArrowBack, Save } from '@mui/icons-material'
 import {
-    Alert,
-    Box,
-    Button,
-    CircularProgress,
-    Grid,
-    Paper,
-    Typography,
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Grid,
+  Paper,
+  Typography,
 } from '@mui/material'
 import React, { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ControlledFormSelect, FormField, FormGroup } from '../../components/FormField'
+import { useNotification } from '../../context/NotificationContext'
 import { useAssetForm, useAssetFormSubmit } from '../../hooks/useAssetForm'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { fetchAsset, updateAsset } from '../../store/slices/assetSlice'
@@ -23,6 +24,7 @@ const AssetDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
+  const { showNotification } = useNotification()
   const { currentAsset, loading, error: assetError } = useAppSelector(
     (state) => state.asset,
   )
@@ -36,7 +38,7 @@ const AssetDetail: React.FC = () => {
   const submitHandler = useAssetFormSubmit(async (data) => {
     try {
       if (!id) throw new Error('Asset ID not found')
-      
+
       const result = await dispatch(
         updateAsset({
           id: parseInt(id),
@@ -53,10 +55,14 @@ const AssetDetail: React.FC = () => {
       )
 
       if (result.payload) {
+        showNotification('Asset updated successfully!', 'success')
         navigate('/assets')
+      } else {
+        showNotification('Failed to update asset', 'error')
       }
     } catch (err) {
       console.error('Failed to update asset:', err)
+      showNotification('An error occurred while updating asset', 'error')
     }
   })
 
@@ -80,13 +86,13 @@ const AssetDetail: React.FC = () => {
       setValue('asset_type_id', currentAsset.asset_type_id)
       setValue('division_id', currentAsset.division_id)
       setValue('location_id', currentAsset.location_id)
-      setValue('manufacturer_id', currentAsset.manufacturer_id)
+      setValue('manufacturer_id', currentAsset.manufacturer_id || 0)
       setValue('warranty_type_id', currentAsset.warranty_type_id)
-      setValue('purchase_date', currentAsset.purchase_date)
-      setValue('warranty_expiry_date', currentAsset.warranty_expiry_date)
-      setValue('cost', currentAsset.cost)
-      setValue('status', currentAsset.status)
-      setValue('notes', currentAsset.notes)
+      setValue('purchase_date', new Date(currentAsset.purchase_date))
+      setValue('warranty_expiry_date', currentAsset.warranty_expiry_date ? new Date(currentAsset.warranty_expiry_date) : new Date())
+      setValue('cost', currentAsset.cost || 0)
+      setValue('status', currentAsset.status || '')
+      setValue('notes', currentAsset.notes || '')
     }
   }, [currentAsset, setValue])
 

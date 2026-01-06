@@ -1,19 +1,19 @@
 import { Save as SaveIcon } from '@mui/icons-material'
 import {
-    Alert,
-    Box,
-    Button,
-    Card,
-    CardContent,
-    CardHeader,
-    CircularProgress,
-    Divider,
-    FormControlLabel,
-    Grid,
-    Stack,
-    Switch,
-    TextField,
-    Typography
+  Alert,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CircularProgress,
+  Divider,
+  FormControlLabel,
+  Grid,
+  Stack,
+  Switch,
+  TextField,
+  Typography
 } from '@mui/material'
 import axios from 'axios'
 import React, { useEffect, useState } from 'react'
@@ -48,7 +48,7 @@ const SystemSettings: React.FC = () => {
   const [settings, setSettings] = useState<SystemSettings>({
     app_name: 'imsquty',
     app_version: '1.0.0',
-    app_url: 'http://localhost:3000',
+    app_url: 'http://localhost:8000',
     app_timezone: 'UTC',
     app_locale: 'en-US',
     max_upload_size: 10,

@@ -1,161 +1,334 @@
-import { Add, Delete, Edit, Info } from '@mui/icons-material'
+import { Add, Delete, Edit } from '@mui/icons-material'
 import {
-    Alert,
-    Box,
-    Button,
-    CircularProgress,
-    IconButton,
-    Paper,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Typography,
+  Box,
+  Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  Paper,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableRow,
+  TextField,
+  Typography,
 } from '@mui/material'
-import React, { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { PaginationControls } from '../../components/PaginationControls'
-import SearchFilter from '../../components/SearchFilter'
-import { useAppDispatch, useAppSelector } from '../../store/hooks'
-import { deleteTicket, fetchTickets } from '../../store/slices/ticketSlice'
 
-const TicketList: React.FC = () => {
-  const dispatch = useAppDispatch()
+interface Ticket {
+  id: number
+  ticket_number: string
+  title: string
+  description: string
+  priority: 'high' | 'medium' | 'low'
+  status: 'open' | 'in_progress' | 'resolved' | 'closed'
+  created_by: string
+  assigned_to?: string
+  created_date: string
+  due_date: string
+}
+
+const mockTickets: Ticket[] = [
+  { id: 1, ticket_number: 'TKT001', title: 'Login Issue', description: 'User cannot login', priority: 'high', status: 'open', created_by: 'admin', assigned_to: 'user1', created_date: '2024-01-10', due_date: '2024-01-12' },
+  { id: 2, ticket_number: 'TKT002', title: 'Report Generation', description: 'PDF export not working', priority: 'medium', status: 'in_progress', created_by: 'user1', assigned_to: 'developer1', created_date: '2024-01-09', due_date: '2024-01-15' },
+  { id: 3, ticket_number: 'TKT003', title: 'Database Optimization', description: 'Slow queries', priority: 'low', status: 'resolved', created_by: 'admin', assigned_to: 'developer2', created_date: '2024-01-08', due_date: '2024-01-20' },
+  { id: 4, ticket_number: 'TKT004', title: 'UI Enhancement', description: 'Improve dashboard layout', priority: 'low', status: 'open', created_by: 'user2', assigned_to: '', created_date: '2024-01-07', due_date: '2024-01-25' },
+]
+
+const priorityColor = (priority: Ticket['priority']): any => {
+  switch (priority) {
+    case 'high': return 'error'
+    case 'medium': return 'warning'
+    case 'low': return 'success'
+    default: return 'default'
+  }
+}
+
+const statusColor = (status: Ticket['status']): any => {
+  switch (status) {
+    case 'open': return 'error'
+    case 'in_progress': return 'info'
+    case 'resolved': return 'success'
+    case 'closed': return 'default'
+    default: return 'default'
+  }
+}
+
+export default function TicketList() {
   const navigate = useNavigate()
-  const { tickets, loading, error, pagination } = useAppSelector((state) => state.ticket)
-  const { priorities } = useAppSelector((state) => state.ticketPriority)
-  const { statuses } = useAppSelector((state) => state.ticketStatus)
-  const [searchValue, setSearchValue] = useState('')
-  const [filterPriority, setFilterPriority] = useState('')
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
+  const [tickets, setTickets] = useState<Ticket[]>(mockTickets)
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(10)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [openDialog, setOpenDialog] = useState(false)
+  const [editingTicket, setEditingTicket] = useState<Ticket | null>(null)
+  const [formData, setFormData] = useState<{
+    ticket_number: string
+    title: string
+    description: string
+    priority: 'high' | 'medium' | 'low'
+    status: 'open' | 'in_progress' | 'resolved' | 'closed'
+    created_by: string
+    assigned_to: string
+    due_date: string
+  }>({
+    ticket_number: '',
+    title: '',
+    description: '',
+    priority: 'medium',
+    status: 'open',
+    created_by: '',
+    assigned_to: '',
+    due_date: '',
+  })
 
-  // Fetch tickets when page or pageSize changes
-  useEffect(() => {
-    dispatch(fetchTickets({ page, perPage: pageSize }))
-  }, [dispatch, page, pageSize])
+  const filteredTickets = tickets.filter(t =>
+    t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    t.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    t.ticket_number.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
-  const handleDelete = (id: number) => {
+  const paginatedTickets = filteredTickets.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  )
+
+  const handleAddTicket = () => {
+    setEditingTicket(null)
+    setFormData({
+      ticket_number: '',
+      title: '',
+      description: '',
+      priority: 'medium',
+      status: 'open',
+      created_by: '',
+      assigned_to: '',
+      due_date: '',
+    })
+    setOpenDialog(true)
+  }
+
+  const handleEditTicket = (ticket: Ticket) => {
+    setEditingTicket(ticket)
+    setFormData({
+      ticket_number: ticket.ticket_number,
+      title: ticket.title,
+      description: ticket.description,
+      priority: ticket.priority,
+      status: ticket.status,
+      created_by: ticket.created_by,
+      assigned_to: ticket.assigned_to || '',
+      due_date: ticket.due_date,
+    })
+    setOpenDialog(true)
+  }
+
+  const handleSaveTicket = () => {
+    if (editingTicket) {
+      setTickets(tickets.map(t =>
+        t.id === editingTicket.id
+          ? { ...t, ...formData } as Ticket
+          : t
+      ))
+    } else {
+      setTickets([...tickets, {
+        id: Math.max(...tickets.map(t => t.id), 0) + 1,
+        ...formData,
+        created_date: new Date().toISOString().split('T')[0],
+      } as Ticket])
+    }
+    setOpenDialog(false)
+  }
+
+  const handleDeleteTicket = (id: number) => {
     if (window.confirm('Are you sure you want to delete this ticket?')) {
-      dispatch(deleteTicket(id))
+      setTickets(tickets.filter(t => t.id !== id))
     }
   }
 
-  const handleClearFilters = () => {
-    setSearchValue('')
-    setFilterPriority('')
-    setPage(1)
-  }
-
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h5">Tickets</Typography>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={() => navigate('/tickets/create')}
-        >
-          New Ticket
-        </Button>
-      </Box>
+    <Box sx={{ p: 3 }}>
+      <Stack spacing={3}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h5">Tickets</Typography>
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={handleAddTicket}
+          >
+            New Ticket
+          </Button>
+        </Box>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        <TextField
+          placeholder="Search tickets..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          fullWidth
+          size="small"
+        />
 
-      <SearchFilter
-        searchValue={searchValue}
-        onSearchChange={setSearchValue}
-        filterValue={filterPriority}
-        onFilterChange={setFilterPriority}
-        filterLabel="Priority"
-        filterOptions={priorities.map((p) => ({
-          label: p.label,
-          value: p.name,
-        }))}
-        onClear={handleClearFilters}
-      />
-
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-
-      {loading ? (
-        <CircularProgress />
-      ) : (
-        <>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                  <TableCell>Ticket Number</TableCell>
-                  <TableCell>Title</TableCell>
-                  <TableCell>Priority</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Created By</TableCell>
-                  <TableCell>Assigned To</TableCell>
-                  <TableCell align="right">Actions</TableCell>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                <TableCell>Ticket #</TableCell>
+                <TableCell>Title</TableCell>
+                <TableCell>Priority</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Created By</TableCell>
+                <TableCell>Assigned To</TableCell>
+                <TableCell>Due Date</TableCell>
+                <TableCell align="right">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {paginatedTickets.map((ticket) => (
+                <TableRow key={ticket.id} hover>
+                  <TableCell>{ticket.ticket_number}</TableCell>
+                  <TableCell>{ticket.title}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={ticket.priority.toUpperCase()}
+                      color={priorityColor(ticket.priority)}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={ticket.status.toUpperCase().replace('_', ' ')}
+                      color={statusColor(ticket.status)}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>{ticket.created_by}</TableCell>
+                  <TableCell>{ticket.assigned_to || '-'}</TableCell>
+                  <TableCell>{ticket.due_date}</TableCell>
+                  <TableCell align="right">
+                    <IconButton
+                      size="small"
+                      onClick={() => handleEditTicket(ticket)}
+                    >
+                      <Edit fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleDeleteTicket(ticket.id)}
+                    >
+                      <Delete fontSize="small" />
+                    </IconButton>
+                  </TableCell>
                 </TableRow>
-              </TableHead>
-              <TableBody>
-                {tickets.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
-                      No tickets found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  tickets.map((ticket) => (
-                    <TableRow key={ticket.id} hover>
-                      <TableCell>{ticket.ticket_number}</TableCell>
-                      <TableCell>{ticket.title}</TableCell>
-                      <TableCell>{ticket.priority}</TableCell>
-                      <TableCell>{ticket.ticket_status_id}</TableCell>
-                      <TableCell>{ticket.created_by}</TableCell>
-                      <TableCell>{ticket.assigned_to || '-'}</TableCell>
-                      <TableCell align="right">
-                        <IconButton
-                          size="small"
-                          onClick={() => navigate(`/tickets/${ticket.id}`)}
-                          title="View details"
-                        >
-                          <Info fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          onClick={() => navigate(`/tickets/${ticket.id}`)}
-                          title="Edit ticket"
-                        >
-                          <Edit fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() => handleDelete(ticket.id)}
-                          title="Delete ticket"
-                        >
-                          <Delete fontSize="small" />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-          {/* Pagination Controls */}
-          <PaginationControls
-            page={page}
-            pageSize={pageSize}
-            total={pagination.total}
-            onPageChange={setPage}
-            onPageSizeChange={setPageSize}
-            pageSizes={[5, 10, 25, 50]}
-          />
-        </>
-      )}
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25, 50]}
+          component="div"
+          count={filteredTickets.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={(e, newPage) => setPage(newPage)}
+          onRowsPerPageChange={(e) => setRowsPerPage(parseInt(e.target.value, 10))}
+        />
+      </Stack>
+
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>{editingTicket ? 'Edit Ticket' : 'Create New Ticket'}</DialogTitle>
+        <DialogContent sx={{ pt: 3 }}>
+          <Stack spacing={2}>
+            <TextField
+              label="Ticket Number"
+              value={formData.ticket_number}
+              onChange={(e) => setFormData({ ...formData, ticket_number: e.target.value })}
+              fullWidth
+              size="small"
+            />
+            <TextField
+              label="Title"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              fullWidth
+              size="small"
+            />
+            <TextField
+              label="Description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              fullWidth
+              size="small"
+              multiline
+              rows={3}
+            />
+            <TextField
+              label="Priority"
+              select
+              value={formData.priority}
+              onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
+              fullWidth
+              size="small"
+              SelectProps={{ native: true }}
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </TextField>
+            <TextField
+              label="Status"
+              select
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+              fullWidth
+              size="small"
+              SelectProps={{ native: true }}
+            >
+              <option value="open">Open</option>
+              <option value="in_progress">In Progress</option>
+              <option value="resolved">Resolved</option>
+              <option value="closed">Closed</option>
+            </TextField>
+            <TextField
+              label="Created By"
+              value={formData.created_by}
+              onChange={(e) => setFormData({ ...formData, created_by: e.target.value })}
+              fullWidth
+              size="small"
+            />
+            <TextField
+              label="Assigned To"
+              value={formData.assigned_to}
+              onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
+              fullWidth
+              size="small"
+            />
+            <TextField
+              label="Due Date"
+              type="date"
+              value={formData.due_date}
+              onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+              fullWidth
+              size="small"
+              InputLabelProps={{ shrink: true }}
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
+          <Button onClick={handleSaveTicket} variant="contained">
+            {editingTicket ? 'Update' : 'Create'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 }
-
-export default TicketList

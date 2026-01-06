@@ -1,10 +1,19 @@
 import {
   AccountCircle,
+  Assessment,
   ConfirmationNumber,
   Dashboard,
+  Description,
+  EqualizerRounded,
   Inventory,
   Logout,
+  MeetingRoom,
   Menu as MenuIcon,
+  Notifications,
+  Payment,
+  People,
+  Settings,
+  ShoppingCart
 } from '@mui/icons-material'
 import {
   AppBar,
@@ -50,11 +59,25 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     navigate('/login')
   }
 
-  const menuItems = [
-    { label: 'Dashboard', icon: <Dashboard />, path: '/' },
-    { label: 'Assets', icon: <Inventory />, path: '/assets' },
-    { label: 'Tickets', icon: <ConfirmationNumber />, path: '/tickets' },
+  // Role-based menu items
+  const allMenuItems = [
+    { label: 'Dashboard', icon: <Dashboard />, path: '/', roles: ['user', 'admin', 'superadmin'] },
+    { label: 'Analytics', icon: <EqualizerRounded />, path: '/dashboard/advanced', roles: ['admin', 'superadmin'], badge: 'NEW' },
+    { label: 'Assets', icon: <Inventory />, path: '/assets', roles: ['user', 'admin', 'superadmin'] },
+    { label: 'Tickets', icon: <ConfirmationNumber />, path: '/tickets', roles: ['user', 'admin', 'superadmin'] },
+    { label: 'Inventory', icon: <ShoppingCart />, path: '/inventory', roles: ['admin', 'superadmin'] },
+    { label: 'Financial', icon: <Payment />, path: '/financial', roles: ['admin', 'superadmin'] },
+    { label: 'Reports', icon: <Description />, path: '/reports', roles: ['admin', 'superadmin'] },
+    { label: 'Meeting Rooms', icon: <MeetingRoom />, path: '/meeting-rooms', roles: ['admin', 'superadmin'] },
+    { label: 'Notifications', icon: <Notifications />, path: '/notifications', roles: ['admin', 'superadmin'] },
+    { label: 'Users', icon: <People />, path: '/users', roles: ['admin', 'superadmin'] },
+    { label: 'Audit Logs', icon: <Assessment />, path: '/audit-logs', roles: ['admin', 'superadmin'] },
+    { label: 'Settings', icon: <Settings />, path: '/settings', roles: ['admin', 'superadmin'] },
   ]
+
+  // Filter menu items based on user role
+  const userRole = user?.role || 'user'
+  const menuItems = allMenuItems.filter((item) => item.roles.includes(userRole))
 
   return (
     <Box sx={{ display: 'flex' }}>

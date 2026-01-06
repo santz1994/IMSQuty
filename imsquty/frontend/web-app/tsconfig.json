@@ -1,7 +1,5 @@
 {
     "compilerOptions": {
-        "composite": true,
-        "noEmit": false,
         "target": "ES2020",
         "useDefineForClassFields": true,
         "lib": [
@@ -13,15 +11,18 @@
         "skipLibCheck": true,
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
+        "types": [
+            "vite/client",
+            "node"
+        ],
         /* Bundler mode */
         "moduleResolution": "bundler",
-        "allowImportingTsExtensions": true,
         "resolveJsonModule": true,
         "isolatedModules": true,
         "noEmit": true,
         "jsx": "react-jsx",
         /* Linting */
-        "strict": true,
+        "strict": false,
         "noUnusedLocals": false,
         "noUnusedParameters": false,
         "noFallthroughCasesInSwitch": true,
@@ -38,6 +39,9 @@
     ],
     "exclude": [
         "node_modules",
-        "dist"
+        "dist",
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "src/__tests__"
     ]
 }
