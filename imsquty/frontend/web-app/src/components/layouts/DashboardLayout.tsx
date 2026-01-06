@@ -4,7 +4,6 @@ import {
   ConfirmationNumber,
   Dashboard,
   Description,
-  EqualizerRounded,
   Inventory,
   Logout,
   MeetingRoom,
@@ -62,7 +61,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   // Role-based menu items
   const allMenuItems = [
     { label: 'Dashboard', icon: <Dashboard />, path: '/', roles: ['user', 'admin', 'superadmin'] },
-    { label: 'Analytics', icon: <EqualizerRounded />, path: '/dashboard/advanced', roles: ['admin', 'superadmin'], badge: 'NEW' },
     { label: 'Assets', icon: <Inventory />, path: '/assets', roles: ['user', 'admin', 'superadmin'] },
     { label: 'Tickets', icon: <ConfirmationNumber />, path: '/tickets', roles: ['user', 'admin', 'superadmin'] },
     { label: 'Inventory', icon: <ShoppingCart />, path: '/inventory', roles: ['admin', 'superadmin'] },

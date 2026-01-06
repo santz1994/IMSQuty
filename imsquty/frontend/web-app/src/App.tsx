@@ -7,7 +7,6 @@ import { useAppSelector } from './store/hooks'
 
 // Lazy load all page components for better performance
 const Dashboard = lazy(() => import('./pages/Dashboard'))
-const AdvancedDashboard = lazy(() => import('./pages/AdvancedDashboard'))
 const AssetList = lazy(() => import('./pages/Assets/AssetList'))
 const AssetCreate = lazy(() => import('./pages/Assets/AssetCreate'))
 const AssetDetail = lazy(() => import('./pages/Assets/AssetDetail'))
@@ -77,15 +76,6 @@ function App() {
           element={
             <ProtectedDashboardRoute>
               <Dashboard />
-            </ProtectedDashboardRoute>
-          }
-        />
-
-        <Route
-          path="/dashboard/advanced"
-          element={
-            <ProtectedDashboardRoute>
-              <AdvancedDashboard />
             </ProtectedDashboardRoute>
           }
         />

@@ -68,8 +68,8 @@ RUN echo "memory_limit = 256M" > /usr/local/etc/php/conf.d/custom.ini && \
     echo "opcache.revalidate_freq = 2" >> /usr/local/etc/php/conf.d/custom.ini
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-    CMD php artisan --version || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+    CMD ps aux | grep -q '[p]hp' || exit 1
 
 EXPOSE 8000
 

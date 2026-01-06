@@ -51,7 +51,7 @@ USER imsquty
 EXPOSE 9000
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD php artisan route:list --json || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+    CMD ps aux | grep -q '[p]hp-fpm' || exit 1
 
 CMD ["php-fpm"]

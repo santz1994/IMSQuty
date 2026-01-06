@@ -1,11 +1,27 @@
 import {
+  ArrowForward,
+  CheckCircle,
+  Email,
+  Lock,
+  Visibility,
+  VisibilityOff,
+} from '@mui/icons-material'
+import {
   Alert,
   Box,
   Button,
+  Card,
   CircularProgress,
   Container,
+  Divider,
+  Grid,
+  IconButton,
+  InputAdornment,
+  Paper,
   TextField,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -13,10 +29,14 @@ import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { login } from '../store/slices/authSlice'
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  const [email, setEmail] = useState('admin@example.com')
+  const [password, setPassword] = useState('password')
   const [emailError, setEmailError] = useState('')
   const [passwordError, setPasswordError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [loginSuccess, setLoginSuccess] = useState(false)
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const { loading, error } = useAppSelector((state) => state.auth)
@@ -51,297 +71,446 @@ const Login: React.FC = () => {
 
     try {
       await dispatch(login({ email, password })).unwrap()
-      navigate('/')
+      setLoginSuccess(true)
+
+      setTimeout(() => {
+        navigate('/')
+      }, 1500)
     } catch (err) {
       console.error('Login failed:', err)
     }
   }
 
+  const handleTogglePasswordVisibility = () => {
+    setShowPassword(!showPassword)
+  }
+
+  const demoCredentials = [
+    { role: 'Admin', email: 'admin@example.com' },
+    { role: 'Manager', email: 'manager@example.com' },
+    { role: 'User', email: 'user@example.com' },
+  ]
+
   return (
     <Box
       sx={{
         minHeight: '100vh',
+        background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         position: 'relative',
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          width: '400px',
-          height: '400px',
-          background: 'rgba(255, 255, 255, 0.1)',
-          borderRadius: '50%',
-          top: '-100px',
-          right: '-100px',
-        },
-        '&::after': {
-          content: '""',
-          position: 'absolute',
-          width: '300px',
-          height: '300px',
-          background: 'rgba(255, 255, 255, 0.1)',
-          borderRadius: '50%',
-          bottom: '-50px',
-          left: '-50px',
-        },
+        overflow: 'hidden',
       }}
     >
-      <Container maxWidth="sm">
-        <Box
-          sx={{
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(10px)',
-            borderRadius: '12px',
-            boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
-            border: '1px solid rgba(255, 255, 255, 0.18)',
-            padding: { xs: '32px 24px', sm: '48px 40px' },
-            position: 'relative',
-            zIndex: 1,
-          }}
-        >
-          {/* Logo/Header */}
-          <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <Box
-              sx={{
-                width: '60px',
-                height: '60px',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                borderRadius: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 16px',
-              }}
-            >
-              <Typography
-                variant="h5"
-                sx={{
-                  color: 'white',
-                  fontWeight: 'bold',
-                }}
-              >
-                IQ
-              </Typography>
-            </Box>
-            <Typography
-              variant="h4"
-              sx={{
-                fontWeight: 700,
-                color: '#1a1a1a',
-                mb: 1,
-              }}
-            >
-              IMSQuty
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{
-                color: '#666',
-              }}
-            >
-              Asset & Ticket Management System
-            </Typography>
-          </Box>
+      {/* Animated background elements */}
+      <Box
+        sx={{
+          position: 'absolute',
+          width: 400,
+          height: 400,
+          borderRadius: '50%',
+          background: 'rgba(255, 255, 255, 0.1)',
+          top: '-200px',
+          left: '-200px',
+          animation: 'float 20s infinite ease-in-out',
+        }}
+      />
+      <Box
+        sx={{
+          position: 'absolute',
+          width: 300,
+          height: 300,
+          borderRadius: '50%',
+          background: 'rgba(255, 255, 255, 0.05)',
+          bottom: '-150px',
+          right: '-150px',
+          animation: 'float 25s infinite ease-in-out reverse',
+        }}
+      />
 
-          {/* Error Alert */}
-          {error && (
-            <Alert
-              severity="error"
-              sx={{
-                mb: 3,
-                borderRadius: '8px',
-                backgroundColor: '#fee',
-                borderLeft: '4px solid #f44',
-              }}
-            >
-              {error}
-            </Alert>
+      <style>{`
+        @keyframes float {
+          0%, 100% { transform: translate(0, 0px); }
+          50% { transform: translate(30px, -30px); }
+        }
+        @keyframes slideIn {
+          from { 
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes checkmark {
+          0% { transform: scale(0); }
+          50% { transform: scale(1.2); }
+          100% { transform: scale(1); }
+        }
+        .fade-in { animation: slideIn 0.6s ease-out; }
+        .checkmark-animation { animation: checkmark 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+      `}</style>
+
+      <Container maxWidth="md">
+        <Grid container spacing={4} alignItems="center">
+          {/* Left side - Branding (hidden on mobile) */}
+          {!isMobile && (
+            <Grid item xs={12} sm={6} className="fade-in">
+              <Box sx={{ color: 'white', textAlign: 'center' }}>
+                <Typography
+                  variant="h3"
+                  sx={{
+                    fontWeight: 'bold',
+                    mb: 2,
+                    textShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                  }}
+                >
+                  IMSQuty
+                </Typography>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    mb: 4,
+                    opacity: 0.9,
+                    fontWeight: 300,
+                  }}
+                >
+                  Inventory Management & Support Quality System
+                </Typography>
+
+                {/* Features list */}
+                <Box sx={{ mt: 6, textAlign: 'left' }}>
+                  {[
+                    'Real-time Asset Tracking',
+                    'Intelligent Ticket Management',
+                    'Advanced Analytics & Reporting',
+                  ].map((feature, idx) => (
+                    <Box
+                      key={idx}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        mb: 2,
+                        opacity: 0.95,
+                      }}
+                    >
+                      <CheckCircle
+                        sx={{
+                          mr: 2,
+                          fontSize: 24,
+                          color: theme.palette.success.light,
+                        }}
+                      />
+                      <Typography variant="body1">{feature}</Typography>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+            </Grid>
           )}
 
-          {/* Login Form */}
-          <Box component="form" onSubmit={handleSubmit}>
-            <Box sx={{ mb: 3 }}>
-              <Typography
-                variant="body2"
-                sx={{
-                  fontWeight: 600,
-                  color: '#1a1a1a',
-                  mb: 1,
-                  display: 'block',
-                }}
-              >
-                Email Address
-              </Typography>
-              <TextField
-                fullWidth
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@example.com"
-                error={!!emailError}
-                helperText={emailError}
-                disabled={loading}
-                autoComplete="email"
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    '&:hover fieldset': {
-                      borderColor: '#667eea',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#667eea',
-                    },
-                  },
-                  '& .MuiOutlinedInput-input': {
-                    color: '#1a1a1a',
-                  },
-                  '& .MuiOutlinedInput-input::placeholder': {
-                    color: '#999',
-                    opacity: 1,
-                  },
-                }}
-              />
-            </Box>
-
-            <Box sx={{ mb: 3 }}>
-              <Typography
-                variant="body2"
-                sx={{
-                  fontWeight: 600,
-                  color: '#1a1a1a',
-                  mb: 1,
-                  display: 'block',
-                }}
-              >
-                Password
-              </Typography>
-              <TextField
-                fullWidth
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                error={!!passwordError}
-                helperText={passwordError}
-                disabled={loading}
-                autoComplete="current-password"
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    '&:hover fieldset': {
-                      borderColor: '#667eea',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#667eea',
-                    },
-                  },
-                  '& .MuiOutlinedInput-input': {
-                    color: '#1a1a1a',
-                  },
-                  '& .MuiOutlinedInput-input::placeholder': {
-                    color: '#999',
-                    opacity: 1,
-                  },
-                }}
-              />
-            </Box>
-
-            {/* Submit Button */}
-            <Button
-              fullWidth
-              variant="contained"
-              type="submit"
-              disabled={loading}
+          {/* Right side - Login form */}
+          <Grid item xs={12} sm={6} className="fade-in">
+            <Card
+              elevation={24}
               sx={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white',
-                fontWeight: 600,
-                fontSize: '16px',
-                padding: '12px',
-                borderRadius: '8px',
-                textTransform: 'none',
-                mb: 2,
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  boxShadow: '0 4px 20px rgba(102, 126, 234, 0.4)',
-                  transform: 'translateY(-2px)',
-                },
-                '&:disabled': {
-                  background: '#ccc',
-                  color: '#999',
-                },
+                p: { xs: 3, sm: 4 },
+                backdropFilter: 'blur(10px)',
+                background: 'rgba(255, 255, 255, 0.95)',
+                borderRadius: 3,
+                border: '1px solid rgba(255, 255, 255, 0.3)',
               }}
             >
-              {loading ? (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <CircularProgress size={20} sx={{ color: 'inherit' }} />
-                  <span>Signing in...</span>
+              {/* Success state */}
+              {loginSuccess && (
+                <Box
+                  sx={{
+                    textAlign: 'center',
+                    py: 4,
+                  }}
+                >
+                  <CheckCircle
+                    className="checkmark-animation"
+                    sx={{
+                      fontSize: 80,
+                      color: theme.palette.success.main,
+                      mb: 2,
+                    }}
+                  />
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      color: theme.palette.success.main,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Login Successful!
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'gray', mt: 1 }}>
+                    Redirecting to dashboard...
+                  </Typography>
                 </Box>
-              ) : (
-                'Sign In'
               )}
-            </Button>
-          </Box>
 
-          {/* Demo Credentials */}
-          <Box
-            sx={{
-              background: '#f5f5f5',
-              padding: '16px',
-              borderRadius: '8px',
-              textAlign: 'center',
-            }}
-          >
-            <Typography
-              variant="caption"
-              sx={{
-                color: '#666',
-                fontSize: '13px',
-              }}
-            >
-              Demo Credentials
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{
-                color: '#1a1a1a',
-                fontWeight: 500,
-                fontSize: '14px',
-                mt: 0.5,
-              }}
-            >
-              Email: admin@example.com
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{
-                color: '#1a1a1a',
-                fontWeight: 500,
-                fontSize: '14px',
-              }}
-            >
-              Password: password
-            </Typography>
-          </Box>
+              {/* Login form */}
+              {!loginSuccess && (
+                <>
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      fontWeight: 'bold',
+                      mb: 1,
+                      color: theme.palette.text.primary,
+                    }}
+                  >
+                    Welcome Back
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: 'gray',
+                      mb: 3,
+                    }}
+                  >
+                    Sign in to your account to continue
+                  </Typography>
 
-          {/* Footer */}
-          <Typography
-            variant="caption"
-            sx={{
-              color: '#999',
-              display: 'block',
-              textAlign: 'center',
-              mt: 3,
-              fontSize: '12px',
-            }}
-          >
-            © 2025 IMSQuty. All rights reserved.
-          </Typography>
-        </Box>
+                  {error && (
+                    <Alert severity="error" sx={{ mb: 3 }}>
+                      {error}
+                    </Alert>
+                  )}
+
+                  <form onSubmit={handleSubmit}>
+                    {/* Email field */}
+                    <Box sx={{ mb: 2 }}>
+                      <TextField
+                        fullWidth
+                        label="Email Address"
+                        type="email"
+                        variant="outlined"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={loading}
+                        error={!!emailError}
+                        helperText={emailError}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <Email
+                                sx={{
+                                  color: theme.palette.primary.main,
+                                  mr: 1,
+                                }}
+                              />
+                            </InputAdornment>
+                          ),
+                        }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: 1.5,
+                            transition: 'all 0.3s',
+                            '&:hover': {
+                              boxShadow: `0 0 0 2px ${theme.palette.primary.light}40`,
+                            },
+                          },
+                        }}
+                      />
+                    </Box>
+
+                    {/* Password field */}
+                    <Box sx={{ mb: 2 }}>
+                      <TextField
+                        fullWidth
+                        label="Password"
+                        type={showPassword ? 'text' : 'password'}
+                        variant="outlined"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        disabled={loading}
+                        error={!!passwordError}
+                        helperText={passwordError}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <Lock
+                                sx={{
+                                  color: theme.palette.primary.main,
+                                  mr: 1,
+                                }}
+                              />
+                            </InputAdornment>
+                          ),
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              <IconButton
+                                onClick={handleTogglePasswordVisibility}
+                                edge="end"
+                                disabled={loading}
+                              >
+                                {showPassword ? (
+                                  <VisibilityOff />
+                                ) : (
+                                  <Visibility />
+                                )}
+                              </IconButton>
+                            </InputAdornment>
+                          ),
+                        }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: 1.5,
+                            transition: 'all 0.3s',
+                            '&:hover': {
+                              boxShadow: `0 0 0 2px ${theme.palette.primary.light}40`,
+                            },
+                          },
+                        }}
+                      />
+                    </Box>
+
+                    {/* Remember me */}
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        mb: 3,
+                        fontSize: '0.875rem',
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          style={{ marginRight: 8 }}
+                          disabled={loading}
+                        />
+                        Remember me
+                      </Typography>
+                      <Typography
+                        component="a"
+                        href="#"
+                        sx={{
+                          color: theme.palette.primary.main,
+                          textDecoration: 'none',
+                          '&:hover': { textDecoration: 'underline' },
+                        }}
+                      >
+                        Forgot password?
+                      </Typography>
+                    </Box>
+
+                    {/* Login button */}
+                    <Button
+                      type="submit"
+                      fullWidth
+                      variant="contained"
+                      size="large"
+                      disabled={loading}
+                      sx={{
+                        borderRadius: 1.5,
+                        fontWeight: 600,
+                        textTransform: 'none',
+                        fontSize: '1rem',
+                        background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+                        boxShadow: `0 4px 15px ${theme.palette.primary.main}40`,
+                        transition: 'all 0.3s',
+                        '&:hover': {
+                          boxShadow: `0 6px 20px ${theme.palette.primary.main}60`,
+                          transform: 'translateY(-2px)',
+                        },
+                        '&:disabled': {
+                          background: 'gray',
+                        },
+                      }}
+                      endIcon={
+                        loading ? (
+                          <CircularProgress size={20} color="inherit" />
+                        ) : (
+                          <ArrowForward />
+                        )
+                      }
+                    >
+                      {loading ? 'Signing In...' : 'Sign In'}
+                    </Button>
+                  </form>
+
+                  {/* Divider */}
+                  <Divider sx={{ my: 2 }} />
+
+                  {/* Demo credentials */}
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      display: 'block',
+                      color: 'gray',
+                      mb: 1.5,
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      letterSpacing: 0.5,
+                    }}
+                  >
+                    Demo Credentials
+                  </Typography>
+
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    {demoCredentials.map((cred, idx) => (
+                      <Paper
+                        key={idx}
+                        sx={{
+                          p: 1.5,
+                          backgroundColor: theme.palette.action.hover,
+                          borderRadius: 1,
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            backgroundColor: theme.palette.action.selected,
+                            transform: 'translateX(4px)',
+                          },
+                        }}
+                        onClick={() => setEmail(cred.email)}
+                      >
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            display: 'block',
+                            color: theme.palette.primary.main,
+                            fontWeight: 600,
+                          }}
+                        >
+                          {cred.role}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: 'gray' }}>
+                          {cred.email}
+                        </Typography>
+                      </Paper>
+                    ))}
+                  </Box>
+
+                  {/* Footer */}
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      display: 'block',
+                      textAlign: 'center',
+                      mt: 3,
+                      color: 'gray',
+                    }}
+                  >
+                    All demo passwords are: <strong>password</strong>
+                  </Typography>
+                </>
+              )}
+            </Card>
+          </Grid>
+        </Grid>
       </Container>
     </Box>
   )
