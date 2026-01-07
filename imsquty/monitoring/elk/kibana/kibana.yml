@@ -1,0 +1,26 @@
+# Kibana Configuration
+server.name: "imsquty-kibana"
+server.host: "0.0.0.0"
+server.port: 5601
+
+# Elasticsearch connection
+elasticsearch.hosts: ["http://elasticsearch:9200"]
+
+# Monitoring
+monitoring.ui.container.elasticsearch.enabled: true
+
+# Kibana index
+kibana.index: ".kibana"
+
+# Default app
+kibana.defaultAppId: "discover"
+
+# Logging
+logging.dest: stdout
+logging.silent: false
+logging.quiet: false
+logging.verbose: false
+
+# Security (disabled for development)
+xpack.security.enabled: false
+xpack.monitoring.enabled: true

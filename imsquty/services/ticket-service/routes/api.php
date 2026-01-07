@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TicketController;
+use App\Http\Controllers\MetricsController;
 use App\Http\Controllers\SLAController;
 use App\Http\Controllers\TicketAssignmentController;
 use App\Http\Controllers\EscalationController;
@@ -17,6 +18,10 @@ use App\Http\Controllers\EscalationController;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+
+// Monitoring endpoints (no auth required for Prometheus)
+Route::get('/health', [MetricsController::class, 'health']);
+Route::get('/metrics', [MetricsController::class, 'index']);
 
 // Health check endpoint
 Route::get('/health', function () {

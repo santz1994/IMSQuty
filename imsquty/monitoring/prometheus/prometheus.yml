@@ -1,0 +1,129 @@
+# Prometheus Configuration for IMSQuty Microservices
+# Monitors all 10 services + API Gateway
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'imsquty-production'
+    environment: 'production'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+# Load rules
+rule_files:
+  - 'alerts.yml'
+  - 'recording_rules.yml'
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # API Gateway (Node.js)
+  - job_name: 'api-gateway'
+    static_configs:
+      - targets: ['api-gateway:3000']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Asset Service
+  - job_name: 'asset-service'
+    static_configs:
+      - targets: ['asset-service:8001']
+    metrics_path: '/api/v1/metrics'
+    scrape_interval: 15s
+
+  # Meeting Room Service
+  - job_name: 'meeting-room-service'
+    static_configs:
+      - targets: ['meeting-room-service:8002']
+    metrics_path: '/api/v1/metrics'
+    scrape_interval: 15s
+
+  # Ticket Service
+  - job_name: 'ticket-service'
+    static_configs:
+      - targets: ['ticket-service:8003']
+    metrics_path: '/api/v1/metrics'
+    scrape_interval: 15s
+
+  # Notification Service
+  - job_name: 'notification-service'
+    static_configs:
+      - targets: ['notification-service:8004']
+    metrics_path: '/api/v1/metrics'
+    scrape_interval: 15s
+
+  # User Service
+  - job_name: 'user-service'
+    static_configs:
+      - targets: ['user-service:8005']
+    metrics_path: '/api/v1/metrics'
+    scrape_interval: 15s
+
+  # Financial Service
+  - job_name: 'financial-service'
+    static_configs:
+      - targets: ['financial-service:8006']
+    metrics_path: '/api/v1/metrics'
+    scrape_interval: 15s
+
+  # Reporting Service
+  - job_name: 'reporting-service'
+    static_configs:
+      - targets: ['reporting-service:8007']
+    metrics_path: '/api/v1/metrics'
+    scrape_interval: 15s
+
+  # Inventory Service
+  - job_name: 'inventory-service'
+    static_configs:
+      - targets: ['inventory-service:8008']
+    metrics_path: '/api/v1/metrics'
+    scrape_interval: 15s
+
+  # Master Data Service
+  - job_name: 'master-data-service'
+    static_configs:
+      - targets: ['master-data-service:8009']
+    metrics_path: '/api/v1/metrics'
+    scrape_interval: 15s
+
+  # Auth Service
+  - job_name: 'auth-service'
+    static_configs:
+      - targets: ['auth-service:8010']
+    metrics_path: '/api/v1/metrics'
+    scrape_interval: 10s  # More frequent for auth
+
+  # MySQL Database
+  - job_name: 'mysql'
+    static_configs:
+      - targets: ['mysql-exporter:9104']
+    scrape_interval: 20s
+
+  # Redis
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 20s
+
+  # Node Exporter (System metrics)
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 30s
+
+  # cAdvisor (Container metrics)
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    scrape_interval: 20s

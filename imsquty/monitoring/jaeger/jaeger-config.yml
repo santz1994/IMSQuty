@@ -1,0 +1,51 @@
+# Jaeger Configuration
+# All-in-one deployment with memory storage
+
+# Service name
+service-name: "imsquty-jaeger"
+
+# Reporter Configuration
+reporter:
+  type: "jaeger"
+  logSpans: true
+  agentHost: "localhost"
+  agentPort: 6831
+
+# Sampler Configuration
+sampler:
+  type: "probabilistic"
+  param: 1.0  # Sample 100% of traces (adjust in production)
+
+# Storage Configuration
+storage:
+  type: "memory"
+  memory:
+    max-traces: 10000
+
+# Query Configuration
+query:
+  base-path: "/"
+  static-files: "/go/jaeger-ui/"
+  ui-config: |
+    {
+      "monitor": {
+        "menuEnabled": true
+      },
+      "dependencies": {
+        "menuEnabled": true
+      }
+    }
+
+# Collector Configuration
+collector:
+  zipkin:
+    host-port: ":9411"
+  grpc:
+    host-port: ":14250"
+  http:
+    host-port: ":14268"
+
+# Agent Configuration
+agent:
+  http-server:
+    host-port: ":5778"

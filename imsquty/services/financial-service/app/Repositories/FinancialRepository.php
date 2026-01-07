@@ -22,6 +22,10 @@ class FinancialRepository extends BaseRepository
         return Invoice::class;
     }
 
+    // ============================================================
+    // INVOICE OPERATIONS
+    // ============================================================
+
     /**
      * Get all invoices with pagination and filters
      */
@@ -33,17 +37,50 @@ class FinancialRepository extends BaseRepository
             $query->where('status', $filters['status']);
         }
 
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function($q) use ($search) {
+                $q->where('invoice_number', 'like', "%{$search}%")
+                  ->orWhere('customer_name', 'like', "%{$search}%")
+                  ->orWhere('customer_email', 'like', "%{$search}%");
+            });
+        }
+
+        if (isset($filters['overdue']) && $filters['overdue']) {
+            $query->overdue();
+        }
+
         return $query->latest('due_date')->paginate($perPage);
     }
 
-    /**
-     * Find invoice by ID
-     */
     public function findInvoiceById(int $id): ?Invoice
     {
         return Invoice::find($id);
     }
 
+    public function createInvoice(array $data): Invoice
+    {
+        return Invoice::create($data);
+    }
+
+    public function updateInvoice(int $id, array $data): bool
+    {
+        return Invoice::where('id', $id)->update($data);
+    }
+
+    public function deleteInvoice(int $id): bool
+    {
+        $invoice = Invoice::find($id);
+        return $invoice ? $invoice->delete() : false;
+    }
+
+    // ============================================================
+    // BUDGET OPERATIONS
+    // ============================================================
+
+    /**
+     * Get all budgets with pagination and filters
+     */
     public function getAllBudgets(int $perPage = 15, array $filters = [])
     {
         $query = Budget::with('expenses');
@@ -54,6 +91,14 @@ class FinancialRepository extends BaseRepository
 
         if (isset($filters['is_active'])) {
             $query->where('is_active', $filters['is_active']);
+        }
+
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('category', 'like', "%{$search}%");
+            });
         }
 
         return $query->latest()->paginate($perPage);
@@ -69,6 +114,24 @@ class FinancialRepository extends BaseRepository
         return Budget::create($data);
     }
 
+    public function updateBudget(int $id, array $data): bool
+    {
+        return Budget::where('id', $id)->update($data);
+    }
+
+    public function deleteBudget(int $id): bool
+    {
+        $budget = Budget::find($id);
+        return $budget ? $budget->delete() : false;
+    }
+
+    // ============================================================
+    // EXPENSE OPERATIONS
+    // ============================================================
+
+    /**
+     * Get all expenses with pagination and filters
+     */
     public function getAllExpenses(int $perPage = 15, array $filters = [])
     {
         $query = Expense::with('budget');
@@ -81,14 +144,32 @@ class FinancialRepository extends BaseRepository
             $query->where('status', $filters['status']);
         }
 
+        if (!empty($filters['category'])) {
+            $query->where('category', $filters['category']);
+        }
+
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function($q) use ($search) {
+                $q->where('description', 'like', "%{$search}%")
+                  ->orWhere('vendor', 'like', "%{$search}%")
+                  ->orWhere('receipt_number', 'like', "%{$search}%");
+            });
+        }
+
         return $query->latest('expense_date')->paginate($perPage);
+    }
+
+    public function findExpenseById(int $id): ?Expense
+    {
+        return Expense::with('budget')->find($id);
     }
 
     public function createExpense(array $data): Expense
     {
         $expense = Expense::create($data);
 
-        // Update budget spent amount
+        // Update budget spent amount only if expense is approved
         if ($expense->budget_id && $expense->status === Expense::STATUS_APPROVED) {
             $budget = $this->findBudgetById($expense->budget_id);
             $budget->increment('spent_amount', $expense->amount);
@@ -97,10 +178,23 @@ class FinancialRepository extends BaseRepository
         return $expense;
     }
 
-    public function approveExpense(int $id, int $approvedBy): bool
+    public function updateExpense(int $id, array $data): bool
+    {
+        return Expense::where('id', $id)->update($data);
+    }
+
+    public function deleteExpense(int $id): bool
     {
         $expense = Expense::find($id);
-        if (!$expense) return false;
+        return $expense ? $expense->delete() : false;
+    }
+
+    public function approveExpense(int $id, int $approvedBy): ?Expense
+    {
+        $expense = Expense::find($id);
+        if (!$expense || $expense->status !== Expense::STATUS_PENDING) {
+            return null;
+        }
 
         $expense->update([
             'status' => Expense::STATUS_APPROVED,
@@ -114,8 +208,27 @@ class FinancialRepository extends BaseRepository
             $budget->increment('spent_amount', $expense->amount);
         }
 
-        return true;
+        return $expense->fresh();
     }
+
+    public function rejectExpense(int $id, string $reason): ?Expense
+    {
+        $expense = Expense::find($id);
+        if (!$expense || $expense->status !== Expense::STATUS_PENDING) {
+            return null;
+        }
+
+        $expense->update([
+            'status' => Expense::STATUS_REJECTED,
+            'notes' => $reason
+        ]);
+
+        return $expense->fresh();
+    }
+
+    // ============================================================
+    // ANALYTICS & REPORTING
+    // ============================================================
 
     public function getFinancialSummary(): array
     {

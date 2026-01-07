@@ -1,0 +1,149 @@
+# Prometheus Alert Rules for IMSQuty
+# Defines alerts for service health, performance, and errors
+
+groups:
+  # Service Health Alerts
+  - name: service_health
+    interval: 30s
+    rules:
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+          category: availability
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "{{ $labels.job }} has been down for more than 1 minute."
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          category: errors
+        annotations:
+          summary: "High error rate on {{ $labels.job }}"
+          description: "{{ $labels.job }} is experiencing {{ $value | humanizePercentage }} error rate."
+
+      - alert: SlowResponse
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "Slow response times on {{ $labels.job }}"
+          description: "95th percentile response time is {{ $value }}s on {{ $labels.job }}."
+
+  # Database Alerts
+  - name: database
+    interval: 30s
+    rules:
+      - alert: MySQLDown
+        expr: up{job="mysql"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          category: database
+        annotations:
+          summary: "MySQL is down"
+          description: "MySQL database has been down for more than 1 minute."
+
+      - alert: HighDatabaseConnections
+        expr: mysql_global_status_threads_connected > 100
+        for: 5m
+        labels:
+          severity: warning
+          category: database
+        annotations:
+          summary: "High MySQL connection count"
+          description: "MySQL has {{ $value }} connections, threshold is 100."
+
+      - alert: SlowQueries
+        expr: rate(mysql_global_status_slow_queries[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          category: database
+        annotations:
+          summary: "High slow query rate"
+          description: "MySQL is experiencing {{ $value }} slow queries per second."
+
+  # Resource Alerts
+  - name: resources
+    interval: 30s
+    rules:
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          category: resources
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is above 90% (current: {{ $value | humanizePercentage }})."
+
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          category: resources
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is above 80% (current: {{ $value }}%)."
+
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes{fstype!~"tmpfs"} / node_filesystem_size_bytes) < 0.1
+        for: 5m
+        labels:
+          severity: warning
+          category: resources
+        annotations:
+          summary: "Low disk space"
+          description: "Disk space is below 10% on {{ $labels.mountpoint }}."
+
+  # Application-Specific Alerts
+  - name: application
+    interval: 30s
+    rules:
+      - alert: HighAuthFailureRate
+        expr: rate(auth_login_failures_total[5m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+          category: security
+        annotations:
+          summary: "High authentication failure rate"
+          description: "Auth service is experiencing {{ $value }} failed logins per second."
+
+      - alert: SLABreached
+        expr: ticket_sla_breached_total > 0
+        for: 1m
+        labels:
+          severity: warning
+          category: business
+        annotations:
+          summary: "SLA breached on tickets"
+          description: "{{ $value }} tickets have breached their SLA."
+
+      - alert: LowStockAlert
+        expr: inventory_low_stock_items > 10
+        for: 5m
+        labels:
+          severity: info
+          category: business
+        annotations:
+          summary: "Multiple items low on stock"
+          description: "{{ $value }} inventory items are low on stock."
+
+      - alert: HighNotificationQueueSize
+        expr: notification_queue_size > 1000
+        for: 5m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "High notification queue size"
+          description: "Notification queue has {{ $value }} pending notifications."

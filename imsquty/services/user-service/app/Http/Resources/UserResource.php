@@ -27,6 +27,11 @@ class UserResource extends JsonResource
             'last_name' => $this->last_name,
             'full_name' => $this->getFullNameAttribute(),
             'phone' => $this->phone,
+            'bio' => $this->bio,
+            'timezone' => $this->timezone,
+            'language' => $this->language,
+            'avatar_url' => $this->avatar_url,
+            'preferences' => $this->preferences,
             'status' => $this->status,
             'division' => $this->when($this->relationLoaded('division'), [
                 'id' => $this->division?->id,

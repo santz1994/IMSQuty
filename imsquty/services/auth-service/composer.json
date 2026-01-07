@@ -11,11 +11,14 @@
     "license": "proprietary",
     "require": {
         "php": "^8.1",
+        "bacon/bacon-qr-code": "^3.0",
         "doctrine/dbal": "^3.10",
         "guzzlehttp/guzzle": "^7.2",
+        "jenssegers/agent": "^2.6",
         "laravel/framework": "^10.0",
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
+        "pragmarx/google2fa": "^9.0",
         "predis/predis": "2.2",
         "spatie/laravel-permission": "5.11",
         "tymon/jwt-auth": "2.0"

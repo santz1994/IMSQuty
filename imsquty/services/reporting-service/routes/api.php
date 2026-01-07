@@ -4,17 +4,24 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ReportController;
 
 Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
-    // Reports - specific routes first (before {id})
-    Route::post('/reports/generate', [ReportController::class, 'generate']);
-    Route::get('/reports/statistics', [ReportController::class, 'statistics']);
+    // Report Management (9 endpoints)
     Route::get('/reports', [ReportController::class, 'index']);
-    Route::get('/reports/{id}', [ReportController::class, 'show']);
+    Route::get('/reports/types', [ReportController::class, 'reportTypes']);
+    Route::get('/reports/statistics', [ReportController::class, 'statistics']);
+    Route::get('/reports/{report}', [ReportController::class, 'show']);
+    Route::post('/reports/generate', [ReportController::class, 'generate']);
+    Route::get('/reports/{report}/download', [ReportController::class, 'download']);
+    Route::delete('/reports/{report}', [ReportController::class, 'destroy']);
     
-    // Schedules
-    Route::post('/schedules/process-due', [ReportController::class, 'processDue']);
+    // Schedule Management (7 endpoints)
     Route::get('/schedules', [ReportController::class, 'schedules']);
+    Route::get('/schedules/{schedule}', [ReportController::class, 'showSchedule']);
     Route::post('/schedules', [ReportController::class, 'createSchedule']);
+    Route::put('/schedules/{schedule}', [ReportController::class, 'updateSchedule']);
+    Route::delete('/schedules/{schedule}', [ReportController::class, 'destroySchedule']);
+    Route::post('/schedules/process-due', [ReportController::class, 'processDue']);
     
+    // Health Check
     Route::get('/health', fn() => response()->json([
         'status' => 'healthy',
         'service' => 'reporting-service',

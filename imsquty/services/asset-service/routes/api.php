@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\AssetModelController;
 use App\Http\Controllers\MaintenanceController;
+use App\Http\Controllers\MetricsController;
 use App\Http\Controllers\WarrantyController;
 use App\Http\Controllers\MovementController;
 
@@ -16,6 +17,10 @@ use App\Http\Controllers\MovementController;
 | All routes are prefixed with /api/v1 and protected with auth middleware.
 |
 */
+
+// Monitoring endpoints (no auth required for Prometheus)
+Route::get('/health', [MetricsController::class, 'health']);
+Route::get('/metrics', [MetricsController::class, 'index']);
 
 Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     

@@ -49,7 +49,12 @@ class User extends Authenticatable implements JWTSubject
         'last_name',
         'status',
         'last_login_at',
-        'last_login_ip'
+        'last_login_ip',
+        'mfa_enabled',
+        'mfa_secret',
+        'mfa_enabled_at',
+        'mfa_backup_codes',
+        'mfa_backup_codes_used'
     ];
 
     /**
@@ -60,6 +65,8 @@ class User extends Authenticatable implements JWTSubject
     protected $hidden = [
         'password',
         'remember_token',
+        'mfa_secret',
+        'mfa_backup_codes',
     ];
 
     /**
@@ -72,7 +79,11 @@ class User extends Authenticatable implements JWTSubject
         return [
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
+            'mfa_enabled_at' => 'datetime',
             'password' => 'hashed',
+            'mfa_enabled' => 'boolean',
+            'mfa_backup_codes' => 'array',
+            'mfa_backup_codes_used' => 'integer',
         ];
     }
 

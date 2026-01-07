@@ -1,0 +1,24 @@
+# Elasticsearch Configuration
+cluster.name: "imsquty-cluster"
+node.name: "imsquty-node-1"
+network.host: 0.0.0.0
+http.port: 9200
+
+# Cluster settings
+discovery.type: single-node
+
+# Memory settings
+bootstrap.memory_lock: true
+
+# Security (disabled for development, enable in production)
+xpack.security.enabled: false
+xpack.monitoring.enabled: true
+xpack.graph.enabled: false
+xpack.watcher.enabled: false
+
+# Index settings
+action.auto_create_index: true
+action.destructive_requires_name: true
+
+# Logging
+logger.level: INFO

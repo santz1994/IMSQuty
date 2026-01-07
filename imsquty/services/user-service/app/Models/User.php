@@ -33,6 +33,12 @@ class User extends Authenticatable
         'status',
         'email_verified_at',
         'last_login',
+        'bio',
+        'timezone',
+        'language',
+        'avatar_path',
+        'avatar_url',
+        'preferences',
     ];
 
     /**
@@ -53,6 +59,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'last_login' => 'datetime',
+        'preferences' => 'array',
     ];
 
     /**

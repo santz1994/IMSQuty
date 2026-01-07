@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\MeetingRoomController;
+use App\Http\Controllers\MetricsController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\BookingWorkflowController;
 use App\Http\Controllers\AvailabilityController;
@@ -12,12 +13,9 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-// Health check
-Route::get('/health', function () {
-    return response()->json([
-        'success' => true,
-        'service' => 'meeting-room-service',
-        'status' => 'healthy',
+// Monitoring endpoints (no auth required for Prometheus)
+Route::get('/health', [MetricsController::class, 'health']);
+Route::get('/metrics', [MetricsController::class, 'index']);
         'timestamp' => now()->toISOString(),
     ]);
 });

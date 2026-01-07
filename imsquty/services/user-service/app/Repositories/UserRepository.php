@@ -88,4 +88,79 @@ class UserRepository extends BaseRepository
     {
         return User::where('status', 'active')->count();
     }
+
+    /**
+     * Get all users with filters and pagination
+     * 
+     * @param array $filters
+     * @param int $perPage
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function getAllWithFilters(array $filters, int $perPage = 15)
+    {
+        $query = User::with(['roles', 'permissions', 'division']);
+        
+        // Status filter
+        if (isset($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+        
+        // Role filter
+        if (isset($filters['role'])) {
+            $query->role($filters['role']);
+        }
+        
+        // Division filter
+        if (isset($filters['division_id'])) {
+            $query->where('division_id', $filters['division_id']);
+        }
+        
+        // Search filter (username, email, name)
+        if (isset($filters['search']) && !empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function($q) use ($search) {
+                $q->where('username', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%");
+            });
+        }
+        
+        // Ordering
+        $sortBy = $filters['sort_by'] ?? 'created_at';
+        $sortOrder = $filters['sort_order'] ?? 'desc';
+        $query->orderBy($sortBy, $sortOrder);
+        
+        return $query->paginate($perPage);
+    }
+
+    /**
+     * Find user by ID (alias for findById for compatibility)
+     * 
+     * @param int $id
+     * @param bool $withTrashed
+     * @return User|null
+     */
+    public function find(int $id, bool $withTrashed = false): ?User
+    {
+        return $this->findById($id, $withTrashed);
+    }
+
+    /**
+     * Restore soft-deleted user by ID
+     * 
+     * @param int $id
+     * @return User|null
+     */
+    public function restore(int $id): ?User
+    {
+        $user = User::withTrashed()->find($id);
+        
+        if ($user && $user->trashed()) {
+            parent::restore($id);
+            return $user->fresh(['roles', 'permissions']);
+        }
+        
+        return null;
+    }
 }

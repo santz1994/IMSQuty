@@ -1,0 +1,55 @@
+# Prometheus Recording Rules
+# Pre-compute frequently used queries for better performance
+
+groups:
+  # HTTP Request Metrics
+  - name: http_metrics
+    interval: 30s
+    rules:
+      - record: job:http_requests_total:rate5m
+        expr: rate(http_requests_total[5m])
+
+      - record: job:http_request_duration_seconds:p95
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
+
+      - record: job:http_request_duration_seconds:p99
+        expr: histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))
+
+      - record: job:http_errors:rate5m
+        expr: rate(http_requests_total{status=~"5.."}[5m])
+
+  # Service Availability
+  - name: availability
+    interval: 30s
+    rules:
+      - record: job:up:avg
+        expr: avg(up) by (job)
+
+      - record: job:availability:24h
+        expr: avg_over_time(up[24h])
+
+  # Database Metrics
+  - name: database_metrics
+    interval: 60s
+    rules:
+      - record: mysql:queries:rate5m
+        expr: rate(mysql_global_status_queries[5m])
+
+      - record: mysql:connections:current
+        expr: mysql_global_status_threads_connected
+
+      - record: mysql:slow_queries:rate5m
+        expr: rate(mysql_global_status_slow_queries[5m])
+
+  # Business Metrics
+  - name: business_metrics
+    interval: 60s
+    rules:
+      - record: tickets:created:rate1h
+        expr: rate(tickets_created_total[1h])
+
+      - record: assets:total:count
+        expr: sum(assets_total) by (status)
+
+      - record: bookings:success_rate:5m
+        expr: rate(bookings_successful_total[5m]) / rate(bookings_total[5m])

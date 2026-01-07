@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\MfaController;
+use App\Http\Controllers\MetricsController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\UserRBACController;
@@ -11,6 +13,11 @@ use Illuminate\Support\Facades\Route;
 | API Routes - Auth Service
 |--------------------------------------------------------------------------
 */
+
+// ==================== MONITORING ENDPOINTS ====================
+// Health and metrics (no auth required for Prometheus)
+Route::get('/health', [MetricsController::class, 'health']);
+Route::get('/metrics', [MetricsController::class, 'index']);
 
 Route::prefix('v1')->group(function () {
     
@@ -31,6 +38,34 @@ Route::prefix('v1')->group(function () {
             Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
             Route::get('/me', [AuthController::class, 'me'])->name('auth.me');
         });
+
+        // ==================== MFA & SESSION MANAGEMENT ====================
+        
+        // MFA endpoints
+        Route::prefix('mfa')->group(function () {
+            Route::get('/status', [MfaController::class, 'getMfaStatus'])->name('mfa.status');
+            Route::post('/setup', [MfaController::class, 'setupMfa'])->name('mfa.setup');
+            Route::post('/enable', [MfaController::class, 'enableMfa'])->name('mfa.enable');
+            Route::post('/verify', [MfaController::class, 'verifyMfa'])->name('mfa.verify');
+            Route::post('/disable', [MfaController::class, 'disableMfa'])->name('mfa.disable');
+            Route::post('/backup-codes/regenerate', [MfaController::class, 'regenerateBackupCodes'])
+                ->name('mfa.backup-codes.regenerate');
+        });
+
+        // Session Management endpoints
+        Route::prefix('sessions')->group(function () {
+            Route::get('/', [MfaController::class, 'getSessions'])->name('sessions.index');
+            Route::get('/statistics', [MfaController::class, 'getSessionStatistics'])
+                ->name('sessions.statistics');
+            Route::delete('/{sessionId}', [MfaController::class, 'revokeSession'])
+                ->name('sessions.revoke');
+            Route::post('/revoke-all-others', [MfaController::class, 'revokeAllOtherSessions'])
+                ->name('sessions.revoke-all-others');
+        });
+
+        // Login History endpoint
+        Route::get('/login-history', [MfaController::class, 'getLoginHistory'])
+            ->name('login-history.index');
 
         // ==================== RBAC ROUTES ====================
         
