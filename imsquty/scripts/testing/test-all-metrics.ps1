@@ -308,7 +308,7 @@ $upTargets = Test-PrometheusTargets
 # TEST 5: GRAFANA DASHBOARDS
 # ================================================================
 
-$grafanaHealthy = Test-GrafanaDashboards
+$null = Test-GrafanaDashboards
 
 # ================================================================
 # FINAL SUMMARY
@@ -336,8 +336,8 @@ Write-Host "✓ Prometheus Targets UP: $upTargets" -ForegroundColor $(
 if ($Results.Errors.Count -gt 0) {
     Write-Host ""
     Write-Host "⚠ Errors ($($Results.Errors.Count)):" -ForegroundColor $ColorError
-    foreach ($error in $Results.Errors) {
-        Write-Host "  • $error" -ForegroundColor $ColorError
+    foreach ($errorItem in $Results.Errors) {
+        Write-Host "  • $errorItem" -ForegroundColor $ColorError
     }
 }
 

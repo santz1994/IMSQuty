@@ -47,6 +47,14 @@ class User extends Authenticatable implements JWTSubject
         'password',
         'first_name',
         'last_name',
+        'phone',
+        'avatar',
+        'department_id',
+        'team_id',
+        'position',
+        'bio',
+        'timezone',
+        'language',
         'status',
         'last_login_at',
         'last_login_ip',
@@ -417,5 +425,262 @@ class User extends Authenticatable implements JWTSubject
     public function isAdmin(): bool
     {
         return $this->hasAnyRole(['Super Admin', 'Admin']);
+    }
+
+    // ==================== DEPARTMENT & TEAM RELATIONSHIPS ====================
+
+    /**
+     * Get the department the user belongs to
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
+    }
+
+    /**
+     * Get the team the user belongs to
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function team()
+    {
+        return $this->belongsTo(Team::class);
+    }
+
+    /**
+     * Get departments managed by this user
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function managedDepartments()
+    {
+        return $this->hasMany(Department::class, 'manager_id');
+    }
+
+    /**
+     * Get departments where this user is director
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function directedDepartments()
+    {
+        return $this->hasMany(Department::class, 'director_id');
+    }
+
+    /**
+     * Get teams managed by this user
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function managedTeams()
+    {
+        return $this->hasMany(Team::class, 'manager_id');
+    }
+
+    // ==================== HIERARCHY & SCOPE CHECKING ====================
+
+    /**
+     * Get user's role level (1=highest, 5=lowest)
+     * 
+     * @return int
+     */
+    public function getRoleLevel(): int
+    {
+        if ($this->hasRole('superadmin')) return 1;
+        if ($this->hasRole('director')) return 2;
+        if ($this->hasRole('manager')) return 3;
+        if ($this->hasRole('admin') || $this->hasRole('hr')) return 4;
+        return 5; // user
+    }
+
+    /**
+     * Check if user can approve another user's requests
+     * 
+     * @param User $targetUser
+     * @return bool
+     */
+    public function canApprove(User $targetUser): bool
+    {
+        // Higher level (lower number) can approve
+        return $this->getRoleLevel() < $targetUser->getRoleLevel();
+    }
+
+    /**
+     * Check if user can manage another user
+     * 
+     * @param User $targetUser
+     * @return bool
+     */
+    public function canManage(User $targetUser): bool
+    {
+        // Superadmin can manage everyone
+        if ($this->hasRole('superadmin')) {
+            return true;
+        }
+
+        // Same or lower level
+        if ($this->getRoleLevel() > $targetUser->getRoleLevel()) {
+            return false;
+        }
+
+        // Director can manage department members
+        if ($this->hasRole('director')) {
+            return $targetUser->department_id === $this->department_id;
+        }
+
+        // Manager can only manage team members
+        if ($this->hasRole('manager')) {
+            return $targetUser->team_id === $this->team_id;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if user is in same team as another user
+     * 
+     * @param int $userId
+     * @return bool
+     */
+    public function isInSameTeam(int $userId): bool
+    {
+        if (!$this->team_id) {
+            return false;
+        }
+
+        $otherUser = static::find($userId);
+        return $otherUser && $this->team_id === $otherUser->team_id;
+    }
+
+    /**
+     * Check if user is in same department as another user
+     * 
+     * @param int $userId
+     * @return bool
+     */
+    public function isInSameDepartment(int $userId): bool
+    {
+        if (!$this->department_id) {
+            return false;
+        }
+
+        $otherUser = static::find($userId);
+        return $otherUser && $this->department_id === $otherUser->department_id;
+    }
+
+    /**
+     * Get all direct reports (team members managed by this user)
+     * 
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function directReports()
+    {
+        if ($this->hasRole('manager') && $this->team_id) {
+            return static::where('team_id', $this->team_id)
+                ->where('id', '!=', $this->id)
+                ->where('status', 'active')
+                ->get();
+        }
+
+        if ($this->hasRole('director') && $this->department_id) {
+            return static::where('department_id', $this->department_id)
+                ->where('id', '!=', $this->id)
+                ->where('status', 'active')
+                ->get();
+        }
+
+        return collect();
+    }
+
+    /**
+     * Get all department members
+     * 
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function departmentMembers()
+    {
+        if (!$this->department_id) {
+            return collect();
+        }
+
+        return static::where('department_id', $this->department_id)
+            ->where('status', 'active')
+            ->get();
+    }
+
+    /**
+     * Get all team members
+     * 
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function teamMembers()
+    {
+        if (!$this->team_id) {
+            return collect();
+        }
+
+        return static::where('team_id', $this->team_id)
+            ->where('status', 'active')
+            ->get();
+    }
+
+    // ==================== HELPER METHODS ====================
+
+    /**
+     * Check if user is a manager
+     * 
+     * @return bool
+     */
+    public function isManager(): bool
+    {
+        return $this->hasRole('manager') || 
+               $this->managedTeams()->exists() || 
+               $this->managedDepartments()->exists();
+    }
+
+    /**
+     * Check if user is a director
+     * 
+     * @return bool
+     */
+    public function isDirector(): bool
+    {
+        return $this->hasRole('director') || $this->directedDepartments()->exists();
+    }
+
+    /**
+     * Check if user is HR
+     * 
+     * @return bool
+     */
+    public function isHR(): bool
+    {
+        return $this->hasRole('hr');
+    }
+
+    /**
+     * Get user's full organizational path
+     * 
+     * @return string
+     */
+    public function getOrganizationalPath(): string
+    {
+        $parts = [];
+
+        if ($this->department) {
+            $parts[] = $this->department->full_path;
+        }
+
+        if ($this->team) {
+            $parts[] = $this->team->name;
+        }
+
+        if ($this->position) {
+            $parts[] = $this->position;
+        }
+
+        return implode(' > ', array_filter($parts));
     }
 }

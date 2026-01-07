@@ -29,6 +29,17 @@ class AuthRepository
     }
 
     /**
+     * Find user by username
+     * 
+     * @param string $username
+     * @return User|null
+     */
+    public function findByUsername(string $username): ?User
+    {
+        return User::where('username', $username)->first();
+    }
+
+    /**
      * Update last login timestamp
      * 
      * @param int $userId

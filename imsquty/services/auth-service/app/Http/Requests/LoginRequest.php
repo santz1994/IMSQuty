@@ -32,9 +32,16 @@ class LoginRequest extends FormRequest
     {
         return [
             'email' => [
-                'required',
+                'required_without:username',
                 'email',
-                'max:255'
+                'max:255',
+                'ends_with:@quty.co.id' // Only @quty.co.id emails allowed
+            ],
+            'username' => [
+                'required_without:email',
+                'string',
+                'max:255',
+                'alpha_dash' // Username: letters, numbers, dashes, underscores
             ],
             'password' => [
                 'required',

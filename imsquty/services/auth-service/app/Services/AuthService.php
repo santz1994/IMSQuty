@@ -36,31 +36,32 @@ class AuthService
     ) {}
 
     /**
-     * Authenticate user with email and password
+     * Authenticate user with username/email and password
      * 
-     * @param array $credentials ['email' => string, 'password' => string, 'remember_me' => bool]
+     * @param array $credentials ['email|username' => string, 'password' => string, 'remember_me' => bool]
      * @return array ['access_token' => string, 'refresh_token' => string, 'user' => User]
      * @throws InvalidCredentialsException
      * @throws AccountLockedException
      */
     public function login(array $credentials): array
     {
-        $email = $credentials['email'];
+        // Support both email and username
+        $identifier = $credentials['email'] ?? $credentials['username'];
         $password = $credentials['password'];
         $rememberMe = $credentials['remember_me'] ?? false;
 
         // Check if account is locked
-        $this->checkAccountLockout($email);
+        $this->checkAccountLockout($identifier);
 
-        // Find user by email
-        $user = $this->repository->findByEmail($email);
+        // Find user by email or username
+        $user = $this->findUserByIdentifier($identifier);
 
         if (!$user || !Hash::check($password, $user->password)) {
             // Increment failed attempts
-            $this->incrementFailedAttempts($email);
+            $this->incrementFailedAttempts($identifier);
             
             // Log failed attempt
-            $this->logLoginAttempt($email, false, request()->ip());
+            $this->logLoginAttempt($identifier, false, request()->ip());
             
             throw new InvalidCredentialsException();
         }
@@ -71,7 +72,7 @@ class AuthService
         }
 
         // Reset failed attempts on successful login
-        $this->resetFailedAttempts($email);
+        $this->resetFailedAttempts($identifier);
 
         // Generate JWT tokens
         $accessToken = $this->jwtService->generateAccessToken($user);
@@ -81,7 +82,7 @@ class AuthService
         $this->repository->updateLastLogin($user->id);
 
         // Log successful login
-        $this->logLoginAttempt($email, true, request()->ip(), $user->id);
+        $this->logLoginAttempt($identifier, true, request()->ip(), $user->id);
 
         // Create audit log
         $this->repository->createAuditLog([
@@ -252,5 +253,22 @@ class AuthService
             'ip_address' => $ipAddress,
             'user_agent' => request()->userAgent()
         ]);
+    }
+
+    /**
+     * Find user by email OR username
+     * 
+     * @param string $identifier - Email or username
+     * @return User|null
+     */
+    private function findUserByIdentifier(string $identifier): ?User
+    {
+        // Check if identifier is email (contains @)
+        if (str_contains($identifier, '@')) {
+            return $this->repository->findByEmail($identifier);
+        }
+        
+        // Otherwise treat as username
+        return $this->repository->findByUsername($identifier);
     }
 }

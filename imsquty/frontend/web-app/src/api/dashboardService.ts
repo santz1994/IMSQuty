@@ -47,10 +47,16 @@ export interface DashboardStats {
     utilizationRate: number
   }
   users: {
+    total: number
+    active: number
+    inactive: number
+    online: number
     totalUsers: number
     activeUsers: number
     totalDepartments: number
     totalTeams: number
+    byRole: { name: string; value: number }[]
+    byDepartment: { name: string; value: number }[]
   }
   notifications: {
     totalSent: number
@@ -233,6 +239,94 @@ export const dashboardService = {
         status: 'unknown',
         services: [],
       }
+    }
+  },
+
+  /**
+   * Role-Specific Dashboard Methods
+   */
+
+  // Director Dashboard Methods
+  getBusinessMetrics: async () => {
+    try {
+      const response = await apiClient.get('/dashboard/director/business-metrics')
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch business metrics:', error)
+      return null
+    }
+  },
+
+  getFinancialOverview: async () => {
+    try {
+      const response = await apiClient.get('/dashboard/director/financial-overview')
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch financial overview:', error)
+      return null
+    }
+  },
+
+  getDepartmentPerformance: async () => {
+    try {
+      const response = await apiClient.get('/dashboard/director/department-performance')
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch department performance:', error)
+      return []
+    }
+  },
+
+  getBusinessTrends: async () => {
+    try {
+      const response = await apiClient.get('/dashboard/director/business-trends')
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch business trends:', error)
+      return []
+    }
+  },
+
+  // Manager Dashboard Methods
+  getTeamMetrics: async () => {
+    try {
+      const response = await apiClient.get('/dashboard/manager/team-metrics')
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch team metrics:', error)
+      return null
+    }
+  },
+
+  getPendingApprovals: async () => {
+    try {
+      const response = await apiClient.get('/dashboard/manager/pending-approvals')
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch pending approvals:', error)
+      return []
+    }
+  },
+
+  // HR Dashboard Methods
+  getHRMetrics: async () => {
+    try {
+      const response = await apiClient.get('/dashboard/hr/metrics')
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch HR metrics:', error)
+      return null
+    }
+  },
+
+  // User Dashboard Methods
+  getUserMetrics: async () => {
+    try {
+      const response = await apiClient.get('/dashboard/user/metrics')
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch user metrics:', error)
+      return null
     }
   },
 }

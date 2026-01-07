@@ -2,12 +2,15 @@ import React, { createContext, useContext, useMemo } from 'react'
 import { useAppSelector } from '../store/hooks'
 
 /**
- * Role Types
- * - super-admin: Full system access (Developer level)
- * - admin: Business operations & management
- * - user: Limited operational access
+ * Role Types (6-Level Hierarchy)
+ * - superadmin: Full system access & IT infrastructure control
+ * - director: Strategic business decisions & company policy
+ * - manager: Team operations & project oversight
+ * - admin: Module management & user support
+ * - hr: Human resources & employee management
+ * - user: End user operations & daily tasks
  */
-export type UserRole = 'super-admin' | 'admin' | 'user' | 'guest'
+export type UserRole = 'superadmin' | 'director' | 'manager' | 'admin' | 'hr' | 'user' | 'guest'
 
 /**
  * Role Context Interface
@@ -15,16 +18,22 @@ export type UserRole = 'super-admin' | 'admin' | 'user' | 'guest'
 interface RoleContextType {
   role: UserRole
   permissions: string[]
+  user: any
   hasPermission: (permission: string) => boolean
   hasRole: (role: UserRole | UserRole[]) => boolean
   hasAnyRole: (roles: UserRole[]) => boolean
   hasAllRoles: (roles: UserRole[]) => boolean
   isSuperAdmin: boolean
+  isDirector: boolean
+  isManager: boolean
   isAdmin: boolean
+  isHR: boolean
   isUser: boolean
   canAccessSystemTools: boolean
   canManageUsers: boolean
   canApproveRequests: boolean
+  canManageFinancials: boolean
+  canViewReports: boolean
 }
 
 const RoleContext = createContext<RoleContextType | undefined>(undefined)
@@ -44,16 +53,22 @@ export const RoleProvider: React.FC<{ children: React.ReactNode }> = ({
       return {
         role: 'guest',
         permissions: [],
+        user: null,
         hasPermission: () => false,
         hasRole: () => false,
         hasAnyRole: () => false,
         hasAllRoles: () => false,
         isSuperAdmin: false,
+        isDirector: false,
+        isManager: false,
         isAdmin: false,
+        isHR: false,
         isUser: false,
         canAccessSystemTools: false,
         canManageUsers: false,
         canApproveRequests: false,
+        canManageFinancials: false,
+        canViewReports: false,
       }
     }
 
@@ -63,8 +78,11 @@ export const RoleProvider: React.FC<{ children: React.ReactNode }> = ({
 
     // Helper functions
     const hasPermission = (permission: string): boolean => {
-      // Super-admin has all permissions
-      if (role === 'super-admin') return true
+      // Superadmin has all permissions
+      if (role === 'superadmin') return true
+
+      // Director has most permissions
+      if (role === 'director') return !permission.includes('system.')
 
       // Check if user has specific permission
       return permissions.includes(permission)
@@ -87,29 +105,40 @@ export const RoleProvider: React.FC<{ children: React.ReactNode }> = ({
       return roles.includes(role) && roles.length === 1
     }
 
-    // Role flags
-    const isSuperAdmin = role === 'super-admin'
-    const isAdmin = role === 'admin' || isSuperAdmin
-    const isUser = role === 'user' || isAdmin
+    // Role flags (6-level hierarchy)
+    const isSuperAdmin = role === 'superadmin'
+    const isDirector = role === 'director' || isSuperAdmin
+    const isManager = role === 'manager' || isDirector
+    const isAdmin = role === 'admin' || isManager
+    const isHR = role === 'hr' || isManager
+    const isUser = role === 'user' || isAdmin || isHR
 
     // Feature flags based on role
     const canAccessSystemTools = isSuperAdmin
-    const canManageUsers = isAdmin
-    const canApproveRequests = isAdmin
+    const canManageUsers = isSuperAdmin || isDirector || isHR
+    const canApproveRequests = isSuperAdmin || isDirector || isManager
+    const canManageFinancials = isSuperAdmin || isDirector || (role === 'admin')
+    const canViewReports = isSuperAdmin || isDirector || isManager
 
     return {
       role,
       permissions,
+      user,
       hasPermission,
       hasRole,
       hasAnyRole,
       hasAllRoles,
       isSuperAdmin,
+      isDirector,
+      isManager,
       isAdmin,
+      isHR,
       isUser,
       canAccessSystemTools,
       canManageUsers,
       canApproveRequests,
+      canManageFinancials,
+      canViewReports,
     }
   }, [user, isAuthenticated])
 

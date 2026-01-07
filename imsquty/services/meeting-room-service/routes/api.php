@@ -16,9 +16,6 @@ use Illuminate\Support\Facades\Route;
 // Monitoring endpoints (no auth required for Prometheus)
 Route::get('/health', [MetricsController::class, 'health']);
 Route::get('/metrics', [MetricsController::class, 'index']);
-        'timestamp' => now()->toISOString(),
-    ]);
-});
 
 // API v1 routes
 Route::prefix('v1')->group(function () {

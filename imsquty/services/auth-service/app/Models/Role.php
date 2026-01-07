@@ -34,9 +34,12 @@ class Role extends Model
      */
     protected $fillable = [
         'name',
+        'slug',
         'guard_name',
         'description',
+        'level',
         'is_system',
+        'is_active',
     ];
 
     /**
@@ -45,7 +48,9 @@ class Role extends Model
      * @var array<string, string>
      */
     protected $casts = [
+        'level' => 'integer',
         'is_system' => 'boolean',
+        'is_active' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

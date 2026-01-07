@@ -503,7 +503,7 @@ const SuperAdminDashboard: React.FC = () => {
                   <XAxis dataKey="time" stroke="#888" />
                   <YAxis stroke="#888" />
                   <Tooltip
-                    contentStyle={{ bgcolor: '#1a1e3a', border: 'none', borderRadius: 8 }}
+                    contentStyle={{ backgroundColor: '#1a1e3a', border: 'none', borderRadius: 8 }}
                   />
                   <Legend />
                   <Line
