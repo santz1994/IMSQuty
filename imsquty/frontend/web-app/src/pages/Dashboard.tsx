@@ -25,7 +25,10 @@ import {
   YAxis,
 } from 'recharts'
 import AISearchBar from '../components/common/AISearchBar'
+import AdvancedNotificationSystem from '../components/common/AdvancedNotificationSystem'
+import ExportManager from '../components/common/ExportManager'
 import PerformanceMetricsDashboard from '../components/common/PerformanceMetricsDashboard'
+import SmartSearch from '../components/common/SmartSearch'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8']
@@ -117,6 +120,8 @@ const Dashboard: React.FC = () => {
 
   return (
     <Box>
+      <AdvancedNotificationSystem maxNotifications={5} />
+
       {/* Header with Toggle */}
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
@@ -148,10 +153,16 @@ const Dashboard: React.FC = () => {
       {/* BASIC VIEW */}
       {viewMode === 'basic' && (
         <>
-          {/* AI-Powered Search Bar */}
-          <Box sx={{ mb: 4 }}>
+          {/* Smart Search & AI Search */}
+          <Stack spacing={2} sx={{ mb: 4 }}>
+            <SmartSearch
+              onSearch={(query, suggestion) => {
+                console.log('Smart Search:', query, suggestion)
+                handleSearch(query)
+              }}
+            />
             <AISearchBar onSearch={handleSearch} />
-          </Box>
+          </Stack>
 
           <Grid container spacing={3}>
             <Grid item xs={12} sm={6} md={3}>
@@ -217,7 +228,14 @@ const Dashboard: React.FC = () => {
       {/* ADVANCED VIEW */}
       {viewMode === 'advanced' && (
         <>
-          {/* KPI Cards */}
+          {/* KPI Cards with Export */}
+          <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" sx={{ mb: 3 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Key Performance Indicators
+            </Typography>
+            <ExportManager data={assets} filename="assets-report" />
+          </Stack>
+
           <Grid container spacing={2} sx={{ mb: 3 }}>
             <Grid item xs={12} sm={6} md={3}>
               <StatCard title="Total Assets" value={assets.length} color="info" />
