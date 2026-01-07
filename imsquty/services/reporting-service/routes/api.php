@@ -2,6 +2,11 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\MetricsController;
+
+// Monitoring endpoints (no auth required for Prometheus)
+Route::get('/health', [MetricsController::class, 'health']);
+Route::get('/metrics', [MetricsController::class, 'index']);
 
 Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     // Report Management (9 endpoints)

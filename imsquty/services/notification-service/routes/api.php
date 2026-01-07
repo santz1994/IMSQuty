@@ -2,12 +2,17 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\MetricsController;
 
 /*
 |--------------------------------------------------------------------------
 | API Routes - Notification Service
 |--------------------------------------------------------------------------
 */
+
+// Monitoring endpoints (no auth required for Prometheus)
+Route::get('/health', [MetricsController::class, 'health']);
+Route::get('/metrics', [MetricsController::class, 'index']);
 
 Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     // Notification management - Specific routes first (must be before {id} parameter)

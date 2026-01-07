@@ -8,6 +8,7 @@ use App\Http\Controllers\ManufacturerController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\WarrantyTypeController;
 use App\Http\Controllers\PcspecController;
+use App\Http\Controllers\MetricsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,6 +19,10 @@ use App\Http\Controllers\PcspecController;
 | Requires authentication via JWT token (auth:sanctum middleware)
 | Rate limiting: 60 requests per minute
 |
+
+// Monitoring endpoints (no auth required for Prometheus)
+Route::get('/health', [MetricsController::class, 'health']);
+Route::get('/metrics', [MetricsController::class, 'index']);
 */
 
 // Health check (no authentication required)

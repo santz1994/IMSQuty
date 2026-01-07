@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\UserBulkController;
+use App\Http\Controllers\MetricsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,9 +16,13 @@ use App\Http\Controllers\UserBulkController;
 |
 */
 
+// Monitoring endpoints (no auth required for Prometheus)
+Route::get('/health', [MetricsController::class, 'health']);
+Route::get('/metrics', [MetricsController::class, 'index']);
+
 Route::prefix('v1')->group(function () {
     
-    // Health check
+    // Health check (legacy - kept for backward compatibility)
     Route::get('/health', function () {
         return response()->json([
             'success' => true,
