@@ -3,6 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\AssetModelController;
+use App\Http\Controllers\MaintenanceController;
+use App\Http\Controllers\WarrantyController;
+use App\Http\Controllers\MovementController;
 
 /*
 |--------------------------------------------------------------------------
@@ -55,6 +58,58 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         
         // Additional actions
         Route::post('/{id}/restore', [AssetModelController::class, 'restore']);
+    });
+
+    // Maintenance Routes
+    Route::prefix('maintenance')->group(function () {
+        // Statistics and special routes (before {id} routes)
+        Route::get('/statistics', [MaintenanceController::class, 'getStatistics']);
+        Route::get('/upcoming', [MaintenanceController::class, 'getUpcoming']);
+        Route::get('/overdue', [MaintenanceController::class, 'getOverdue']);
+        Route::get('/status/{status}', [MaintenanceController::class, 'getByStatus']);
+        Route::get('/type/{type}', [MaintenanceController::class, 'getByType']);
+        Route::get('/asset/{assetId}', [MaintenanceController::class, 'getByAsset']);
+        
+        // Standard CRUD
+        Route::get('/{id}', [MaintenanceController::class, 'show']);
+        Route::post('/', [MaintenanceController::class, 'store']);
+        Route::put('/{id}', [MaintenanceController::class, 'update']);
+        Route::delete('/{id}', [MaintenanceController::class, 'destroy']);
+        
+        // Actions
+        Route::post('/{id}/complete', [MaintenanceController::class, 'complete']);
+        Route::post('/{id}/cancel', [MaintenanceController::class, 'cancel']);
+    });
+
+    // Warranty Routes
+    Route::prefix('warranties')->group(function () {
+        // Special routes (before {assetId} routes)
+        Route::get('/statistics', [WarrantyController::class, 'getStatistics']);
+        Route::get('/expiring', [WarrantyController::class, 'getExpiring']);
+        Route::get('/expired', [WarrantyController::class, 'getExpired']);
+        Route::get('/active', [WarrantyController::class, 'getActive']);
+        Route::get('/alerts', [WarrantyController::class, 'getExpiryAlerts']);
+        
+        // By asset
+        Route::get('/asset/{assetId}', [WarrantyController::class, 'getByAsset']);
+        Route::put('/asset/{assetId}', [WarrantyController::class, 'update']);
+        Route::get('/asset/{assetId}/check-validity', [WarrantyController::class, 'checkValidity']);
+    });
+
+    // Movement Routes
+    Route::prefix('movements')->group(function () {
+        // Statistics and special routes (before {id} routes)
+        Route::get('/statistics', [MovementController::class, 'getStatistics']);
+        Route::get('/recent', [MovementController::class, 'getRecent']);
+        Route::get('/asset/{assetId}', [MovementController::class, 'getByAsset']);
+        Route::get('/asset/{assetId}/current-location', [MovementController::class, 'getCurrentLocation']);
+        Route::get('/location/{locationId}', [MovementController::class, 'getByLocation']);
+        Route::post('/date-range', [MovementController::class, 'getByDateRange']);
+        
+        // Standard CRUD
+        Route::get('/{id}', [MovementController::class, 'show']);
+        Route::post('/', [MovementController::class, 'store']);
+        Route::delete('/{id}', [MovementController::class, 'destroy']);
     });
 });
 

@@ -17,7 +17,10 @@ class NotificationService
 {
     public function __construct(
         private NotificationRepository $notificationRepository,
-        private NotificationTemplateRepository $templateRepository
+        private NotificationTemplateRepository $templateRepository,
+        private EmailService $emailService,
+        private SMSService $smsService,
+        private PushService $pushService
     ) {}
 
     /**
@@ -223,15 +226,7 @@ class NotificationService
      */
     private function sendEmail(Notification $notification): bool
     {
-        // DEFERRED: Email integration (supports: Mailhog, SMTP, SendGrid, AWS SES)
-        // Phase 6 enhancement: Configure via .env (MAIL_DRIVER, MAIL_HOST, MAIL_PORT, etc.)
-        // Currently: Logs notification for testing. Will send via configured mail driver when enabled.
-        Log::info('Email sent (simulated)', [
-            'to' => $notification->user->email,
-            'subject' => $notification->subject
-        ]);
-        
-        return true;
+        return $this->emailService->send($notification);
     }
 
     /**
@@ -239,15 +234,7 @@ class NotificationService
      */
     private function sendSms(Notification $notification): bool
     {
-        // DEFERRED: SMS integration (supports: Twilio, Nexmo, AWS SNS)
-        // Phase 6 enhancement: Configure API credentials via .env (SMS_DRIVER, TWILIO_ACCOUNT_SID, etc.)
-        // Currently: Logs notification for testing. Will send via configured SMS driver when enabled.
-        Log::info('SMS sent (simulated)', [
-            'to' => $notification->user->phone,
-            'body' => $notification->body
-        ]);
-        
-        return true;
+        return $this->smsService->send($notification);
     }
 
     /**
@@ -255,14 +242,7 @@ class NotificationService
      */
     private function sendPush(Notification $notification): bool
     {
-        // DEFERRED: Push notification integration (supports: Firebase FCM, OneSignal)
-        // Phase 6 enhancement: Configure via .env credentials (PUSH_DRIVER, FIREBASE_KEY, etc.)
-        // Currently: Logs notification for testing. Will send via configured push driver when enabled.
-        Log::info('Push notification sent (simulated)', [
-            'user_id' => $notification->user_id
-        ]);
-        
-        return true;
+        return $this->pushService->send($notification);
     }
 
     /**

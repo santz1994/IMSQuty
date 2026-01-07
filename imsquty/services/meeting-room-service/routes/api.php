@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\MeetingRoomController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\BookingWorkflowController;
+use App\Http\Controllers\AvailabilityController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -55,9 +57,20 @@ Route::prefix('v1')->group(function () {
         Route::delete('/{id}', [BookingController::class, 'destroy']);
         
         // Special actions
-        Route::post('/{id}/approve', [BookingController::class, 'approve']);
-        Route::post('/{id}/reject', [BookingController::class, 'reject']);
-        Route::post('/{id}/cancel', [BookingController::class, 'cancel']);
+        Route::post('/{id}/approve', [BookingWorkflowController::class, 'approve']);
+        Route::post('/{id}/reject', [BookingWorkflowController::class, 'reject']);
+        Route::post('/{id}/cancel', [BookingWorkflowController::class, 'cancel']);
+        Route::post('/{id}/check-in', [BookingWorkflowController::class, 'checkIn']);
+        Route::post('/{id}/check-out', [BookingWorkflowController::class, 'checkOut']);
+        Route::post('/{id}/feedback', [BookingWorkflowController::class, 'submitFeedback']);
         Route::get('/query/statistics', [BookingController::class, 'statistics']);
+    });
+
+    // Availability (public access for checking)
+    Route::prefix('availability')->group(function () {
+        Route::post('/check', [AvailabilityController::class, 'checkAvailability']);
+        Route::post('/find-rooms', [AvailabilityController::class, 'findAvailableRooms']);
+        Route::get('/room/{roomId}/schedule', [AvailabilityController::class, 'getRoomSchedule']);
+        Route::post('/matrix', [AvailabilityController::class, 'getAvailabilityMatrix']);
     });
 });

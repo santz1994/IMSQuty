@@ -1,5 +1,5 @@
 # Multi-stage build for Meeting Room Service
-FROM php:8.4-fpm-alpine as base
+FROM php:8.4-fpm-alpine AS base
 
 # Install system dependencies
 RUN apk add --no-cache \

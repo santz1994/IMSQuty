@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Traits\Auditable;
+use App\Traits\HasUUID;
+use App\Traits\HasAudit;
 
 /**
  * Asset Model
@@ -24,7 +26,7 @@ use App\Traits\Auditable;
  */
 class Asset extends Model
 {
-    use HasFactory, SoftDeletes, Auditable;
+    use HasFactory, SoftDeletes, Auditable, HasUUID, HasAudit;
 
     protected $table = 'assets';
 

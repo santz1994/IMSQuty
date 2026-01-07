@@ -1,5 +1,5 @@
 # Multi-stage build for Auth Service
-FROM php:8.4-fpm as base
+FROM php:8.4-fpm AS base
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
