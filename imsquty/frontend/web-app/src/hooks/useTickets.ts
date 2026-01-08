@@ -3,15 +3,15 @@
  * React hook for ticket management
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import ticketRepository from '../repositories/TicketRepository'
-import { 
-  Ticket, 
-  TicketComment, 
-  TicketAttachment, 
-  TicketStats 
-} from '../services/TicketService'
 import { PaginationParams } from '../services/BaseService'
+import {
+  Ticket,
+  TicketAttachment,
+  TicketComment,
+  TicketStats
+} from '../services/TicketService'
 
 interface UseTicketsResult {
   tickets: Ticket[]

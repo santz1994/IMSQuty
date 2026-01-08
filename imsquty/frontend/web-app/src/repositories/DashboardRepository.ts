@@ -3,17 +3,17 @@
  * Data access layer for dashboard data with short-lived caching
  */
 
-import { BaseRepository } from './BaseRepository'
 import dashboardService, {
-  DashboardStats,
-  RoleBasedDashboard,
+  Activity,
   AssetStatusDistribution,
+  DashboardStats,
+  MaintenanceSchedule,
+  RoleBasedDashboard,
   TicketPriorityDistribution,
   TrendData,
-  MaintenanceSchedule,
   WarrantyExpiring,
-  Activity,
 } from '../services/DashboardService'
+import { BaseRepository } from './BaseRepository'
 
 class DashboardRepository extends BaseRepository<DashboardStats> {
   constructor() {
@@ -49,7 +49,7 @@ class DashboardRepository extends BaseRepository<DashboardStats> {
    */
   async getRoleDashboard(roleId?: number, forceRefresh: boolean = false): Promise<RoleBasedDashboard | null> {
     const cacheKey = `role_dashboard_${roleId || 'current'}`
-    
+
     if (!forceRefresh) {
       const cached = this.getFromCache<RoleBasedDashboard>(cacheKey)
       if (cached) return cached
@@ -117,7 +117,7 @@ class DashboardRepository extends BaseRepository<DashboardStats> {
     forceRefresh: boolean = false
   ): Promise<TrendData[] | null> {
     const cacheKey = `asset_trends_${period}`
-    
+
     if (!forceRefresh) {
       const cached = this.getFromCache<TrendData[]>(cacheKey)
       if (cached) return cached
@@ -143,7 +143,7 @@ class DashboardRepository extends BaseRepository<DashboardStats> {
     forceRefresh: boolean = false
   ): Promise<TrendData[] | null> {
     const cacheKey = `ticket_trends_${period}`
-    
+
     if (!forceRefresh) {
       const cached = this.getFromCache<TrendData[]>(cacheKey)
       if (cached) return cached
@@ -166,7 +166,7 @@ class DashboardRepository extends BaseRepository<DashboardStats> {
    */
   async getMaintenanceSchedule(days: number = 30, forceRefresh: boolean = false): Promise<MaintenanceSchedule[] | null> {
     const cacheKey = `maintenance_schedule_${days}`
-    
+
     if (!forceRefresh) {
       const cached = this.getFromCache<MaintenanceSchedule[]>(cacheKey)
       if (cached) return cached
@@ -190,7 +190,7 @@ class DashboardRepository extends BaseRepository<DashboardStats> {
    */
   async getWarrantiesExpiring(days: number = 90, forceRefresh: boolean = false): Promise<WarrantyExpiring[] | null> {
     const cacheKey = `warranties_expiring_${days}`
-    
+
     if (!forceRefresh) {
       const cached = this.getFromCache<WarrantyExpiring[]>(cacheKey)
       if (cached) return cached
@@ -213,7 +213,7 @@ class DashboardRepository extends BaseRepository<DashboardStats> {
    */
   async getRecentActivities(limit: number = 10, forceRefresh: boolean = false): Promise<Activity[] | null> {
     const cacheKey = `recent_activities_${limit}`
-    
+
     if (!forceRefresh) {
       const cached = this.getFromCache<Activity[]>(cacheKey)
       if (cached) return cached
@@ -258,7 +258,7 @@ class DashboardRepository extends BaseRepository<DashboardStats> {
    */
   async getDivisionDashboard(divisionId: number, forceRefresh: boolean = false): Promise<DashboardStats | null> {
     const cacheKey = `division_dashboard_${divisionId}`
-    
+
     if (!forceRefresh) {
       const cached = this.getFromCache<DashboardStats>(cacheKey)
       if (cached) return cached
@@ -281,7 +281,7 @@ class DashboardRepository extends BaseRepository<DashboardStats> {
    */
   async getLocationDashboard(locationId: number, forceRefresh: boolean = false): Promise<DashboardStats | null> {
     const cacheKey = `location_dashboard_${locationId}`
-    
+
     if (!forceRefresh) {
       const cached = this.getFromCache<DashboardStats>(cacheKey)
       if (cached) return cached

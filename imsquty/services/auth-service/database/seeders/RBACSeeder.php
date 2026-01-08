@@ -14,12 +14,18 @@ class RBACSeeder extends Seeder
      */
     public function run(): void
     {
+        // Disable foreign key checks
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        
         // Clear existing RBAC data
         DB::table('role_has_permissions')->truncate();
         DB::table('model_has_permissions')->truncate();
         DB::table('model_has_roles')->truncate();
         DB::table('permissions')->truncate();
         DB::table('roles')->truncate();
+        
+        // Re-enable foreign key checks
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         // ==================== PERMISSIONS ====================
         $permissions = [

@@ -48,7 +48,7 @@ class TestUsersSeeder extends Seeder
             'status' => 'active',
             'email_verified_at' => now(),
         ]);
-        $superadmin->assignRole('superadmin');
+        $superadmin->assignRole('Super Admin');
 
         // LEVEL 2: Director (Strategic Business)
         $director = User::create([
@@ -64,7 +64,7 @@ class TestUsersSeeder extends Seeder
             'status' => 'active',
             'email_verified_at' => now(),
         ]);
-        $director->assignRole('director');
+        $director->assignRole('Manager'); // Using Manager role as closest to Director
 
         // Update department director
         if ($itDept) {
@@ -86,7 +86,7 @@ class TestUsersSeeder extends Seeder
             'status' => 'active',
             'email_verified_at' => now(),
         ]);
-        $manager->assignRole('manager');
+        $manager->assignRole('Manager');
 
         // Update department and team manager
         if ($itDevDept) {
@@ -111,7 +111,7 @@ class TestUsersSeeder extends Seeder
             'status' => 'active',
             'email_verified_at' => now(),
         ]);
-        $admin->assignRole('admin');
+        $admin->assignRole('Admin');
 
         // LEVEL 4B: HR (Human Resources)
         $hr = User::create([
@@ -127,7 +127,7 @@ class TestUsersSeeder extends Seeder
             'status' => 'active',
             'email_verified_at' => now(),
         ]);
-        $hr->assignRole('hr');
+        $hr->assignRole('Manager'); // Using Manager role for HR
 
         // Update HR department manager
         if ($hrDept) {
@@ -149,7 +149,7 @@ class TestUsersSeeder extends Seeder
             'status' => 'active',
             'email_verified_at' => now(),
         ]);
-        $user->assignRole('user');
+        $user->assignRole('User');
 
         // Additional developers for testing
         $dev1 = User::create([

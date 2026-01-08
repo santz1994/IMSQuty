@@ -3,26 +3,26 @@
  * React hooks for all master data entities
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
+  assetModelRepository,
+  assetStatusRepository,
+  assetTypeRepository,
   divisionRepository,
   locationRepository,
   manufacturerRepository,
   warrantyTypeRepository,
-  assetTypeRepository,
-  assetStatusRepository,
-  assetModelRepository,
 } from '../repositories/MasterDataRepositories'
+import { PaginationParams } from '../services/BaseService'
 import {
+  AssetModel,
+  AssetStatus,
+  AssetType,
   Division,
   Location,
   Manufacturer,
   WarrantyType,
-  AssetType,
-  AssetStatus,
-  AssetModel,
 } from '../services/MasterDataServices'
-import { PaginationParams } from '../services/BaseService'
 
 // Generic hook interface
 interface UseMasterDataResult<T> {

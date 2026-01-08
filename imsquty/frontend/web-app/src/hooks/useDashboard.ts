@@ -3,17 +3,15 @@
  * React hook for dashboard data and role-based dashboards
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import dashboardRepository from '../repositories/DashboardRepository'
 import {
-  DashboardStats,
-  RoleBasedDashboard,
-  AssetStatusDistribution,
-  TicketPriorityDistribution,
-  TrendData,
-  MaintenanceSchedule,
-  WarrantyExpiring,
   Activity,
+  DashboardStats,
+  MaintenanceSchedule,
+  RoleBasedDashboard,
+  TrendData,
+  WarrantyExpiring
 } from '../services/DashboardService'
 
 interface UseDashboardResult {

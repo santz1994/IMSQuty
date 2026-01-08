@@ -10,45 +10,45 @@
  * - Reusable dashboard widgets
  */
 
-import React, { useEffect, useState } from 'react'
 import {
-  Box,
-  Grid,
-  Typography,
+  Assessment,
+  Dashboard as DashboardIcon,
+  Refresh,
+  Security,
+  Speed,
+  Storage,
+} from '@mui/icons-material'
+import {
   Alert,
+  Box,
+  Button,
+  Chip,
+  Grid,
+  Paper,
+  Stack,
   Tab,
   Tabs,
-  Button,
-  Stack,
-  Chip,
-  Paper,
+  Typography,
   useTheme,
 } from '@mui/material'
+import React, { useEffect, useState } from 'react'
+import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import {
-  Dashboard as DashboardIcon,
-  Storage,
-  Speed,
-  Security,
-  Assessment,
-  Refresh,
-} from '@mui/icons-material'
-import { useAuth } from '../../hooks/useAuth'
-import { useDashboard } from '../../hooks/useDashboard'
-import { useAssets } from '../../hooks/useAssets'
-import { useTickets } from '../../hooks/useTickets'
-import {
-  StatCard,
+  ActivityItem,
   ChartCard,
   DashboardGrid,
-  ActivityItem,
   QuickActionButton,
+  StatCard,
 } from '../../components/dashboard/DashboardWidgets'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { useAssets } from '../../hooks/useAssets'
+import { useAuth } from '../../hooks/useAuth'
+import { useDashboard } from '../../hooks/useDashboard'
+import { useTickets } from '../../hooks/useTickets'
 
 const EnhancedSuperAdminDashboard: React.FC = () => {
   const theme = useTheme()
   const [tabIndex, setTabIndex] = useState(0)
-  
+
   // Use new hooks from our three-tier architecture
   const { user, checkPermission } = useAuth()
   const { stats: dashboardStats, loading: dashboardLoading, error: dashboardError, fetchStats, refreshStats } = useDashboard(true)

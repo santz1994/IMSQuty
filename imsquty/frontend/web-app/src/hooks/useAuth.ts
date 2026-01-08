@@ -3,9 +3,9 @@
  * React hook for authentication and user management
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import authRepository from '../repositories/AuthRepository'
-import { User, LoginCredentials, RegisterData, Permission, Role } from '../services/AuthService'
+import { LoginCredentials, Permission, RegisterData, Role, User } from '../services/AuthService'
 
 interface UseAuthResult {
   // State
@@ -15,7 +15,7 @@ interface UseAuthResult {
   error: string | null
   permissions: Permission[]
   roles: Role[]
-  
+
   // Actions
   login: (credentials: LoginCredentials) => Promise<boolean>
   register: (data: RegisterData) => Promise<boolean>
@@ -59,11 +59,11 @@ export function useAuth(): UseAuthResult {
           const freshUser = await authRepository.getCurrentUser()
           if (freshUser) {
             setUser(freshUser)
-            
+
             // Load permissions and roles
             const userPerms = await authRepository.getUserPermissions()
             const userRoles = await authRepository.getUserRoles()
-            
+
             if (userPerms) setPermissions(userPerms)
             if (userRoles) setRoles(userRoles)
           } else {
@@ -91,14 +91,14 @@ export function useAuth(): UseAuthResult {
       if (authData) {
         setUser(authData.user)
         setIsAuthenticated(true)
-        
+
         // Load permissions and roles
         const userPerms = await authRepository.getUserPermissions()
         const userRoles = await authRepository.getUserRoles()
-        
+
         if (userPerms) setPermissions(userPerms)
         if (userRoles) setRoles(userRoles)
-        
+
         return true
       } else {
         setError('Invalid credentials')
@@ -153,11 +153,11 @@ export function useAuth(): UseAuthResult {
       const freshUser = await authRepository.getCurrentUser(true)
       if (freshUser) {
         setUser(freshUser)
-        
+
         // Refresh permissions and roles
         const userPerms = await authRepository.getUserPermissions(true)
         const userRoles = await authRepository.getUserRoles(true)
-        
+
         if (userPerms) setPermissions(userPerms)
         if (userRoles) setRoles(userRoles)
       }

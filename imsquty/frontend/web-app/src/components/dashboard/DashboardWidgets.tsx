@@ -3,25 +3,22 @@
  * Reusable dashboard widgets for all RBAC roles
  */
 
-import React from 'react'
+import {
+  Remove,
+  TrendingDown,
+  TrendingUp
+} from '@mui/icons-material'
 import {
   Box,
   Card,
   CardContent,
-  Typography,
+  Chip,
   Grid,
   LinearProgress,
-  Chip,
-  IconButton,
-  useTheme,
+  Typography,
+  useTheme
 } from '@mui/material'
-import {
-  TrendingUp,
-  TrendingDown,
-  Remove,
-  Refresh,
-  MoreVert,
-} from '@mui/icons-material'
+import React from 'react'
 
 interface StatCardProps {
   title: string

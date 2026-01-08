@@ -7,6 +7,7 @@ use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\MetricsController;
 use App\Http\Controllers\WarrantyController;
 use App\Http\Controllers\MovementController;
+use App\Http\Controllers\ImportExportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -115,8 +116,14 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         Route::get('/{id}', [MovementController::class, 'show']);
         Route::post('/', [MovementController::class, 'store']);
         Route::delete('/{id}', [MovementController::class, 'destroy']);
-    });
-});
+    });    
+    // Import/Export Routes
+    Route::prefix('import-export')->group(function () {
+        Route::post('/import', [ImportExportController::class, 'import']);
+        Route::get('/export/excel', [ImportExportController::class, 'exportExcel']);
+        Route::get('/export/csv', [ImportExportController::class, 'exportCSV']);
+        Route::get('/template', [ImportExportController::class, 'downloadTemplate']);
+    });});
 
 /*
 |--------------------------------------------------------------------------

@@ -3,16 +3,15 @@
  * Data access layer for authentication with session caching
  */
 
-import { BaseRepository } from './BaseRepository'
-import authService, { 
-  User, 
-  AuthResponse, 
-  LoginCredentials, 
-  RegisterData,
+import authService, {
+  AuthResponse,
+  LoginCredentials,
   Permission,
-  Role 
+  RegisterData,
+  Role,
+  User
 } from '../services/AuthService'
-import { ServiceResponse } from '../services/BaseService'
+import { BaseRepository } from './BaseRepository'
 
 class AuthRepository extends BaseRepository<User> {
   private static instance: AuthRepository
@@ -50,7 +49,7 @@ class AuthRepository extends BaseRepository<User> {
       this.currentUser = authData.user
       this.setCache('current_user', authData.user)
       this.setCache('auth_token', authData.token)
-      
+
       // Store token in localStorage
       if (typeof window !== 'undefined') {
         localStorage.setItem('auth_token', authData.token)
@@ -74,7 +73,7 @@ class AuthRepository extends BaseRepository<User> {
       this.currentUser = authData.user
       this.setCache('current_user', authData.user)
       this.setCache('auth_token', authData.token)
-      
+
       if (typeof window !== 'undefined') {
         localStorage.setItem('auth_token', authData.token)
         localStorage.setItem('user', JSON.stringify(authData.user))
@@ -88,16 +87,16 @@ class AuthRepository extends BaseRepository<User> {
    */
   async logout(): Promise<boolean> {
     const response = await authService.logout()
-    
+
     // Clear all cached data regardless of response
     this.clearAllCache()
     this.currentUser = null
-    
+
     if (typeof window !== 'undefined') {
       localStorage.removeItem('auth_token')
       localStorage.removeItem('user')
     }
-    
+
     return this.isSuccess(response)
   }
 
@@ -124,7 +123,7 @@ class AuthRepository extends BaseRepository<User> {
     if (user) {
       this.currentUser = user
       this.setCache('current_user', user)
-      
+
       if (typeof window !== 'undefined') {
         localStorage.setItem('user', JSON.stringify(user))
       }
@@ -144,7 +143,7 @@ class AuthRepository extends BaseRepository<User> {
     const authData = this.extractData<AuthResponse>(response)
     if (authData) {
       this.setCache('auth_token', authData.token)
-      
+
       if (typeof window !== 'undefined') {
         localStorage.setItem('auth_token', authData.token)
       }
@@ -220,7 +219,7 @@ class AuthRepository extends BaseRepository<User> {
     if (user) {
       this.currentUser = user
       this.setCache('current_user', user)
-      
+
       if (typeof window !== 'undefined') {
         localStorage.setItem('user', JSON.stringify(user))
       }
@@ -255,7 +254,7 @@ class AuthRepository extends BaseRepository<User> {
       if (this.currentUser) {
         this.currentUser.avatar = result.avatar_url
         this.setCache('current_user', this.currentUser)
-        
+
         if (typeof window !== 'undefined') {
           localStorage.setItem('user', JSON.stringify(this.currentUser))
         }
@@ -269,7 +268,7 @@ class AuthRepository extends BaseRepository<User> {
    */
   isAuthenticated(): boolean {
     if (typeof window === 'undefined') return false
-    
+
     const token = localStorage.getItem('auth_token')
     return !!token
   }
@@ -287,10 +286,10 @@ class AuthRepository extends BaseRepository<User> {
    */
   getCachedUser(): User | null {
     if (typeof window === 'undefined') return null
-    
+
     const userStr = localStorage.getItem('user')
     if (!userStr) return null
-    
+
     try {
       return JSON.parse(userStr)
     } catch {
@@ -304,7 +303,7 @@ class AuthRepository extends BaseRepository<User> {
   clearAuthData(): void {
     this.clearAllCache()
     this.currentUser = null
-    
+
     if (typeof window !== 'undefined') {
       localStorage.removeItem('auth_token')
       localStorage.removeItem('user')

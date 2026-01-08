@@ -3,24 +3,24 @@
  * Data access layer for all master data entities
  */
 
-import { BaseRepository, CRUDRepository } from './BaseRepository'
-import {
-  divisionService,
-  locationService,
-  manufacturerService,
-  warrantyTypeService,
-  assetTypeService,
-  assetStatusService,
-  assetModelService,
-  Division,
-  Location,
-  Manufacturer,
-  WarrantyType,
-  AssetType,
-  AssetStatus,
-  AssetModel,
-} from '../services/MasterDataServices'
 import { PaginationParams } from '../services/BaseService'
+import {
+  AssetModel,
+  assetModelService,
+  AssetStatus,
+  assetStatusService,
+  AssetType,
+  assetTypeService,
+  Division,
+  divisionService,
+  Location,
+  locationService,
+  Manufacturer,
+  manufacturerService,
+  WarrantyType,
+  warrantyTypeService,
+} from '../services/MasterDataServices'
+import { CRUDRepository } from './BaseRepository'
 
 /**
  * Division Repository

@@ -4,14 +4,15 @@
  * Uses new three-tier architecture with hooks
  */
 
+import { Alert, Box, CircularProgress } from '@mui/material'
 import React, { useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
-import { Box, CircularProgress, Alert } from '@mui/material'
 import useAuth from '../hooks/useAuth'
-import SuperAdminDashboard from './SuperAdmin/SuperAdminDashboard'
+import AdminDashboard from './Admin/AdminDashboard'
 import DirectorDashboard from './Director/DirectorDashboard'
-import ManagerDashboard from './Manager/ManagerDashboard'
 import HRDashboard from './HR/HRDashboard'
+import ManagerDashboard from './Manager/ManagerDashboard'
+import SuperAdminDashboard from './SuperAdmin/SuperAdminDashboard'
 import UserDashboard from './User/UserDashboard'
 
 /**
@@ -28,7 +29,7 @@ const ROLE_DASHBOARDS: Record<string, React.ComponentType> = {
   superadmin: SuperAdminDashboard,
   director: DirectorDashboard,
   manager: ManagerDashboard,
-  admin: ManagerDashboard, // Admin uses Manager dashboard with restricted access
+  admin: AdminDashboard, // Admin has its own dedicated dashboard
   hr: HRDashboard,
   user: UserDashboard,
 }

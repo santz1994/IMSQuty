@@ -3,15 +3,14 @@
  * Data access layer for ticket management with caching
  */
 
-import { BaseRepository } from './BaseRepository'
+import { PaginationParams } from '../services/BaseService'
 import ticketService, {
   Ticket,
-  TicketComment,
   TicketAttachment,
-  TicketHistory,
-  TicketStats,
+  TicketComment,
+  TicketStats
 } from '../services/TicketService'
-import { PaginationParams } from '../services/BaseService'
+import { BaseRepository } from './BaseRepository'
 
 class TicketRepository extends BaseRepository<Ticket> {
   constructor() {
@@ -46,7 +45,7 @@ class TicketRepository extends BaseRepository<Ticket> {
    */
   async getById(id: number | string, forceRefresh: boolean = false): Promise<Ticket | null> {
     const cacheKey = `ticket_${id}`
-    
+
     if (!forceRefresh) {
       const cached = this.getFromCache<Ticket>(cacheKey)
       if (cached) return cached
@@ -77,7 +76,7 @@ class TicketRepository extends BaseRepository<Ticket> {
     this.invalidateCachePattern(/^list_/)
     this.invalidateCachePattern(/^stats/)
     this.invalidateCachePattern(/^my_/)
-    
+
     return this.extractData<Ticket>(response)
   }
 
@@ -94,7 +93,7 @@ class TicketRepository extends BaseRepository<Ticket> {
     this.clearCache(`ticket_${id}`)
     this.invalidateCachePattern(/^list_/)
     this.invalidateCachePattern(/^stats/)
-    
+
     return this.extractData<Ticket>(response)
   }
 
@@ -113,7 +112,7 @@ class TicketRepository extends BaseRepository<Ticket> {
     this.invalidateCachePattern(/^stats/)
     this.invalidateCachePattern(/^comments_/)
     this.invalidateCachePattern(/^attachments_/)
-    
+
     return true
   }
 
@@ -233,7 +232,7 @@ class TicketRepository extends BaseRepository<Ticket> {
     this.clearCache(`ticket_${ticketId}`)
     this.invalidateCachePattern(/^list_/)
     this.invalidateCachePattern(/^my_/)
-    
+
     return this.extractData<Ticket>(response)
   }
 
@@ -251,7 +250,7 @@ class TicketRepository extends BaseRepository<Ticket> {
     this.invalidateCachePattern(/^list_/)
     this.invalidateCachePattern(/^stats/)
     this.invalidateCachePattern(/^status_/)
-    
+
     return this.extractData<Ticket>(response)
   }
 
@@ -267,7 +266,7 @@ class TicketRepository extends BaseRepository<Ticket> {
     this.clearCache(`ticket_${ticketId}`)
     this.invalidateCachePattern(/^list_/)
     this.invalidateCachePattern(/^stats/)
-    
+
     return this.extractData<Ticket>(response)
   }
 
@@ -283,7 +282,7 @@ class TicketRepository extends BaseRepository<Ticket> {
     this.clearCache(`ticket_${ticketId}`)
     this.invalidateCachePattern(/^list_/)
     this.invalidateCachePattern(/^stats/)
-    
+
     return this.extractData<Ticket>(response)
   }
 
@@ -292,7 +291,7 @@ class TicketRepository extends BaseRepository<Ticket> {
    */
   async getComments(ticketId: number | string, forceRefresh: boolean = false): Promise<TicketComment[] | null> {
     const cacheKey = `comments_${ticketId}`
-    
+
     if (!forceRefresh) {
       const cached = this.getFromCache<TicketComment[]>(cacheKey)
       if (cached) return cached
@@ -322,7 +321,7 @@ class TicketRepository extends BaseRepository<Ticket> {
 
     // Invalidate comments cache
     this.clearCache(`comments_${ticketId}`)
-    
+
     return this.extractData<TicketComment>(response)
   }
 
@@ -331,7 +330,7 @@ class TicketRepository extends BaseRepository<Ticket> {
    */
   async getAttachments(ticketId: number | string, forceRefresh: boolean = false): Promise<TicketAttachment[] | null> {
     const cacheKey = `attachments_${ticketId}`
-    
+
     if (!forceRefresh) {
       const cached = this.getFromCache<TicketAttachment[]>(cacheKey)
       if (cached) return cached
@@ -360,7 +359,7 @@ class TicketRepository extends BaseRepository<Ticket> {
 
     // Invalidate attachments cache
     this.clearCache(`attachments_${ticketId}`)
-    
+
     return this.extractData<TicketAttachment>(response)
   }
 
