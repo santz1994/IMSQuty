@@ -26,6 +26,33 @@ Route::prefix('dashboard')->group(function () {
     Route::get('/health', [DashboardController::class, 'systemHealth']);
     Route::get('/stats', [DashboardController::class, 'aggregatedStats']);
     Route::get('/quick-stats', [DashboardController::class, 'quickStats']);
+    
+    // Role-based dashboard endpoints (Phase 3)
+    Route::middleware('auth:api')->group(function () {
+        // Director Dashboard
+        Route::prefix('director')->group(function () {
+            Route::get('/business-metrics', [DashboardController::class, 'directorBusinessMetrics']);
+            Route::get('/financial-overview', [DashboardController::class, 'directorFinancialOverview']);
+            Route::get('/department-performance', [DashboardController::class, 'directorDepartmentPerformance']);
+            Route::get('/business-trends', [DashboardController::class, 'directorBusinessTrends']);
+        });
+        
+        // Manager Dashboard
+        Route::prefix('manager')->group(function () {
+            Route::get('/team-metrics', [DashboardController::class, 'managerTeamMetrics']);
+            Route::get('/pending-approvals', [DashboardController::class, 'managerPendingApprovals']);
+        });
+        
+        // HR Dashboard
+        Route::prefix('hr')->group(function () {
+            Route::get('/metrics', [DashboardController::class, 'hrMetrics']);
+        });
+        
+        // User Dashboard
+        Route::prefix('user')->group(function () {
+            Route::get('/metrics', [DashboardController::class, 'userMetrics']);
+        });
+    });
 });
 
 Route::prefix('v1')->group(function () {
