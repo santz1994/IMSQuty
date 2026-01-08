@@ -1,43 +1,45 @@
 import { FileDownload } from '@mui/icons-material'
 import {
+  Alert,
   Box,
   Button,
   Card,
   CardContent,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Grid,
+  MenuItem,
   Stack,
   TextField,
   Typography,
 } from '@mui/material'
 import React, { useState } from 'react'
-
-const mockReports = [
-  { id: 1, title: 'Asset Inventory Report', description: 'Complete asset inventory with status', generatedDate: '2026-01-05', format: 'PDF' },
-  { id: 2, title: 'Open Tickets Summary', description: 'All open tickets by priority and assignee', generatedDate: '2026-01-04', format: 'Excel' },
-  { id: 3, title: 'Financial Report', description: 'Monthly financial summary and analysis', generatedDate: '2026-01-03', format: 'PDF' },
-  { id: 4, title: 'Meeting Rooms Utilization', description: 'Room booking statistics and trends', generatedDate: '2026-01-02', format: 'PDF' },
-]
+import { useReports } from '../../hooks/useReports'
 
 const ReportsList: React.FC = () => {
-  const [reports, setReports] = useState(mockReports)
+  const { reports, loading, error, fetchReports, generateReport, downloadReport } = useReports(true)
   const [openDialog, setOpenDialog] = useState(false)
-  const [formData, setFormData] = useState({ title: '', format: 'PDF', dateRange: '' })
+  const [formData, setFormData] = useState({ title: '', type: 'asset', format: 'excel' })
 
-  const handleGenerateReport = () => {
-    const newReport = {
-      id: Math.max(...reports.map(r => r.id), 0) + 1,
-      title: formData.title,
-      description: 'Custom generated report',
-      generatedDate: new Date().toISOString().split('T')[0],
-      format: formData.format,
-    }
-    setReports([newReport, ...reports])
+  const handleGenerateReport = async () => {
+    await generateReport({
+      type: formData.type as any,
+      name: formData.title,
+      format: formData.format as any
+    })
     setOpenDialog(false)
+    setFormData({ title: '', type: 'asset', format: 'excel' })
   }
+
+  const handleDownload = async (id: number, name: string) => {
+    await downloadReport(id, name)
+  }
+
+  if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}><CircularProgress /></Box>
+  if (error) return <Box sx={{ p: 3 }}><Alert severity="error" action={<Button onClick={fetchReports}>Retry</Button>}>{error}</Alert></Box>
 
   return (
     <Box sx={{ p: 3 }}>
@@ -54,15 +56,24 @@ const ReportsList: React.FC = () => {
             <Grid item xs={12} sm={6} md={4} key={report.id}>
               <Card sx={{ height: '100%' }}>
                 <CardContent>
-                  <Typography variant="h6" gutterBottom>{report.title}</Typography>
-                  <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>{report.description}</Typography>
+                  <Typography variant="h6" gutterBottom>{report.name}</Typography>
+                  <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+                    {report.description || 'Generated report'}
+                  </Typography>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="caption" color="textSecondary">{report.generatedDate}</Typography>
+                    <Typography variant="caption" color="textSecondary">{report.created_at?.split(' ')[0]}</Typography>
                     <Box sx={{ display: 'flex', gap: 1 }}>
                       <Typography variant="caption" sx={{ backgroundColor: '#e3f2fd', px: 1, py: 0.5, borderRadius: 1 }}>
-                        {report.format}
+                        {report.format.toUpperCase()}
                       </Typography>
-                      <Button size="small" startIcon={<FileDownload />}>Download</Button>
+                      <Button 
+                        size="small" 
+                        startIcon={<FileDownload />} 
+                        onClick={() => handleDownload(report.id, report.name)}
+                        disabled={report.status !== 'completed'}
+                      >
+                        Download
+                      </Button>
                     </Box>
                   </Box>
                 </CardContent>

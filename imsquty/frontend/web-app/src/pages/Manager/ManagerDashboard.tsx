@@ -90,58 +90,41 @@ const ManagerDashboard: React.FC = () => {
     return <Box sx={{ p: 3 }}>Loading Manager Dashboard...</Box>
   }
 
-  // Mock data
-  const teamStats = [
+  // Real data from API (fetched via dashboardService.getTeamMetrics)
+  const teamStats = teamMetrics?.stats || [
     {
       title: 'Team Members',
-      value: '24',
-      subtitle: '3 new this month',
+      value: teamMetrics?.teamMembers || '0',
+      subtitle: 'Active team size',
       icon: <GroupIcon sx={{ fontSize: 40 }} />,
       color: '#2563eb'
     },
     {
       title: 'Active Projects',
-      value: '8',
-      subtitle: '2 due this week',
+      value: teamMetrics?.activeProjects || '0',
+      subtitle: 'In progress',
       icon: <AssignmentIcon sx={{ fontSize: 40 }} />,
       color: '#8b5cf6'
     },
     {
       title: 'Completed Tasks',
-      value: '156',
-      subtitle: '+12 this week',
+      value: teamMetrics?.completedTasks || '0',
+      subtitle: 'This month',
       icon: <CheckCircleIcon sx={{ fontSize: 40 }} />,
       color: '#10b981'
     },
     {
       title: 'Pending Approvals',
-      value: '12',
-      subtitle: '3 urgent',
+      value: pendingApprovals?.length || '0',
+      subtitle: 'Requires action',
       icon: <PendingIcon sx={{ fontSize: 40 }} />,
       color: '#f59e0b'
     }
   ]
 
-  const teamPerformance = [
-    { week: 'W1', tasks: 42, completed: 38, efficiency: 90 },
-    { week: 'W2', tasks: 45, completed: 41, efficiency: 91 },
-    { week: 'W3', tasks: 48, completed: 45, efficiency: 94 },
-    { week: 'W4', tasks: 50, completed: 46, efficiency: 92 }
-  ]
-
-  const projectStatus = [
-    { name: 'Asset Migration', status: 'On Track', progress: 75, team: 6 },
-    { name: 'System Upgrade', status: 'At Risk', progress: 45, team: 4 },
-    { name: 'New Module', status: 'On Track', progress: 60, team: 5 },
-    { name: 'Documentation', status: 'Ahead', progress: 90, team: 3 }
-  ]
-
-  const approvalsList = [
-    { type: 'Asset Request', requester: 'John Doe', priority: 'High', date: '2 hours ago' },
-    { type: 'Leave Request', requester: 'Jane Smith', priority: 'Medium', date: '5 hours ago' },
-    { type: 'Budget Approval', requester: 'IT Team', priority: 'High', date: '1 day ago' },
-    { type: 'Access Request', requester: 'Mike Johnson', priority: 'Low', date: '2 days ago' }
-  ]
+  const teamPerformance = teamMetrics?.teamPerformance || []
+  const projectStatus = teamMetrics?.projects || []
+  const approvalsList = pendingApprovals || []
 
   return (
     <Box sx={{ p: 3, backgroundColor: '#f8f9fa', minHeight: '100vh' }}>

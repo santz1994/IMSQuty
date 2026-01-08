@@ -1,8 +1,10 @@
 import { Add, Delete, Edit } from '@mui/icons-material'
 import {
+  Alert,
   Box,
   Button,
   Chip,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -18,10 +20,11 @@ import {
   TablePagination,
   TableRow,
   TextField,
-  Typography,
+  Typography
 } from '@mui/material'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTickets } from '../../hooks/useTickets'
 
 interface Ticket {
   id: number
@@ -35,13 +38,6 @@ interface Ticket {
   created_date: string
   due_date: string
 }
-
-const mockTickets: Ticket[] = [
-  { id: 1, ticket_number: 'TKT001', title: 'Login Issue', description: 'User cannot login', priority: 'high', status: 'open', created_by: 'admin', assigned_to: 'user1', created_date: '2024-01-10', due_date: '2024-01-12' },
-  { id: 2, ticket_number: 'TKT002', title: 'Report Generation', description: 'PDF export not working', priority: 'medium', status: 'in_progress', created_by: 'user1', assigned_to: 'developer1', created_date: '2024-01-09', due_date: '2024-01-15' },
-  { id: 3, ticket_number: 'TKT003', title: 'Database Optimization', description: 'Slow queries', priority: 'low', status: 'resolved', created_by: 'admin', assigned_to: 'developer2', created_date: '2024-01-08', due_date: '2024-01-20' },
-  { id: 4, ticket_number: 'TKT004', title: 'UI Enhancement', description: 'Improve dashboard layout', priority: 'low', status: 'open', created_by: 'user2', assigned_to: '', created_date: '2024-01-07', due_date: '2024-01-25' },
-]
 
 const priorityColor = (priority: Ticket['priority']): any => {
   switch (priority) {
@@ -64,7 +60,8 @@ const statusColor = (status: Ticket['status']): any => {
 
 export default function TicketList() {
   const navigate = useNavigate()
-  const [tickets, setTickets] = useState<Ticket[]>(mockTickets)
+  // ✅ REAL API DATA - No mock data
+  const { tickets, loading, error, fetchTickets, createTicket, updateTicket, deleteTicket } = useTickets(true)
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
@@ -131,27 +128,54 @@ export default function TicketList() {
     setOpenDialog(true)
   }
 
-  const handleSaveTicket = () => {
-    if (editingTicket) {
-      setTickets(tickets.map(t =>
-        t.id === editingTicket.id
-          ? { ...t, ...formData } as Ticket
-          : t
-      ))
-    } else {
-      setTickets([...tickets, {
-        id: Math.max(...tickets.map(t => t.id), 0) + 1,
-        ...formData,
-        created_date: new Date().toISOString().split('T')[0],
-      } as Ticket])
+  const handleSaveTicket = async () => {
+    try {
+      if (editingTicket) {
+        await updateTicket(editingTicket.id, formData)
+      } else {
+        await createTicket(formData)
+      }
+      setOpenDialog(false)
+      await fetchTickets()
+    } catch (err) {
+      console.error('Failed to save ticket:', err)
+      alert('Failed to save ticket. Please try again.')
     }
-    setOpenDialog(false)
   }
 
-  const handleDeleteTicket = (id: number) => {
+  const handleDeleteTicket = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this ticket?')) {
-      setTickets(tickets.filter(t => t.id !== id))
+      try {
+        await deleteTicket(id)
+        await fetchTickets()
+      } catch (err) {
+        console.error('Failed to delete ticket:', err)
+        alert('Failed to delete ticket. Please try again.')
+      }
     }
+  }
+
+  // Loading state
+  if (loading) {
+    return (
+      <Box sx={{ p: 3, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+        <CircularProgress />
+      </Box>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+        <Button variant="contained" onClick={() => fetchTickets()}>
+          Retry
+        </Button>
+      </Box>
+    )
   }
 
   return (

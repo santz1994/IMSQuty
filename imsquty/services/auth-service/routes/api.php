@@ -3,9 +3,11 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MfaController;
 use App\Http\Controllers\MetricsController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\UserRBACController;
+use App\Http\Controllers\AuditLogController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -18,6 +20,13 @@ use Illuminate\Support\Facades\Route;
 // Health and metrics (no auth required for Prometheus)
 Route::get('/health', [MetricsController::class, 'health']);
 Route::get('/metrics', [MetricsController::class, 'index']);
+
+// Dashboard endpoints (no auth for now - could add later)
+Route::prefix('dashboard')->group(function () {
+    Route::get('/health', [DashboardController::class, 'systemHealth']);
+    Route::get('/stats', [DashboardController::class, 'aggregatedStats']);
+    Route::get('/quick-stats', [DashboardController::class, 'quickStats']);
+});
 
 Route::prefix('v1')->group(function () {
     
@@ -115,6 +124,17 @@ Route::prefix('v1')->group(function () {
                 ->name('users.check.permission');
             Route::get('/check-role/{role}', [UserRBACController::class, 'checkRole'])
                 ->name('users.check.role');
+        });
+
+        // ==================== AUDIT LOG ROUTES ====================
+        Route::prefix('audit-logs')->group(function () {
+            Route::get('/', [AuditLogController::class, 'index'])->name('audit-logs.index');
+            Route::get('/statistics', [AuditLogController::class, 'statistics'])->name('audit-logs.statistics');
+            Route::get('/actions', [AuditLogController::class, 'getActions'])->name('audit-logs.actions');
+            Route::get('/export/csv', [AuditLogController::class, 'exportCSV'])->name('audit-logs.export.csv');
+            Route::get('/user/{userId}', [AuditLogController::class, 'userActivity'])->name('audit-logs.user-activity');
+            Route::get('/{id}', [AuditLogController::class, 'show'])->name('audit-logs.show');
+            Route::post('/cleanup', [AuditLogController::class, 'cleanup'])->name('audit-logs.cleanup');
         });
     });
     

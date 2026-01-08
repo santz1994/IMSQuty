@@ -48,8 +48,8 @@ const AdminDashboard: React.FC = () => {
   const theme = useTheme()
   const { user } = useAuth()
   const { stats, loading: statsLoading, refreshStats } = useDashboard(true)
-  const { users, loading: usersLoading } = useUsers(true, { perPage: 10 })
-  const { tickets, loading: ticketsLoading } = useTickets(true, { perPage: 10, status: 'open' })
+  const { users, loading: usersLoading } = useUsers(true, { per_page: 10 })
+  const { tickets, loading: ticketsLoading } = useTickets(true, { per_page: 10 })
 
   // Check admin access
   const isAdmin = user?.role?.slug === 'admin'
@@ -107,7 +107,7 @@ const AdminDashboard: React.FC = () => {
             value={stats?.users?.total || 0}
             change={+5.2}
             icon={<People />}
-            color={theme.palette.primary.main}
+            color="primary"
             loading={statsLoading}
           />
         </Grid>
@@ -117,7 +117,7 @@ const AdminDashboard: React.FC = () => {
             value={stats?.users?.active || 0}
             change={+2.1}
             icon={<CheckCircle />}
-            color={theme.palette.success.main}
+            color="success"
             loading={statsLoading}
           />
         </Grid>
@@ -127,7 +127,7 @@ const AdminDashboard: React.FC = () => {
             value={stats?.tickets?.open || 0}
             change={-3.5}
             icon={<Assignment />}
-            color={theme.palette.warning.main}
+            color="warning"
             loading={statsLoading}
           />
         </Grid>
@@ -137,7 +137,7 @@ const AdminDashboard: React.FC = () => {
             value={12}
             change={+8.1}
             icon={<Warning />}
-            color={theme.palette.error.main}
+            color="error"
             loading={statsLoading}
           />
         </Grid>
@@ -162,7 +162,7 @@ const AdminDashboard: React.FC = () => {
                   <React.Fragment key={u.id}>
                     <ListItem>
                       <ListItemAvatar>
-                        <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
+                        <Avatar sx={{ bgcolor: theme.palette.primary?.main || '#1976d2' }}>
                           {u.first_name?.[0]}{u.last_name?.[0]}
                         </Avatar>
                       </ListItemAvatar>

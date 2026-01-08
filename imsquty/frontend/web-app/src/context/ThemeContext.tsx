@@ -50,13 +50,14 @@ const createAppTheme = (themeMode: 'light' | 'dark') => {
         main: themeMode === 'dark' ? '#29b6f6' : '#2196f3',
       },
       background: {
-        default: themeMode === 'dark' ? '#121212' : '#fafafa',
-        paper: themeMode === 'dark' ? '#1e1e1e' : '#ffffff',
+        default: themeMode === 'dark' ? '#0a1929' : '#fafafa',
+        paper: themeMode === 'dark' ? '#132f4c' : '#ffffff',
       },
       text: {
-        primary: themeMode === 'dark' ? '#ffffff' : 'rgba(0, 0, 0, 0.87)',
+        primary: themeMode === 'dark' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(0, 0, 0, 0.87)',
         secondary: themeMode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
       },
+      divider: themeMode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)',
     },
     typography: {
       fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
@@ -69,6 +70,30 @@ const createAppTheme = (themeMode: 'light' | 'dark') => {
       },
     },
     components: {
+      MuiCssBaseline: {
+        styleOverrides: {
+          body: {
+            scrollbarColor: themeMode === 'dark'
+              ? '#6b6b6b #2b2b2b'
+              : '#959595 #f5f5f5',
+            '&::-webkit-scrollbar, & *::-webkit-scrollbar': {
+              width: '8px',
+              height: '8px',
+            },
+            '&::-webkit-scrollbar-thumb, & *::-webkit-scrollbar-thumb': {
+              borderRadius: 8,
+              backgroundColor: themeMode === 'dark' ? '#6b6b6b' : '#959595',
+              minHeight: 24,
+            },
+            '&::-webkit-scrollbar-thumb:hover, & *::-webkit-scrollbar-thumb:hover': {
+              backgroundColor: themeMode === 'dark' ? '#959595' : '#6b6b6b',
+            },
+            '&::-webkit-scrollbar-track, & *::-webkit-scrollbar-track': {
+              backgroundColor: themeMode === 'dark' ? '#2b2b2b' : '#f5f5f5',
+            },
+          },
+        },
+      },
       MuiAppBar: {
         styleOverrides: {
           root: {
@@ -101,6 +126,14 @@ const createAppTheme = (themeMode: 'light' | 'dark') => {
 export const CustomThemeProvider: React.FC<ThemeProviderProps> = ({
   children,
 }) => {
+  // Initialize with system preference immediately to prevent flashing
+  const getInitialTheme = (): 'light' | 'dark' => {
+    if (typeof window === 'undefined') return 'light'
+    const stored = localStorage.getItem('theme-mode') as ThemeMode | null
+    if (stored && stored !== 'auto') return stored
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  }
+
   const [mode, setModeState] = useState<ThemeMode>(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('theme-mode') as ThemeMode | null
@@ -109,7 +142,7 @@ export const CustomThemeProvider: React.FC<ThemeProviderProps> = ({
     return 'auto'
   })
 
-  const [actualTheme, setActualTheme] = useState<'light' | 'dark'>('light')
+  const [actualTheme, setActualTheme] = useState<'light' | 'dark'>(getInitialTheme)
 
   // Set mode with logging - NO dependency on mode to avoid stale closure
   const setMode = useCallback((newMode: ThemeMode) => {
@@ -120,33 +153,48 @@ export const CustomThemeProvider: React.FC<ThemeProviderProps> = ({
   // Detect system preference for auto mode
   useEffect(() => {
     const updateActualTheme = () => {
-      let newTheme: 'light' | 'dark'
+      try {
+        let newTheme: 'light' | 'dark'
 
-      if (mode === 'auto') {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-        newTheme = prefersDark ? 'dark' : 'light'
-        console.log('[THEME] 🌓 Auto mode - system prefers:', newTheme)
-      } else {
-        newTheme = mode
-        console.log('[THEME] 👤 Manual mode:', newTheme)
+        if (mode === 'auto') {
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+          newTheme = prefersDark ? 'dark' : 'light'
+          console.log('[THEME] 🌓 Auto mode - system prefers:', newTheme)
+        } else {
+          newTheme = mode
+          console.log('[THEME] 👤 Manual mode:', newTheme)
+        }
+
+        setActualTheme(newTheme)
+        console.log('[THEME] ✅ Applied theme:', newTheme)
+      } catch (error) {
+        console.error('[THEME] ❌ Error updating theme:', error)
+        // Fallback to light theme on error
+        setActualTheme('light')
       }
-
-      setActualTheme(newTheme)
-      console.log('[THEME] ✅ Applied theme:', newTheme)
     }
 
     updateActualTheme()
 
     if (mode === 'auto') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-      mediaQuery.addEventListener('change', updateActualTheme)
-      return () => mediaQuery.removeEventListener('change', updateActualTheme)
+      try {
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+        mediaQuery.addEventListener('change', updateActualTheme)
+        return () => mediaQuery.removeEventListener('change', updateActualTheme)
+      } catch (error) {
+        console.error('[THEME] ❌ Error setting up media query listener:', error)
+      }
     }
   }, [mode])
 
   // Save to localStorage whenever mode changes
   useEffect(() => {
-    localStorage.setItem('theme-mode', mode)
+    try {
+      localStorage.setItem('theme-mode', mode)
+      console.log('[THEME] 💾 Saved preference:', mode)
+    } catch (error) {
+      console.error('[THEME] ❌ Failed to save preference:', error)
+    }
   }, [mode])
 
   const theme = useMemo(() => {

@@ -1,8 +1,10 @@
 import { Add, Delete, Edit, Search } from '@mui/icons-material'
 import {
+  Alert,
   Box,
   Button,
   Chip,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -21,38 +23,42 @@ import {
   Typography,
 } from '@mui/material'
 import React, { useState } from 'react'
-
-const mockTransactions = [
-  { id: 1, date: '2026-01-05', description: 'Equipment Purchase', amount: 5000, type: 'expense', category: 'Assets', status: 'completed' },
-  { id: 2, date: '2026-01-04', description: 'Software License', amount: 1200, type: 'expense', category: 'Software', status: 'completed' },
-  { id: 3, date: '2026-01-03', description: 'Maintenance Service', amount: 800, type: 'expense', category: 'Maintenance', status: 'pending' },
-  { id: 4, date: '2026-01-02', description: 'Asset Depreciation', amount: 2000, type: 'adjustment', category: 'Depreciation', status: 'completed' },
-]
+import { useInvoices } from '../../hooks/useFinancial'
 
 const FinancialList: React.FC = () => {
-  const [transactions, setTransactions] = useState(mockTransactions)
+  const { invoices, loading, error, fetchInvoices, createInvoice, deleteInvoice } = useInvoices(true)
+  const transactions = invoices.map(inv => ({
+    id: inv.id,
+    date: inv.issue_date,
+    description: inv.vendor_name,
+    amount: inv.amount,
+    type: 'expense',
+    category: 'Invoice',
+    status: inv.status
+  }))
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
   const [openDialog, setOpenDialog] = useState(false)
-  const [formData, setFormData] = useState({ date: '', description: '', amount: '', type: 'expense', category: '', status: 'completed' })
+  const [formData, setFormData] = useState({ date: '', description: '', amount: '', type: 'expense', category: '', status: 'draft' })
 
   const filtered = transactions.filter(tx => tx.description.toLowerCase().includes(searchQuery.toLowerCase()))
   const paginated = filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
 
-  const handleSave = () => {
-    const newTx = {
-      id: Math.max(...transactions.map(t => t.id), 0) + 1,
-      date: formData.date,
-      description: formData.description,
+  const handleSave = async () => {
+    await createInvoice({
+      vendor_name: formData.description,
       amount: parseFloat(formData.amount),
-      type: formData.type,
-      category: formData.category,
-      status: formData.status,
-    }
-    setTransactions([...transactions, newTx])
+      currency: 'USD',
+      issue_date: formData.date,
+      due_date: formData.date
+    })
     setOpenDialog(false)
+    setFormData({ date: '', description: '', amount: '', type: 'expense', category: '', status: 'draft' })
   }
+
+  if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}><CircularProgress /></Box>
+  if (error) return <Box sx={{ p: 3 }}><Alert severity="error" action={<Button onClick={fetchInvoices}>Retry</Button>}>{error}</Alert></Box>
 
   return (
     <Box sx={{ p: 3 }}>

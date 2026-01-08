@@ -11,14 +11,8 @@ import {
   Typography,
   useTheme
 } from '@mui/material'
-import React, { useEffect, useMemo, useState } from 'react'
-
-interface SearchSuggestion {
-  label: string
-  category: 'asset' | 'ticket' | 'user' | 'recent' | 'trending'
-  value: any
-  description?: string
-}
+import React, { useEffect, useState } from 'react'
+import searchService, { SearchSuggestion } from '../../services/searchService'
 
 interface SmartSearchProps {
   onSearch: (query: string, suggestion?: SearchSuggestion) => void
@@ -34,111 +28,58 @@ const SmartSearch: React.FC<SmartSearchProps> = ({
   const [loading, setLoading] = useState(false)
   const [recentSearches, setRecentSearches] = useState<string[]>([])
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([])
+  const [trendingSearches, setTrendingSearches] = useState<SearchSuggestion[]>([])
 
   // Load recent searches from localStorage
   useEffect(() => {
-    const stored = localStorage.getItem('recentSearches')
-    if (stored) {
-      setRecentSearches(JSON.parse(stored).slice(0, 5))
-    }
+    setRecentSearches(searchService.getRecentSearches().slice(0, 5))
   }, [])
 
-  // Mock trending searches
-  const trendingSearches: SearchSuggestion[] = useMemo(
-    () => [
-      {
-        label: 'High Priority Tickets',
-        category: 'trending',
-        value: { filter: 'priority:high' },
-        description: 'All high-priority tickets',
-      },
-      {
-        label: 'Maintenance Assets',
-        category: 'trending',
-        value: { filter: 'status:maintenance' },
-        description: 'Assets under maintenance',
-      },
-      {
-        label: 'Overdue Tasks',
-        category: 'trending',
-        value: { filter: 'status:overdue' },
-        description: 'Tasks that need attention',
-      },
-    ],
-    []
-  )
+  // Load trending searches from API
+  useEffect(() => {
+    const loadTrending = async () => {
+      const trending = await searchService.getTrendingSearches(5)
+      setTrendingSearches(trending)
+    }
+    loadTrending()
+  }, [])
 
   const handleInputChange = async (value: string) => {
     setInput(value)
-    if (!value) {
+    if (!value || value.length < 2) {
       setSuggestions([])
       return
     }
 
     setLoading(true)
 
-    // Simulate API delay
-    setTimeout(() => {
-      const mockResults: SearchSuggestion[] = [
-        // Mock assets
-        {
-          label: `Asset: ${value}-001`,
-          category: 'asset',
-          value: { id: '1', type: 'asset' },
-          description: 'Desktop Computer',
-        },
-        {
-          label: `Asset: ${value}-002`,
-          category: 'asset',
-          value: { id: '2', type: 'asset' },
-          description: 'Laptop Device',
-        },
-        // Mock tickets
-        {
-          label: `Ticket: #${value.toUpperCase()}-100`,
-          category: 'ticket',
-          value: { id: '100', type: 'ticket' },
-          description: 'System Issue Report',
-        },
-        {
-          label: `Ticket: #${value.toUpperCase()}-101`,
-          category: 'ticket',
-          value: { id: '101', type: 'ticket' },
-          description: 'Hardware Request',
-        },
-        // Mock users
-        {
-          label: `User: ${value}@company.com`,
-          category: 'user',
-          value: { email: `${value}@company.com`, type: 'user' },
-          description: 'Employee Account',
-        },
-      ]
+    try {
+      // Get real suggestions from API
+      const results = await searchService.getSearchSuggestions(value, 10)
 
-      // Add trending suggestions
-      const combined = [
-        ...mockResults,
-        ...trendingSearches.filter((t) =>
-          t.label.toLowerCase().includes(value.toLowerCase())
-        ),
-      ]
+      // Add trending searches that match the query
+      const matchingTrending = trendingSearches.filter((t) =>
+        t.label.toLowerCase().includes(value.toLowerCase())
+      )
 
+      // Combine results
+      const combined = [...results, ...matchingTrending]
       setSuggestions(combined)
+    } catch (error) {
+      console.error('Search failed:', error)
+      setSuggestions([])
+    } finally {
       setLoading(false)
-    }, 300)
+    }
   }
 
   const handleSearch = (suggestion?: SearchSuggestion) => {
     const searchTerm = suggestion?.label || input
     if (!searchTerm) return
 
-    // Save to recent searches
-    const updated = [
-      searchTerm,
-      ...recentSearches.filter((s) => s !== searchTerm),
-    ].slice(0, 5)
-    setRecentSearches(updated)
-    localStorage.setItem('recentSearches', JSON.stringify(updated))
+    // Save to recent searches using service
+    searchService.saveRecentSearch(searchTerm)
+    setRecentSearches(searchService.getRecentSearches().slice(0, 5))
 
     onSearch(searchTerm, suggestion)
     setInput('')

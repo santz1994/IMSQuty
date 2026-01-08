@@ -95,12 +95,15 @@ const Login: React.FC = () => {
     <Box
       sx={{
         minHeight: '100vh',
-        background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+        background: theme.palette.mode === 'dark'
+          ? 'linear-gradient(135deg, #1e3a8a 0%, #7c2d91 100%)'
+          : `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
         overflow: 'hidden',
+        transition: 'background 0.3s ease-in-out',
       }}
     >
       {/* Animated background elements */}
@@ -158,7 +161,11 @@ const Login: React.FC = () => {
           {/* Left side - Branding (hidden on mobile) */}
           {!isMobile && (
             <Grid item xs={12} sm={6} className="fade-in">
-              <Box sx={{ color: 'white', textAlign: 'center' }}>
+              <Box sx={{
+                color: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.95)' : 'white',
+                textAlign: 'center',
+                transition: 'color 0.3s ease-in-out'
+              }}>
                 <Typography
                   variant="h3"
                   sx={{
@@ -218,9 +225,14 @@ const Login: React.FC = () => {
               sx={{
                 p: { xs: 3, sm: 4 },
                 backdropFilter: 'blur(10px)',
-                background: 'rgba(255, 255, 255, 0.95)',
+                backgroundColor: theme.palette.mode === 'dark'
+                  ? 'rgba(18, 18, 18, 0.95)'
+                  : 'rgba(255, 255, 255, 0.95)',
                 borderRadius: 3,
-                border: '1px solid rgba(255, 255, 255, 0.3)',
+                border: theme.palette.mode === 'dark'
+                  ? '1px solid rgba(255, 255, 255, 0.1)'
+                  : '1px solid rgba(255, 255, 255, 0.3)',
+                transition: 'all 0.3s ease-in-out',
               }}
             >
               {/* Success state */}
@@ -248,7 +260,7 @@ const Login: React.FC = () => {
                   >
                     Login Successful!
                   </Typography>
-                  <Typography variant="body2" sx={{ color: 'gray', mt: 1 }}>
+                  <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mt: 1 }}>
                     Redirecting to dashboard...
                   </Typography>
                 </Box>
@@ -270,7 +282,7 @@ const Login: React.FC = () => {
                   <Typography
                     variant="body2"
                     sx={{
-                      color: 'gray',
+                      color: theme.palette.text.secondary,
                       mb: 3,
                     }}
                   >

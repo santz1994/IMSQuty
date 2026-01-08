@@ -1,7 +1,10 @@
 import { Delete, Mail, MailOutline } from '@mui/icons-material'
 import {
+  Alert,
   Box,
+  Button,
   Chip,
+  CircularProgress,
   IconButton,
   Paper,
   Stack,
@@ -16,36 +19,20 @@ import {
   Typography
 } from '@mui/material'
 import { useState } from 'react'
+import { useNotifications } from '../../hooks/useNotifications'
 
-interface Notification {
-  id: number
-  type: 'assignment' | 'alert' | 'info' | 'warning' | 'success'
-  message: string
-  date: string
-  read: boolean
-}
-
-const mockNotifications: Notification[] = [
-  { id: 1, type: 'assignment', message: 'You have been assigned to Asset #123', date: '2024-01-06 10:30', read: false },
-  { id: 2, type: 'alert', message: 'Maintenance due for equipment at Office A', date: '2024-01-06 09:15', read: true },
-  { id: 3, type: 'info', message: 'New ticket #456 created', date: '2024-01-05 14:45', read: true },
-  { id: 4, type: 'warning', message: 'Low inventory alert: USB Cables (150 units)', date: '2024-01-05 11:20', read: false },
-  { id: 5, type: 'success', message: 'Ticket #123 has been resolved', date: '2024-01-04 16:30', read: true },
-]
-
-const typeColor = (type: Notification['type']): any => {
+const typeColor = (type: string): any => {
   switch (type) {
-    case 'alert': return 'error'
+    case 'error': return 'error'
     case 'warning': return 'warning'
     case 'info': return 'info'
-    case 'assignment': return 'primary'
     case 'success': return 'success'
     default: return 'default'
   }
 }
 
 export default function NotificationsList() {
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications)
+  const { notifications, unreadCount, loading, error, fetchNotifications, markAsRead, deleteNotification } = useNotifications(true)
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
 
@@ -54,17 +41,16 @@ export default function NotificationsList() {
     page * rowsPerPage + rowsPerPage
   )
 
-  const handleToggleRead = (id: number) => {
-    setNotifications(notifications.map(n =>
-      n.id === id ? { ...n, read: !n.read } : n
-    ))
+  const handleToggleRead = async (id: number) => {
+    await markAsRead(id)
   }
 
-  const handleDelete = (id: number) => {
-    setNotifications(notifications.filter(n => n.id !== id))
+  const handleDelete = async (id: number) => {
+    await deleteNotification(id)
   }
 
-  const unreadCount = notifications.filter(n => !n.read).length
+  if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}><CircularProgress /></Box>
+  if (error) return <Box sx={{ p: 3 }}><Alert severity="error" action={<Button onClick={fetchNotifications}>Retry</Button>}>{error}</Alert></Box>
 
   return (
     <Box sx={{ p: 3 }}>
@@ -124,8 +110,8 @@ export default function NotificationsList() {
                       size="small"
                     />
                   </TableCell>
-                  <TableCell>{notification.message}</TableCell>
-                  <TableCell>{notification.date}</TableCell>
+                  <TableCell>{notification.title}: {notification.message}</TableCell>
+                  <TableCell>{notification.created_at}</TableCell>
                   <TableCell align="right">
                     <IconButton
                       size="small"

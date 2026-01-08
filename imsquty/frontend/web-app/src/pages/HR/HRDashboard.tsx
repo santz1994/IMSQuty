@@ -14,7 +14,8 @@ import {
   ListItemText,
   Paper,
   Stack,
-  Typography
+  Typography,
+  useTheme
 } from '@mui/material'
 import React, { useEffect, useState } from 'react'
 import {
@@ -83,87 +84,60 @@ const HRDashboard: React.FC = () => {
     return <Box sx={{ p: 3 }}>Loading HR Dashboard...</Box>
   }
 
-  // Mock data
-  const hrStats = [
+  // Real data from API (with fallback for demo)
+  const hrStats = hrMetrics?.stats || [
     {
       title: 'Total Employees',
-      value: '347',
-      subtitle: '+5 this month',
+      value: hrMetrics?.totalEmployees || '0',
+      subtitle: 'From User Service API',
       icon: <PeopleIcon sx={{ fontSize: 40 }} />,
       color: '#8b5cf6'
     },
     {
       title: 'Open Positions',
-      value: '12',
-      subtitle: '8 in progress',
+      value: hrMetrics?.openPositions || '0',
+      subtitle: 'Awaiting candidates',
       icon: <PersonAddIcon sx={{ fontSize: 40 }} />,
       color: '#3b82f6'
     },
     {
       title: 'Pending Leaves',
-      value: '8',
-      subtitle: '3 urgent',
+      value: hrMetrics?.pendingLeaves || '0',
+      subtitle: 'Requires approval',
       icon: <EventIcon sx={{ fontSize: 40 }} />,
       color: '#f59e0b'
     },
     {
       title: 'Training Sessions',
-      value: '6',
-      subtitle: '2 this week',
+      value: hrMetrics?.trainingSessions || '0',
+      subtitle: 'Scheduled this month',
       icon: <AssessmentIcon sx={{ fontSize: 40 }} />,
       color: '#10b981'
     }
   ]
 
-  const departmentDistribution = [
-    { name: 'IT', value: 85, color: '#3b82f6' },
-    { name: 'HR', value: 15, color: '#8b5cf6' },
-    { name: 'Finance', value: 42, color: '#10b981' },
-    { name: 'Operations', value: 78, color: '#f59e0b' },
-    { name: 'Sales', value: 65, color: '#ef4444' },
-    { name: 'Marketing', value: 38, color: '#06b6d4' },
-    { name: 'Admin', value: 24, color: '#ec4899' }
-  ]
-
-  const recruitmentPipeline = [
-    { stage: 'Applied', count: 145 },
-    { stage: 'Screened', count: 68 },
-    { stage: 'Interviewed', count: 32 },
-    { stage: 'Offered', count: 12 },
-    { stage: 'Hired', count: 8 }
-  ]
-
-  const leaveRequests = [
-    { employee: 'John Doe', type: 'Annual Leave', days: 5, status: 'Pending' },
-    { employee: 'Jane Smith', type: 'Sick Leave', days: 2, status: 'Pending' },
-    { employee: 'Mike Johnson', type: 'Personal Leave', days: 1, status: 'Approved' },
-    { employee: 'Sarah Williams', type: 'Annual Leave', days: 7, status: 'Pending' }
-  ]
-
-  const upcomingTrainings = [
-    { title: 'Leadership Workshop', date: 'Jan 15, 2026', participants: 12 },
-    { title: 'Technical Skills', date: 'Jan 18, 2026', participants: 25 },
-    { title: 'Safety Training', date: 'Jan 22, 2026', participants: 50 },
-    { title: 'Customer Service', date: 'Jan 28, 2026', participants: 18 }
-  ]
+  const departmentDistribution = hrMetrics?.departmentDistribution || []
+  const recruitmentPipeline = hrMetrics?.recruitmentPipeline || []
+  const leaveRequests = hrMetrics?.leaveRequests || []
+  const upcomingTrainings = hrMetrics?.upcomingTrainings || []
 
   return (
-    <Box sx={{ p: 3, backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
+    <Box sx={{ p: 3, backgroundColor: theme.palette.background.default, minHeight: '100vh' }}>
       {/* Header */}
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
         <Box>
-          <Typography variant="h4" sx={{ color: '#8b5cf6', fontWeight: 700 }}>
-            👥 HR Dashboard
+          <Typography variant="h4" sx={{ color: theme.palette.primary?.main || '#1976d2', fontWeight: 700 }}>
+            HR Dashboard
           </Typography>
-          <Typography variant="body2" sx={{ color: '#6b7280', mt: 0.5 }}>
+          <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mt: 0.5 }}>
             Human Resources Management & Employee Operations
           </Typography>
         </Box>
         <Chip
           label="HR ACCESS"
           sx={{
-            backgroundColor: '#8b5cf6',
-            color: '#fff',
+            backgroundColor: theme.palette.primary?.main || '#1976d2',
+            color: theme.palette.primary?.contrastText || '#fff',
             fontWeight: 700,
             fontSize: '0.875rem'
           }}
@@ -184,13 +158,13 @@ const HRDashboard: React.FC = () => {
               <CardContent>
                 <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
                   <Box>
-                    <Typography variant="body2" sx={{ color: '#6b7280', mb: 1 }}>
-                      {stat.title}
+                    <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 1 }}>
+                      {stat.label}
                     </Typography>
-                    <Typography variant="h4" sx={{ color: '#111827', fontWeight: 700, mb: 0.5 }}>
+                    <Typography variant="h4" sx={{ color: theme.palette.text.primary, fontWeight: 700, mb: 0.5 }}>
                       {stat.value}
                     </Typography>
-                    <Typography variant="caption" sx={{ color: '#9ca3af' }}>
+                    <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
                       {stat.subtitle}
                     </Typography>
                   </Box>

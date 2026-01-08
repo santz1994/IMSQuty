@@ -300,6 +300,28 @@ class DashboardRepository extends BaseRepository<DashboardStats> {
   }
 
   /**
+   * Get system performance metrics
+   */
+  async getSystemMetrics(forceRefresh: boolean = false): Promise<any> {
+    if (!forceRefresh) {
+      const cached = this.getFromCache<any>('system_metrics')
+      if (cached) return cached
+    }
+
+    const response = await dashboardService.getSystemHealth()
+    if (!this.isSuccess(response)) {
+      return null
+    }
+
+    const data = this.extractData<any>(response)
+    if (data) {
+      // Short cache for real-time metrics (30 seconds)
+      this.setCache('system_metrics', data, 30000)
+    }
+    return data
+  }
+
+  /**
    * Get dashboard configuration
    */
   async getDashboardConfig(forceRefresh: boolean = false): Promise<any> {

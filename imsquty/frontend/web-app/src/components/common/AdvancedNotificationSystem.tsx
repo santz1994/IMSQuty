@@ -13,6 +13,7 @@ import {
   Typography
 } from '@mui/material'
 import React, { useEffect, useState } from 'react'
+import { formatTimeID } from '../../utils/dateTimeFormat'
 
 export interface NotificationItem {
   id: string
@@ -177,7 +178,7 @@ const AdvancedNotificationSystem: React.FC<AdvancedNotificationSystemProps> = ({
                       />
                     )}
                     <Typography variant="caption" color="textSecondary">
-                      {notification.timestamp.toLocaleTimeString()}
+                      {formatTimeID(notification.timestamp)}
                     </Typography>
                   </Stack>
                 </Box>

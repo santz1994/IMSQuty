@@ -71,65 +71,42 @@ const UserDashboard: React.FC = () => {
     return <Box sx={{ p: 3 }}>Loading Dashboard...</Box>
   }
 
-  // Mock data
-  const personalStats = [
+  // Real data from API (fetched via dashboardService user methods)
+  const personalStats = userMetrics?.stats || [
     {
       title: 'My Tasks',
-      value: '12',
-      subtitle: '3 due today',
+      value: userMetrics?.tasks?.length || '0',
+      subtitle: userMetrics?.tasksDueToday ? `${userMetrics.tasksDueToday} due today` : 'No tasks',
       icon: <AssignmentIcon sx={{ fontSize: 40 }} />,
       color: '#3b82f6'
     },
     {
       title: 'Completed',
-      value: '45',
+      value: userMetrics?.completedTasks || '0',
       subtitle: 'This month',
       icon: <CheckCircleIcon sx={{ fontSize: 40 }} />,
       color: '#10b981'
     },
     {
       title: 'My Bookings',
-      value: '3',
-      subtitle: '1 upcoming',
+      value: userMetrics?.myBookings || '0',
+      subtitle: userMetrics?.upcomingBookings ? `${userMetrics.upcomingBookings} upcoming` : 'No bookings',
       icon: <MeetingRoomIcon sx={{ fontSize: 40 }} />,
       color: '#8b5cf6'
     },
     {
       title: 'Notifications',
-      value: '8',
-      subtitle: '2 unread',
+      value: userMetrics?.notifications || '0',
+      subtitle: userMetrics?.unreadNotifications ? `${userMetrics.unreadNotifications} unread` : 'All read',
       icon: <NotificationsIcon sx={{ fontSize: 40 }} />,
       color: '#f59e0b'
     }
   ]
 
-  const myTasks = [
-    { title: 'Update asset inventory', status: 'In Progress', dueDate: 'Today', priority: 'High' },
-    { title: 'Complete training module', status: 'Not Started', dueDate: 'Tomorrow', priority: 'Medium' },
-    { title: 'Submit monthly report', status: 'In Progress', dueDate: 'Jan 10', priority: 'High' },
-    { title: 'Review meeting notes', status: 'Not Started', dueDate: 'Jan 12', priority: 'Low' }
-  ]
-
-  const myAssets = [
-    { name: 'Dell Laptop XPS 15', id: 'AST-2024-1245', status: 'Active' },
-    { name: 'iPhone 14 Pro', id: 'AST-2024-3892', status: 'Active' },
-    { name: 'Office Chair Ergonomic', id: 'AST-2024-5621', status: 'Active' }
-  ]
-
-  const recentActivity = [
-    { action: 'Booked Meeting Room A', time: '2 hours ago' },
-    { action: 'Submitted Ticket #1245', time: '5 hours ago' },
-    { action: 'Completed Task: Report Review', time: '1 day ago' },
-    { action: 'Updated Profile Information', time: '2 days ago' }
-  ]
-
-  const activityTrend = [
-    { day: 'Mon', tasks: 8 },
-    { day: 'Tue', tasks: 12 },
-    { day: 'Wed', tasks: 10 },
-    { day: 'Thu', tasks: 15 },
-    { day: 'Fri', tasks: 11 }
-  ]
+  const myTasks = userMetrics?.tasks || []
+  const myAssets = userMetrics?.assets || []
+  const recentActivity = userMetrics?.recentActivity || []
+  const activityTrend = userMetrics?.activityTrend || []
 
   return (
     <Box sx={{ p: 3, backgroundColor: '#f8f9fa', minHeight: '100vh' }}>

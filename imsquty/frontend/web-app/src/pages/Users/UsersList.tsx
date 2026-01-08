@@ -1,8 +1,10 @@
 import { Add, Delete, Edit, Search } from '@mui/icons-material'
 import {
+  Alert,
   Box,
   Button,
   Chip,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -19,10 +21,11 @@ import {
   TableRow,
   TextField,
   Tooltip,
-  Typography,
+  Typography
 } from '@mui/material'
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useUsers } from '../../hooks/useUsers'
 
 interface User {
   id: number
@@ -33,36 +36,10 @@ interface User {
   lastLogin: string
 }
 
-const mockUsers: User[] = [
-  {
-    id: 1,
-    name: 'Admin User',
-    email: 'admin@imsquty.local',
-    role: 'admin',
-    status: 'active',
-    lastLogin: '2026-01-06 10:30:00',
-  },
-  {
-    id: 2,
-    name: 'John Smith',
-    email: 'john@imsquty.local',
-    role: 'user',
-    status: 'active',
-    lastLogin: '2026-01-05 14:15:00',
-  },
-  {
-    id: 3,
-    name: 'Sarah Manager',
-    email: 'sarah@imsquty.local',
-    role: 'admin',
-    status: 'active',
-    lastLogin: '2026-01-04 09:45:00',
-  },
-]
-
 const UsersList: React.FC = () => {
   const navigate = useNavigate()
-  const [users, setUsers] = useState<User[]>(mockUsers)
+  // ✅ REAL API DATA - No mock data
+  const { users, loading, error, fetchUsers, createUser, updateUser, deleteUser } = useUsers(true)
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
@@ -107,25 +84,30 @@ const UsersList: React.FC = () => {
     setEditingUser(null)
   }
 
-  const handleSaveUser = () => {
-    if (editingUser) {
-      setUsers(
-        users.map((u) => (u.id === editingUser.id ? { ...u, ...formData } : u))
-      )
-    } else {
-      const newUser: User = {
-        id: Math.max(...users.map((u) => u.id), 0) + 1,
-        ...formData,
-        lastLogin: 'Never',
+  const handleSaveUser = async () => {
+    try {
+      if (editingUser) {
+        await updateUser(editingUser.id, formData)
+      } else {
+        await createUser(formData)
       }
-      setUsers([...users, newUser])
+      handleCloseDialog()
+      await fetchUsers()
+    } catch (err) {
+      console.error('Failed to save user:', err)
+      alert('Failed to save user. Please try again.')
     }
-    handleCloseDialog()
   }
 
-  const handleDeleteUser = (id: number) => {
+  const handleDeleteUser = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
-      setUsers(users.filter((u) => u.id !== id))
+      try {
+        await deleteUser(id)
+        await fetchUsers()
+      } catch (err) {
+        console.error('Failed to delete user:', err)
+        alert('Failed to delete user. Please try again.')
+      }
     }
   }
 
@@ -140,6 +122,29 @@ const UsersList: React.FC = () => {
       default:
         return 'default'
     }
+  }
+
+  // Loading state
+  if (loading) {
+    return (
+      <Box sx={{ p: 3, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+        <CircularProgress />
+      </Box>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+        <Button variant="contained" onClick={() => fetchUsers()}>
+          Retry
+        </Button>
+      </Box>
+    )
   }
 
   return (

@@ -93,7 +93,6 @@ export interface MFAVerifyRequest {
 // ============================================================================
 
 const AUTH_API_BASE = '/auth'
-const USE_MOCK_AUTH = import.meta.env.VITE_USE_MOCK_AUTH === 'true'
 
 // Token storage keys
 const TOKEN_KEY = 'access_token'
@@ -106,16 +105,11 @@ const USER_KEY = 'user'
 
 export const authService = {
   /**
-   * Login with email and password
+   * Login with email and password - REAL DATABASE ONLY
    */
   login: async (email: string, password: string): Promise<LoginResponse> => {
-    if (USE_MOCK_AUTH) {
-      console.log('[AUTH] 🔧 Mock mode enabled - bypassing real API')
-      return authService.mockLogin(email, password)
-    }
-
     try {
-      console.log('[AUTH] 🔑 Attempting login...')
+      console.log('[AUTH] 🔑 Attempting real database login...')
 
       const response = await apiClient.post<LoginResponse>(
         `${AUTH_API_BASE}/login`,
@@ -171,15 +165,14 @@ export const authService = {
   },
 
   /**
-   * Logout current user
+   * Logout current user - REAL API ONLY
    */
   logout: async (): Promise<void> => {
-    if (!USE_MOCK_AUTH) {
-      try {
-        await apiClient.post(`${AUTH_API_BASE}/logout`)
-      } catch (error) {
-        console.warn('[AUTH] ⚠ Logout API call failed, clearing local storage anyway')
-      }
+    try {
+      await apiClient.post(`${AUTH_API_BASE}/logout`)
+      console.log('[AUTH] 🌐 Server logout successful')
+    } catch (error) {
+      console.warn('[AUTH] ⚠ Logout API call failed, clearing local storage anyway')
     }
 
     // Clear all auth data
@@ -423,58 +416,6 @@ export const authService = {
       console.error('[AUTH] ❌ Failed to fetch login history')
       throw error
     }
-  },
-
-  // ============================================================================
-  // MOCK AUTHENTICATION (for development without backend)
-  // ============================================================================
-
-  /**
-   * Mock login for development
-   */
-  mockLogin: async (email: string, password: string): Promise<LoginResponse> => {
-    console.log('[AUTH] 🔧 Mock authentication - accepting any credentials')
-
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500))
-
-    const mockUser: User = {
-      id: '1',
-      username: email.split('@')[0],
-      email: email,
-      first_name: 'Demo',
-      last_name: 'User',
-      full_name: 'Demo User',
-      role: 'admin',
-      permissions: ['all'],
-      department: 'IT',
-      position: 'Senior Developer',
-      is_active: true,
-      mfa_enabled: false,
-      email_verified_at: new Date().toISOString(),
-      last_login_at: new Date().toISOString(),
-    }
-
-    const mockResponse: LoginResponse = {
-      success: true,
-      data: {
-        access_token: 'mock-jwt-token-' + Date.now(),
-        refresh_token: 'mock-refresh-token-' + Date.now(),
-        token_type: 'Bearer',
-        expires_in: 3600,
-        user: mockUser,
-      },
-      message: 'Login successful (mock mode)',
-    }
-
-    localStorage.setItem(TOKEN_KEY, mockResponse.data.access_token)
-    localStorage.setItem(REFRESH_TOKEN_KEY, mockResponse.data.refresh_token)
-    localStorage.setItem(USER_KEY, JSON.stringify(mockUser))
-
-    console.log('[AUTH] ✅ Mock login successful')
-    console.log('[AUTH] 👤 User:', mockUser.full_name, '|', mockUser.role)
-
-    return mockResponse
   },
 }
 

@@ -16,6 +16,7 @@ import {
 
 interface UseDashboardResult {
   stats: DashboardStats | null
+  metrics: any | null
   loading: boolean
   error: string | null
   fetchStats: () => Promise<void>
@@ -35,6 +36,7 @@ interface UseRoleDashboardResult {
  */
 export function useDashboard(autoFetch: boolean = false): UseDashboardResult {
   const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [metrics, setMetrics] = useState<any | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -43,9 +45,16 @@ export function useDashboard(autoFetch: boolean = false): UseDashboardResult {
     setError(null)
     try {
       const data = await dashboardRepository.getStats()
+      const metricsData = await dashboardRepository.getSystemMetrics()
+
       if (data) {
         setStats(data)
-      } else {
+      }
+      if (metricsData) {
+        setMetrics(metricsData)
+      }
+
+      if (!data && !metricsData) {
         setError('Failed to fetch dashboard statistics')
       }
     } catch (err) {
@@ -67,6 +76,7 @@ export function useDashboard(autoFetch: boolean = false): UseDashboardResult {
 
   return {
     stats,
+    metrics,
     loading,
     error,
     fetchStats,

@@ -95,65 +95,45 @@ const DirectorDashboard: React.FC = () => {
     return <Box sx={{ p: 3 }}>Loading Director Dashboard...</Box>
   }
 
-  // Mock data for demonstration
-  const kpiCards = [
+  // Real data from API (fetched via dashboardService director methods)
+  const kpiCards = businessMetrics?.kpis || [
     {
       title: 'Total Revenue',
-      value: 'Rp 15.2M',
-      change: '+12.5%',
-      trend: 'up',
+      value: businessMetrics?.totalRevenue || 'Rp 0',
+      change: businessMetrics?.revenueChange || '+0%',
+      trend: 'neutral',
       icon: <AttachMoneyIcon sx={{ fontSize: 40 }} />,
       color: '#d4af37'
     },
     {
       title: 'Total Assets',
-      value: '2,847',
-      change: '+8.3%',
-      trend: 'up',
+      value: businessMetrics?.totalAssets || '0',
+      change: businessMetrics?.assetsChange || '+0%',
+      trend: 'neutral',
       icon: <BusinessIcon sx={{ fontSize: 40 }} />,
       color: '#4caf50'
     },
     {
       title: 'Total Employees',
-      value: '347',
-      change: '+5.2%',
-      trend: 'up',
+      value: businessMetrics?.totalEmployees || '0',
+      change: businessMetrics?.employeesChange || '+0%',
+      trend: 'neutral',
       icon: <PeopleIcon sx={{ fontSize: 40 }} />,
       color: '#2196f3'
     },
     {
       title: 'Operational Efficiency',
-      value: '87.4%',
-      change: '-2.1%',
-      trend: 'down',
+      value: businessMetrics?.efficiency || '0%',
+      change: businessMetrics?.efficiencyChange || '0%',
+      trend: 'neutral',
       icon: <AssessmentIcon sx={{ fontSize: 40 }} />,
       color: '#ff9800'
     }
   ]
 
-  const departmentData = [
-    { name: 'IT', performance: 92, budget: 85, satisfaction: 88 },
-    { name: 'HR', performance: 88, budget: 90, satisfaction: 85 },
-    { name: 'Finance', performance: 95, budget: 88, satisfaction: 90 },
-    { name: 'Operations', performance: 85, budget: 82, satisfaction: 80 },
-    { name: 'Sales', performance: 90, budget: 87, satisfaction: 92 }
-  ]
-
-  const monthlyTrend = [
-    { month: 'Jul', revenue: 12.5, costs: 8.2, profit: 4.3 },
-    { month: 'Aug', revenue: 13.2, costs: 8.5, profit: 4.7 },
-    { month: 'Sep', revenue: 13.8, costs: 8.8, profit: 5.0 },
-    { month: 'Oct', revenue: 14.5, costs: 9.0, profit: 5.5 },
-    { month: 'Nov', revenue: 14.8, costs: 9.2, profit: 5.6 },
-    { month: 'Dec', revenue: 15.2, costs: 9.5, profit: 5.7 }
-  ]
-
-  const riskIndicators = [
-    { category: 'Financial Risk', level: 'Low', score: 25, color: '#4caf50' },
-    { category: 'Operational Risk', level: 'Medium', score: 55, color: '#ff9800' },
-    { category: 'Compliance Risk', level: 'Low', score: 30, color: '#4caf50' },
-    { category: 'Strategic Risk', level: 'Medium', score: 45, color: '#ff9800' }
-  ]
+  const departmentData = departmentPerformance || []
+  const monthlyTrend = trendData || []
+  const riskIndicators = businessMetrics?.risks || []
 
   return (
     <Box sx={{ p: 3, backgroundColor: '#1a1d29', minHeight: '100vh' }}>

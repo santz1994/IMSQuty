@@ -1,10 +1,12 @@
 import { Add } from '@mui/icons-material'
 import {
+  Alert,
   Box,
   Button,
   Card,
   CardContent,
   Chip,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -15,16 +17,10 @@ import {
   Typography,
 } from '@mui/material'
 import React, { useState } from 'react'
-
-const mockRooms = [
-  { id: 1, name: 'Conference Room A', capacity: 10, floor: '2nd', status: 'available', features: ['Projector', 'Whiteboard', 'Video Conference'] },
-  { id: 2, name: 'Meeting Room B', capacity: 6, floor: '3rd', status: 'booked', features: ['Whiteboard', 'TV Monitor'] },
-  { id: 3, name: 'Board Room', capacity: 20, floor: '1st', status: 'available', features: ['Projector', 'Video Conference', 'Audio System'] },
-  { id: 4, name: 'Training Room', capacity: 30, floor: '4th', status: 'available', features: ['Projector', 'Microphone', 'Whiteboard'] },
-]
+import { useMeetingRooms } from '../../hooks/useMeetingRooms'
 
 const MeetingRoomsList: React.FC = () => {
-  const [rooms, setRooms] = useState(mockRooms)
+  const { rooms, loading, error, fetchRooms, createRoom, updateRoom, deleteRoom } = useMeetingRooms(true)
   const [openDialog, setOpenDialog] = useState(false)
   const [formData, setFormData] = useState({ name: '', capacity: '', floor: '', features: '' })
 
@@ -33,18 +29,19 @@ const MeetingRoomsList: React.FC = () => {
     setOpenDialog(true)
   }
 
-  const handleSave = () => {
-    const newRoom = {
-      id: Math.max(...rooms.map(r => r.id), 0) + 1,
+  const handleSave = async () => {
+    await createRoom({
       name: formData.name,
       capacity: parseInt(formData.capacity),
       floor: formData.floor,
-      status: 'available',
-      features: formData.features.split(',').map(f => f.trim()),
-    }
-    setRooms([...rooms, newRoom])
+      features: formData.features.split(',').map(f => f.trim())
+    })
     setOpenDialog(false)
+    setFormData({ name: '', capacity: '', floor: '', features: '' })
   }
+
+  if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}><CircularProgress /></Box>
+  if (error) return <Box sx={{ p: 3 }}><Alert severity="error" action={<Button onClick={fetchRooms}>Retry</Button>}>{error}</Alert></Box>
 
   return (
     <Box sx={{ p: 3 }}>

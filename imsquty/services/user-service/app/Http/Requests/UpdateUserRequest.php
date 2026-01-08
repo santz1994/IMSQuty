@@ -43,6 +43,7 @@ class UpdateUserRequest extends FormRequest
                 'string',
                 'email',
                 'max:255',
+                'ends_with:@quty.co.id', // Only corporate domain allowed
                 Rule::unique('users', 'email')->ignore($userId)
             ],
             'password' => [

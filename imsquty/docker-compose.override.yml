@@ -1,5 +1,3 @@
-version: '3.8'
-
 # Override file to skip problematic services like RabbitMQ
 # This allows us to test core functionality without external dependencies
 
@@ -11,7 +9,7 @@ services:
         limits:
           cpus: '0'
           memory: '0'
-    # This effectively disables the service
+  # This effectively disables the service
 
   # Keep only essential services for now
   mysql:

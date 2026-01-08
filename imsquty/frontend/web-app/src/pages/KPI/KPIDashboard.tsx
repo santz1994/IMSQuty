@@ -142,15 +142,8 @@ const KPIDashboard: React.FC = () => {
     )
   }
 
-  // Mock trend data
-  const trendData = [
-    { month: 'Jan', value: 85 },
-    { month: 'Feb', value: 88 },
-    { month: 'Mar', value: 87 },
-    { month: 'Apr', value: 90 },
-    { month: 'May', value: 92 },
-    { month: 'Jun', value: 94.5 },
-  ]
+  // Real trend data from API
+  const trendData = kpis?.trends || []
 
   return (
     <Box sx={{ p: 3 }}>
@@ -294,7 +287,7 @@ const KPIDashboard: React.FC = () => {
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Line type="monotone" dataKey="value" stroke={theme.palette.primary.main} strokeWidth={2} />
+                      <Line type="monotone" dataKey="value" stroke={theme.palette.primary?.main || '#1976d2'} strokeWidth={2} />
                     </LineChart>
                   </ResponsiveContainer>
                 </CardContent>

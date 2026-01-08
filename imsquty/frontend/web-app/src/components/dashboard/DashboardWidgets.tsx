@@ -4,19 +4,19 @@
  */
 
 import {
-  Remove,
-  TrendingDown,
-  TrendingUp
+    Remove,
+    TrendingDown,
+    TrendingUp
 } from '@mui/icons-material'
 import {
-  Box,
-  Card,
-  CardContent,
-  Chip,
-  Grid,
-  LinearProgress,
-  Typography,
-  useTheme
+    Box,
+    Card,
+    CardContent,
+    Chip,
+    Grid,
+    LinearProgress,
+    Typography,
+    useTheme
 } from '@mui/material'
 import React from 'react'
 
@@ -243,7 +243,7 @@ export const ActivityItem: React.FC<ActivityItemProps> = ({
             <Chip label={user} size="small" variant="outlined" />
           )}
           <Typography variant="caption" color="text.secondary">
-            {new Date(timestamp).toLocaleString('id-ID')}
+            {formatDateTimeID(timestamp)}
           </Typography>
         </Box>
       </Box>

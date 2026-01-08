@@ -11,6 +11,7 @@ import {
 } from '@mui/material'
 import React, { useEffect, useState } from 'react'
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { formatTimeID } from '../../utils/dateTimeFormat'
 
 interface PerformanceMetric {
   name: string
@@ -89,10 +90,7 @@ const PerformanceMetricsDashboard: React.FC<PerformanceMetricsProps> = ({ onMetr
       setChartData((prev) => [
         ...prev.slice(1),
         {
-          time: new Date().toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-          }),
+          time: formatTimeID(new Date()),
           latency: 140 + Math.random() * 10,
           throughput: 900 + Math.random() * 50,
         },
@@ -262,7 +260,7 @@ const PerformanceMetricsDashboard: React.FC<PerformanceMetricsProps> = ({ onMetr
           ✅ System Status: <span style={{ color: theme.palette.success.dark }}>All Systems Operational</span>
         </Typography>
         <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
-          Last update: {new Date().toLocaleTimeString()}
+          Last update: {formatTimeID(new Date())}
         </Typography>
       </Paper>
     </Box>

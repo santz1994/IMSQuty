@@ -1,8 +1,10 @@
 import { Add, Delete, Edit } from '@mui/icons-material'
 import {
+  Alert,
   Box,
   Button,
   Chip,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -18,10 +20,11 @@ import {
   TablePagination,
   TableRow,
   TextField,
-  Typography,
+  Typography
 } from '@mui/material'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAssets } from '../../hooks/useAssets'
 
 interface Asset {
   id: number
@@ -32,14 +35,6 @@ interface Asset {
   status: 'active' | 'maintenance' | 'inactive'
   purchase_date: string
 }
-
-const mockAssets: Asset[] = [
-  { id: 1, asset_tag: 'AST001', name: 'Laptop Dell', serial_number: 'SN123456', asset_type_id: '1', status: 'active', purchase_date: '2023-01-15' },
-  { id: 2, asset_tag: 'AST002', name: 'Monitor LG', serial_number: 'SN123457', asset_type_id: '2', status: 'active', purchase_date: '2023-02-20' },
-  { id: 3, asset_tag: 'AST003', name: 'Keyboard Logitech', serial_number: 'SN123458', asset_type_id: '3', status: 'maintenance', purchase_date: '2023-03-10' },
-  { id: 4, asset_tag: 'AST004', name: 'Mouse Razer', serial_number: 'SN123459', asset_type_id: '3', status: 'inactive', purchase_date: '2022-12-01' },
-  { id: 5, asset_tag: 'AST005', name: 'Printer HP', serial_number: 'SN123460', asset_type_id: '4', status: 'active', purchase_date: '2023-04-05' },
-]
 
 const statusChipColor = (status: Asset['status']): any => {
   switch (status) {
@@ -52,7 +47,8 @@ const statusChipColor = (status: Asset['status']): any => {
 
 export default function AssetList() {
   const navigate = useNavigate()
-  const [assets, setAssets] = useState<Asset[]>(mockAssets)
+  // ✅ REAL API DATA - No mock data
+  const { assets, loading, error, fetchAssets, createAsset, updateAsset, deleteAsset } = useAssets(true)
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
@@ -110,26 +106,58 @@ export default function AssetList() {
     setOpenDialog(true)
   }
 
-  const handleSaveAsset = () => {
-    if (editingAsset) {
-      setAssets(assets.map(a =>
-        a.id === editingAsset.id
-          ? { ...a, ...formData }
-          : a
-      ))
-    } else {
-      setAssets([...assets, {
-        id: Math.max(...assets.map(a => a.id), 0) + 1,
-        ...formData,
-      }])
+  const handleSaveAsset = async () => {
+    try {
+      if (editingAsset) {
+        // Update existing asset via API
+        await updateAsset(editingAsset.id, formData)
+      } else {
+        // Create new asset via API
+        await createAsset(formData)
+      }
+      setOpenDialog(false)
+      // Refresh list
+      await fetchAssets()
+    } catch (err) {
+      console.error('Failed to save asset:', err)
+      alert('Failed to save asset. Please try again.')
     }
-    setOpenDialog(false)
   }
 
-  const handleDeleteAsset = (id: number) => {
+  const handleDeleteAsset = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this asset?')) {
-      setAssets(assets.filter(a => a.id !== id))
+      try {
+        await deleteAsset(id)
+        // Refresh list
+        await fetchAssets()
+      } catch (err) {
+        console.error('Failed to delete asset:', err)
+        alert('Failed to delete asset. Please try again.')
+      }
     }
+  }
+
+  // Loading state
+  if (loading) {
+    return (
+      <Box sx={{ p: 3, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+        <CircularProgress />
+      </Box>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+        <Button variant="contained" onClick={() => fetchAssets()}>
+          Retry
+        </Button>
+      </Box>
+    )
   }
 
   return (

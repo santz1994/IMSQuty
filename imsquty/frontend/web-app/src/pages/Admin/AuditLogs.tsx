@@ -1,29 +1,30 @@
 import {
-    Delete as DeleteIcon,
-    Download as DownloadIcon,
-    Refresh as RefreshIcon,
+  Delete as DeleteIcon,
+  Download as DownloadIcon,
+  Refresh as RefreshIcon,
 } from '@mui/icons-material'
 import {
-    Alert,
-    Box,
-    Button,
-    Chip,
-    CircularProgress,
-    MenuItem,
-    Paper,
-    Stack,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    TextField,
-    Typography
+  Alert,
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  MenuItem,
+  Paper,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Typography
 } from '@mui/material'
 import axios from 'axios'
 import React, { useEffect, useState } from 'react'
 import { PaginationControls } from '../../components/PaginationControls'
+import { formatDateTimeID } from '../../utils/dateTimeFormat'
 
 interface AuditLog {
   id: number
@@ -326,7 +327,7 @@ const AuditLogs: React.FC = () => {
               logs.map((log) => (
                 <TableRow key={log.id} hover>
                   <TableCell sx={{ fontSize: '0.85rem' }}>
-                    {new Date(log.created_at).toLocaleString()}
+                    {formatDateTimeID(log.created_at)}
                   </TableCell>
                   <TableCell>{log.user_name}</TableCell>
                   <TableCell>

@@ -1,8 +1,10 @@
 import { Add, Delete, Edit, Search } from '@mui/icons-material'
 import {
+  Alert,
   Box,
   Button,
   Chip,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -21,16 +23,10 @@ import {
   Typography,
 } from '@mui/material'
 import React, { useState } from 'react'
-
-const mockInventory = [
-  { id: 1, name: 'USB Cables', quantity: 150, unit: 'pcs', location: 'Warehouse A', status: 'in_stock' },
-  { id: 2, name: 'HDMI Cables', quantity: 85, unit: 'pcs', location: 'Warehouse B', status: 'low_stock' },
-  { id: 3, name: 'Power Supplies', quantity: 0, unit: 'pcs', location: 'Warehouse A', status: 'out_of_stock' },
-  { id: 4, name: 'Monitor Stands', quantity: 42, unit: 'pcs', location: 'Warehouse C', status: 'in_stock' },
-]
+import { useInventory } from '../../hooks/useInventory'
 
 const InventoryList: React.FC = () => {
-  const [inventory, setInventory] = useState(mockInventory)
+  const { items: inventory, loading, error, fetchItems, createItem, updateItem, deleteItem } = useInventory(true)
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
@@ -40,18 +36,26 @@ const InventoryList: React.FC = () => {
   const filtered = inventory.filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()))
   const paginated = filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
 
-  const handleSave = () => {
-    const newItem = {
-      id: Math.max(...inventory.map(i => i.id), 0) + 1,
+  const handleSave = async () => {
+    await createItem({
       name: formData.name,
+      sku: `SKU-${Date.now()}`,
+      category: 'General',
       quantity: parseInt(formData.quantity),
       unit: formData.unit,
-      location: formData.location,
-      status: formData.status,
-    }
-    setInventory([...inventory, newItem])
+      min_stock: 10,
+      warehouse_id: 1
+    })
     setOpenDialog(false)
+    setFormData({ name: '', quantity: '', unit: '', location: '', status: 'in_stock' })
   }
+
+  const handleDelete = async (id: number) => {
+    await deleteItem(id)
+  }
+
+  if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}><CircularProgress /></Box>
+  if (error) return <Box sx={{ p: 3 }}><Alert severity="error" action={<Button onClick={fetchItems}>Retry</Button>}>{error}</Alert></Box>
 
   return (
     <Box sx={{ p: 3 }}>
@@ -101,7 +105,7 @@ const InventoryList: React.FC = () => {
                   </TableCell>
                   <TableCell align="center">
                     <IconButton size="small" color="info"><Edit /></IconButton>
-                    <IconButton size="small" color="error" onClick={() => setInventory(inventory.filter(i => i.id !== item.id))}><Delete /></IconButton>
+                    <IconButton size="small" color="error" onClick={() => handleDelete(item.id)}><Delete /></IconButton>
                   </TableCell>
                 </TableRow>
               )) : (
