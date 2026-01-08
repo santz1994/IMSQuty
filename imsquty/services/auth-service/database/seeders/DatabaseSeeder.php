@@ -22,17 +22,18 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,  // 3. Map permissions to roles
             DepartmentsSeeder::class,     // 4. Create departments
             TeamsSeeder::class,           // 5. Create teams
-            TestUsersSeeder::class,       // 6. Create test users with role assignments
+            // TestUsersSeeder::class,    // 6. ⚠️ DISABLED FOR PRODUCTION - Test users with fake data
         ]);
 
         $this->command->info('');
         $this->command->info('🎉 Database seeding completed successfully!');
         $this->command->info('');
-        $this->command->warn('⚠️  Test users created with default password: password123');
+        $this->command->info('📝 Production Mode: Essential data seeded (roles, permissions, departments, teams)');
+        $this->command->info('⚠️  Test users DISABLED - Use real user accounts from HR system');
         $this->command->info('');
         $this->command->info('Next steps:');
-        $this->command->info('1. Test login with any test user');
-        $this->command->info('2. Verify role-based permissions');
-        $this->command->info('3. Update default passwords in production');
+        $this->command->info('1. Import real users from HR system');
+        $this->command->info('2. Assign roles to actual users');
+        $this->command->info('3. Configure production authentication');
     }
 }
