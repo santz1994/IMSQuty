@@ -11,10 +11,9 @@ import {
   DialogContent,
   DialogTitle,
   Grid,
-  MenuItem,
   Stack,
   TextField,
-  Typography,
+  Typography
 } from '@mui/material'
 import React, { useState } from 'react'
 import { useReports } from '../../hooks/useReports'
@@ -66,9 +65,9 @@ const ReportsList: React.FC = () => {
                       <Typography variant="caption" sx={{ backgroundColor: '#e3f2fd', px: 1, py: 0.5, borderRadius: 1 }}>
                         {report.format.toUpperCase()}
                       </Typography>
-                      <Button 
-                        size="small" 
-                        startIcon={<FileDownload />} 
+                      <Button
+                        size="small"
+                        startIcon={<FileDownload />}
                         onClick={() => handleDownload(report.id, report.name)}
                         disabled={report.status !== 'completed'}
                       >
