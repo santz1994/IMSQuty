@@ -1,5 +1,5 @@
 # Multi-stage build for Auth Service
-FROM php:8.4-fpm AS base
+FROM php:8.4-cli AS base
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -25,13 +25,16 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 # Copy composer files
-COPY composer.json composer.lock ./
+COPY services/auth-service/composer.json services/auth-service/composer.lock ./
+
+# Copy shared folder (needed for autoload)
+COPY shared /var/www/shared
 
 # Install dependencies
 RUN composer install --no-scripts --no-autoloader --prefer-dist --no-dev
 
 # Copy application code
-COPY . .
+COPY services/auth-service/ .
 
 # Generate autoload files
 RUN composer dump-autoload --optimize
@@ -48,10 +51,10 @@ RUN groupadd -g 1000 imsquty && \
 USER imsquty
 
 # Expose port
-EXPOSE 9000
+EXPOSE 8001
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
-    CMD ps aux | grep -q '[p]hp-fpm' || exit 1
+    CMD curl -f http://localhost:8001/api/v1/health || exit 1
 
-CMD ["php-fpm"]
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8001"]

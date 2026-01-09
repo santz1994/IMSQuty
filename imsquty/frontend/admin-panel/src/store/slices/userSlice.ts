@@ -1,8 +1,8 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import userService, {
-    CreateUserRequest,
-    UpdateUserRequest,
-    User,
+  CreateUserRequest,
+  UpdateUserRequest,
+  User,
 } from '../../api/userService'
 
 interface UserState {
@@ -14,6 +14,7 @@ interface UserState {
     page: number
     perPage: number
     total: number
+    last_page?: number
   }
 }
 
@@ -26,6 +27,7 @@ const initialState: UserState = {
     page: 1,
     perPage: 10,
     total: 0,
+    last_page: 1,
   },
 }
 

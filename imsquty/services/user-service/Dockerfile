@@ -1,5 +1,5 @@
 # Multi-stage build for User Service
-FROM php:8.4-fpm as base
+FROM php:8.4-cli AS base
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -25,13 +25,16 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 # Copy composer files
-COPY composer.json composer.lock ./
+COPY services/user-service/composer.json services/user-service/composer.lock ./
+
+# Copy shared folder (needed for autoload)
+COPY shared /var/www/shared
 
 # Install dependencies
 RUN composer install --no-scripts --no-autoloader --prefer-dist --no-dev
 
 # Copy application code
-COPY . .
+COPY services/user-service/ .
 
 # Generate autoload files
 RUN composer dump-autoload --optimize

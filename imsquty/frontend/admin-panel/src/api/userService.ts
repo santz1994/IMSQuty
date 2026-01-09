@@ -3,9 +3,12 @@ import client from './client'
 export interface User {
   id: number
   email: string
+  username?: string
   first_name: string
   last_name: string
   role_id: number
+  department?: string
+  team?: string
   is_active: boolean
   created_at: string
   updated_at: string

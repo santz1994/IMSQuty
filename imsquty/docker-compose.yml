@@ -134,8 +134,8 @@ services:
   # Auth Service
   auth-service:
     build:
-      context: ./services/auth-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/auth-service/Dockerfile
     container_name: imsquty-auth-service
     restart: unless-stopped
     ports:
@@ -167,8 +167,8 @@ services:
   # User Service
   user-service:
     build:
-      context: ./services/user-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/user-service/Dockerfile
     container_name: imsquty-user-service
     restart: unless-stopped
     ports:
@@ -237,8 +237,8 @@ services:
   # Ticket Service
   ticket-service:
     build:
-      context: ./services/ticket-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/ticket-service/Dockerfile
     container_name: imsquty-ticket-service
     restart: unless-stopped
     ports:
@@ -368,8 +368,8 @@ services:
   # Master Data Service
   master-data-service:
     build:
-      context: ./services/master-data-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/master-data-service/Dockerfile
     container_name: imsquty-master-data-service
     restart: unless-stopped
     ports:

@@ -31,6 +31,19 @@ export interface RefreshTokenResponse {
   message: string
 }
 
+export interface Role {
+  id: number
+  name: string
+  guard_name: string
+  permissions: Permission[]
+}
+
+export interface Permission {
+  id: number
+  name: string
+  guard_name: string
+}
+
 export interface User {
   id: string
   username: string
@@ -38,12 +51,14 @@ export interface User {
   first_name: string
   last_name: string
   full_name: string
-  role: string
-  permissions: string[]
+  role: string  // Single role string for frontend (transformed from roles array)
+  roles?: Role[]  // Original roles array from backend
+  permissions: string[]  // Flattened permissions for easy checking
   department?: string
   position?: string
   avatar?: string
   is_active: boolean
+  status?: string
   email_verified_at?: string
   mfa_enabled: boolean
   last_login_at?: string
@@ -100,6 +115,58 @@ const REFRESH_TOKEN_KEY = 'refresh_token'
 const USER_KEY = 'user'
 
 // ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Transform backend user data to frontend format
+ * Extracts primary role from roles array and flattens permissions
+ */
+function transformUserData(userData: any): User {
+  // Get primary role name (first role in array)
+  const primaryRole = userData.roles && userData.roles.length > 0
+    ? userData.roles[0].name
+    : 'user'
+
+  // Flatten all permissions from all roles
+  const allPermissions: string[] = []
+  if (userData.roles && Array.isArray(userData.roles)) {
+    userData.roles.forEach((role: Role) => {
+      if (role.permissions && Array.isArray(role.permissions)) {
+        role.permissions.forEach((perm: Permission) => {
+          if (!allPermissions.includes(perm.name)) {
+            allPermissions.push(perm.name)
+          }
+        })
+      }
+    })
+  }
+
+  // Construct full name
+  const fullName = userData.full_name || `${userData.first_name || ''} ${userData.last_name || ''}`.trim()
+
+  return {
+    id: userData.id?.toString() || '',
+    username: userData.username || '',
+    email: userData.email || '',
+    first_name: userData.first_name || '',
+    last_name: userData.last_name || '',
+    full_name: fullName,
+    role: primaryRole,  // Single role string for easy checking
+    roles: userData.roles,  // Keep original roles array
+    permissions: allPermissions,  // Flattened permissions
+    department: userData.department_id || userData.department,
+    position: userData.position,
+    avatar: userData.avatar,
+    is_active: userData.status === 'active',
+    status: userData.status,
+    email_verified_at: userData.email_verified_at,
+    mfa_enabled: userData.mfa_enabled || false,
+    last_login_at: userData.last_login_at,
+  }
+}
+
+// ============================================================================
 // AUTHENTICATION SERVICE
 // ============================================================================
 
@@ -119,13 +186,20 @@ export const authService = {
       if (response.data.success) {
         const { access_token, refresh_token, user } = response.data.data
 
-        // Store tokens and user data
+        // Transform user data: Extract primary role and flatten permissions
+        const transformedUser = transformUserData(user)
+
+        // Store tokens and transformed user data
         localStorage.setItem(TOKEN_KEY, access_token)
         localStorage.setItem(REFRESH_TOKEN_KEY, refresh_token)
-        localStorage.setItem(USER_KEY, JSON.stringify(user))
+        localStorage.setItem(USER_KEY, JSON.stringify(transformedUser))
 
         console.log('[AUTH] ✅ Login successful')
-        console.log('[AUTH] 👤 User:', user.full_name, '|', user.role)
+        console.log('[AUTH] 👤 User:', transformedUser.full_name, '|', transformedUser.role)
+        console.log('[AUTH] 🔐 Permissions:', transformedUser.permissions.length)
+
+        // Update response with transformed user
+        response.data.data.user = transformedUser
       }
 
       return response.data

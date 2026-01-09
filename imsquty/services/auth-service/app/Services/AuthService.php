@@ -81,6 +81,9 @@ class AuthService
         // Update last login
         $this->repository->updateLastLogin($user->id);
 
+        // Load roles and permissions for RBAC
+        $user->load('roles.permissions');
+
         // Log successful login
         $this->logLoginAttempt($identifier, true, request()->ip(), $user->id);
 
@@ -94,12 +97,16 @@ class AuthService
             'user_agent' => request()->userAgent()
         ]);
 
+        // Prepare user data with roles and permissions
+        $userData = $user->toArray();
+        $userData['roles'] = $user->roles->toArray();
+
         return [
             'access_token' => $accessToken,
             'refresh_token' => $refreshToken,
             'token_type' => 'bearer',
             'expires_in' => config('jwt.ttl') * 60,
-            'user' => $user
+            'user' => $userData
         ];
     }
 

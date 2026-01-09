@@ -37,7 +37,7 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/",
-            "Shared\\": "../../shared/"
+            "Shared\\": "../shared/"
         }
     },
     "autoload-dev": {

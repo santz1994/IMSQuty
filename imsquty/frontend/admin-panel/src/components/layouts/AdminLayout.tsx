@@ -1,22 +1,22 @@
 import { AccountCircle, Menu as MenuIcon } from '@mui/icons-material'
 import {
-    AppBar,
-    Box,
-    Drawer,
-    IconButton,
-    List,
-    ListItem,
-    ListItemButton,
-    ListItemText,
-    Menu,
-    MenuItem,
-    Toolbar,
-    Typography,
+  AppBar,
+  Box,
+  Drawer,
+  IconButton,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  Menu,
+  MenuItem,
+  Toolbar,
+  Typography,
 } from '@mui/material'
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAppDispatch, useAppSelector } from '../../../store/hooks'
-import { logout } from '../../../store/slices/authSlice'
+import { useAppDispatch, useAppSelector } from '../../store/hooks'
+import { logout } from '../../store/slices/authSlice'
 
 interface AdminLayoutProps {
   children: React.ReactNode

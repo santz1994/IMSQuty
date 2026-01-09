@@ -31,8 +31,8 @@ import { login } from '../store/slices/authSlice'
 const Login: React.FC = () => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
-  const [email, setEmail] = useState('admin@example.com')
-  const [password, setPassword] = useState('password')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [emailError, setEmailError] = useState('')
   const [passwordError, setPasswordError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -86,9 +86,9 @@ const Login: React.FC = () => {
   }
 
   const demoCredentials = [
-    { role: 'Admin', email: 'admin@example.com' },
-    { role: 'Manager', email: 'manager@example.com' },
-    { role: 'User', email: 'user@example.com' },
+    { role: 'Admin', email: 'admin@quty.co.id' },
+    { role: 'Manager', email: 'manager@quty.co.id' },
+    { role: 'User', email: 'user@quty.co.id' },
   ]
 
   return (
@@ -300,7 +300,7 @@ const Login: React.FC = () => {
                     <Box sx={{ mb: 2 }}>
                       <TextField
                         fullWidth
-                        label="Email Address"
+                        label="Email Address/username"
                         type="email"
                         variant="outlined"
                         value={email}
