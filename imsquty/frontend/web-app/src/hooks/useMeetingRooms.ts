@@ -263,3 +263,85 @@ export const useBookings = (autoFetch = false) => {
     checkOut
   }
 }
+
+/**
+ * Combined hook for meeting rooms and bookings
+ * Useful for components that need both rooms and bookings data
+ */
+export const useMeetingRoomsWithBookings = (autoFetch = false) => {
+  const [rooms, setRooms] = useState<MeetingRoom[]>([])
+  const [bookings, setBookings] = useState<Booking[]>([])
+  const [loading, setLoading] = useState<boolean>(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchRooms = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await meetingRoomService.getRooms()
+      if (response.success && response.data) {
+        setRooms(response.data)
+      } else {
+        setError(response.message || 'Failed to fetch meeting rooms')
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred while fetching meeting rooms')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const fetchBookings = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await meetingRoomService.getBookings()
+      if (response.success && response.data) {
+        setBookings(response.data)
+      } else {
+        setError(response.message || 'Failed to fetch bookings')
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred while fetching bookings')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const createBooking = useCallback(async (data: CreateBookingData) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await meetingRoomService.createBooking(data)
+      if (response.success) {
+        await fetchBookings()
+        return response.data
+      } else {
+        setError(response.message || 'Failed to create booking')
+        return null
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred while creating booking')
+      return null
+    } finally {
+      setLoading(false)
+    }
+  }, [fetchBookings])
+
+  useEffect(() => {
+    if (autoFetch) {
+      fetchRooms()
+      fetchBookings()
+    }
+  }, [autoFetch, fetchRooms, fetchBookings])
+
+  return {
+    rooms,
+    bookings,
+    loading,
+    error,
+    fetchRooms,
+    fetchBookings,
+    createBooking
+  }
+}

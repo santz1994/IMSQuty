@@ -7,6 +7,7 @@ export interface User {
   first_name: string
   last_name: string
   role_id: number
+  role_name?: string
   department?: string
   team?: string
   is_active: boolean

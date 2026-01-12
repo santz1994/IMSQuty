@@ -224,6 +224,42 @@ class MeetingRoomService extends BaseService {
       return this.transformError(error)
     }
   }
+
+  /**
+   * Approve booking (admin/manager)
+   */
+  async approveBooking(bookingId: number): Promise<ServiceResponse<Booking>> {
+    try {
+      const response = await this.post<Booking>(`/bookings/${bookingId}/approve`, {})
+      return response
+    } catch (error) {
+      return this.transformError(error)
+    }
+  }
+
+  /**
+   * Reject booking (admin/manager)
+   */
+  async rejectBooking(bookingId: number, reason?: string): Promise<ServiceResponse<Booking>> {
+    try {
+      const response = await this.post<Booking>(`/bookings/${bookingId}/reject`, { reason })
+      return response
+    } catch (error) {
+      return this.transformError(error)
+    }
+  }
+
+  /**
+   * Request reschedule
+   */
+  async rescheduleBooking(bookingId: number, data: { start_time: string; end_time: string; reason?: string }): Promise<ServiceResponse<Booking>> {
+    try {
+      const response = await this.post<Booking>(`/bookings/${bookingId}/reschedule`, data)
+      return response
+    } catch (error) {
+      return this.transformError(error)
+    }
+  }
 }
 
 // Export singleton instance

@@ -15,17 +15,17 @@ import {
 } from '@mui/material'
 import React, { useEffect, useMemo } from 'react'
 import {
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
+  CartesianGrid,
   Cell,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
 } from 'recharts'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { fetchUsers } from '../store/slices/userSlice'
@@ -46,7 +46,7 @@ const AdminDashboard: React.FC = () => {
       const date = new Date(today)
       date.setDate(date.getDate() - i)
       const dateStr = date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' })
-      
+
       // Count users created on this day (mock data - in production use real created_at)
       const count = Math.floor(Math.random() * 10) + 5
       data.push({
@@ -64,7 +64,7 @@ const AdminDashboard: React.FC = () => {
       const role = user.role_name || 'Unknown'
       roleCounts[role] = (roleCounts[role] || 0) + 1
     })
-    
+
     return Object.entries(roleCounts).map(([name, value]) => ({
       name,
       value,

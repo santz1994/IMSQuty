@@ -24,7 +24,7 @@ Write-Host "[OK] Environment file exists" -ForegroundColor Green
 Write-Host ""
 
 Write-Host "Step 2: Stopping existing containers..." -ForegroundColor Yellow
-docker-compose down -v 2>&1 | Out-Null
+docker compose down -v 2>&1 | Out-Null
 Write-Host "[OK] Containers stopped" -ForegroundColor Green
 Write-Host ""
 
@@ -34,7 +34,7 @@ Write-Host ""
 
 Write-Host "Step 4: Building Docker images..." -ForegroundColor Yellow
 Write-Host "This may take 10-15 minutes on first run..." -ForegroundColor Gray
-docker-compose build --parallel
+docker compose build --parallel
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[ERROR] Image build failed!" -ForegroundColor Red
     exit 1
@@ -43,16 +43,22 @@ Write-Host "[OK] All images built successfully" -ForegroundColor Green
 Write-Host ""
 
 Write-Host "Step 5: Starting infrastructure services..." -ForegroundColor Yellow
-docker-compose up -d mysql redis rabbitmq minio mailhog
+docker compose up -d mysql redis rabbitmq minio mailhog
 Write-Host "Waiting 30 seconds for infrastructure to be ready..." -ForegroundColor Gray
 Start-Sleep -Seconds 30
 
 $infrastructureServices = @("mysql", "redis", "rabbitmq", "minio", "mailhog")
 foreach ($service in $infrastructureServices) {
-    $health = docker inspect --format='{{.State.Health.Status}}' "imsquty-$service" 2>$null
+    # Try to get health status first, if not available get general status
+    $health = docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}no-healthcheck{{end}}' "imsquty-$service" 2>$null
     if ($health -eq "healthy" -or $health -eq "starting") {
         Write-Host "[OK] $service is $health" -ForegroundColor Green
-    } else {
+    }
+    elseif ($health -eq "no-healthcheck") {
+        $status = docker inspect --format='{{.State.Status}}' "imsquty-$service" 2>$null
+        Write-Host "[OK] $service is $status (no healthcheck)" -ForegroundColor Green
+    }
+    else {
         $status = docker inspect --format='{{.State.Status}}' "imsquty-$service" 2>$null
         Write-Host "[OK] $service is $status" -ForegroundColor Green
     }
@@ -60,23 +66,24 @@ foreach ($service in $infrastructureServices) {
 Write-Host ""
 
 Write-Host "Step 6: Running database migrations..." -ForegroundColor Yellow
-docker-compose exec -T mysql mysql -uroot -pimsquty112233 -e "SHOW DATABASES;" 2>$null | Out-Null
+docker compose exec -T mysql mysql -uroot -pimsquty112233 -e "SHOW DATABASES;" 2>$null | Out-Null
 if ($LASTEXITCODE -eq 0) {
     Write-Host "[OK] Database is accessible" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "[WARN] Database check failed, but continuing..." -ForegroundColor Yellow
 }
 Write-Host ""
 
 Write-Host "Step 7: Starting microservices..." -ForegroundColor Yellow
-docker-compose up -d
+docker compose up -d
 Write-Host "Waiting 20 seconds for services to start..." -ForegroundColor Gray
 Start-Sleep -Seconds 20
 Write-Host "[OK] All services started" -ForegroundColor Green
 Write-Host ""
 
 Write-Host "Step 8: Checking service status..." -ForegroundColor Yellow
-$services = docker-compose ps --services
+$services = docker compose ps --services
 $runningCount = 0
 $totalCount = 0
 
@@ -86,7 +93,8 @@ foreach ($service in $services) {
     if ($status -eq "running") {
         Write-Host "[OK] $service - Running" -ForegroundColor Green
         $runningCount++
-    } else {
+    }
+    else {
         Write-Host "[FAIL] $service - $status" -ForegroundColor Red
     }
 }
@@ -118,17 +126,18 @@ Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "Useful Commands:" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  View logs:         docker-compose logs -f" -ForegroundColor White
-Write-Host "  View specific:     docker-compose logs -f auth-service" -ForegroundColor White
-Write-Host "  Stop all:          docker-compose down" -ForegroundColor White
-Write-Host "  Restart service:   docker-compose restart auth-service" -ForegroundColor White
-Write-Host "  Check status:      docker-compose ps" -ForegroundColor White
+Write-Host "  View logs:         docker compose logs -f" -ForegroundColor White
+Write-Host "  View specific:     docker compose logs -f auth-service" -ForegroundColor White
+Write-Host "  Stop all:          docker compose down" -ForegroundColor White
+Write-Host "  Restart service:   docker compose restart auth-service" -ForegroundColor White
+Write-Host "  Check status:      docker compose ps" -ForegroundColor White
 Write-Host ""
 
 if ($runningCount -eq $totalCount) {
     Write-Host "[SUCCESS] All services deployed successfully!" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "[WARNING] Some services failed to start. Check logs with:" -ForegroundColor Yellow
-    Write-Host "docker-compose logs" -ForegroundColor White
+    Write-Host "docker compose logs" -ForegroundColor White
 }
 Write-Host ""

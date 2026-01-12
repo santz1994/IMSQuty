@@ -1,8 +1,9 @@
 import { Box, CircularProgress } from '@mui/material'
 import React, { Suspense, lazy } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useParams } from 'react-router-dom'
 import DashboardLayout from './components/layouts/DashboardLayout'
 import Login from './pages/Login'
+import RoomLCDDisplay, { AllRoomsLCDDisplay } from './pages/MeetingRooms/RoomLCDDisplay'
 import { useAppSelector } from './store/hooks'
 
 // Lazy load all page components for better performance
@@ -19,6 +20,9 @@ const InventoryList = lazy(() => import('./pages/Inventory/InventoryList'))
 const FinancialList = lazy(() => import('./pages/Financial/FinancialList'))
 const NotificationsList = lazy(() => import('./pages/Notifications/NotificationsList'))
 const MeetingRoomsList = lazy(() => import('./pages/MeetingRooms/MeetingRoomsList'))
+const BookingCalendar = lazy(() => import('./pages/MeetingRooms/BookingCalendar'))
+const BookingApprovals = lazy(() => import('./pages/MeetingRooms/BookingApprovals'))
+const ReceptionistPanel = lazy(() => import('./pages/MeetingRooms/ReceptionistPanel'))
 const AuditLogsList = lazy(() => import('./pages/AuditLogs/AuditLogsList'))
 const SettingsPage = lazy(() => import('./pages/Settings/SettingsPage'))
 
@@ -59,6 +63,12 @@ const ProtectedDashboardRoute: React.FC<{ children: React.ReactNode }> = ({
     <DashboardLayout>{children}</DashboardLayout>
   </ProtectedRoute>
 )
+
+// Wrapper component for LCD display with roomId from URL params
+const RoomLCDDisplayWrapper: React.FC = () => {
+  const { roomId } = useParams<{ roomId: string }>()
+  return <RoomLCDDisplay roomId={Number(roomId)} />
+}
 
 function App() {
   const { isAuthenticated } = useAppSelector((state) => state.auth)
@@ -167,6 +177,52 @@ function App() {
             <ProtectedDashboardRoute>
               <MeetingRoomsList />
             </ProtectedDashboardRoute>
+          }
+        />
+
+        <Route
+          path="/meeting-rooms/calendar"
+          element={
+            <ProtectedDashboardRoute>
+              <BookingCalendar />
+            </ProtectedDashboardRoute>
+          }
+        />
+
+        <Route
+          path="/meeting-rooms/approvals"
+          element={
+            <ProtectedDashboardRoute>
+              <BookingApprovals />
+            </ProtectedDashboardRoute>
+          }
+        />
+
+        <Route
+          path="/meeting-rooms/receptionist"
+          element={
+            <ProtectedDashboardRoute>
+              <ReceptionistPanel />
+            </ProtectedDashboardRoute>
+          }
+        />
+
+        {/* LCD Display routes - fullscreen without navigation */}
+        <Route
+          path="/meeting-rooms/display/:roomId"
+          element={
+            <ProtectedRoute>
+              <RoomLCDDisplayWrapper />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/meeting-rooms/display-all"
+          element={
+            <ProtectedRoute>
+              <AllRoomsLCDDisplay />
+            </ProtectedRoute>
           }
         />
 
