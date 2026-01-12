@@ -318,18 +318,20 @@ const RolesPermissions: React.FC = () => {
                         <SecurityIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title="Delete Role">
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => {
-                          setDeletingRole(role)
-                          setOpenDeleteDialog(true)
-                        }}
-                        disabled={role.name === 'superadmin'} // Prevent deleting superadmin
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
+                    <Tooltip title={role.name === 'superadmin' ? 'Cannot delete system role' : 'Delete Role'}>
+                      <span>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => {
+                            setDeletingRole(role)
+                            setOpenDeleteDialog(true)
+                          }}
+                          disabled={role.name === 'superadmin'} // Prevent deleting superadmin
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </span>
                     </Tooltip>
                   </TableCell>
                 </TableRow>

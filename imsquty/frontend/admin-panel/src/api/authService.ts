@@ -16,7 +16,8 @@ export interface LoginRequest {
 export interface LoginResponse {
   success: boolean
   data: {
-    token: string
+    access_token: string
+    refresh_token: string
     user: User
   }
   message: string
@@ -28,8 +29,8 @@ class AuthService {
       email,
       password,
     })
-    if (response.data.data.token) {
-      localStorage.setItem('token', response.data.data.token)
+    if (response.data.data.access_token) {
+      localStorage.setItem('token', response.data.data.access_token)
       localStorage.setItem('user', JSON.stringify(response.data.data.user))
     }
     return response.data

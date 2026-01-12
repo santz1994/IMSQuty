@@ -150,17 +150,16 @@ class UserRepository extends BaseRepository
      * Restore soft-deleted user by ID
      * 
      * @param int $id
-     * @return User|null
+     * @return bool
      */
-    public function restore(int $id): ?User
+    public function restore(int $id): bool
     {
         $user = User::withTrashed()->find($id);
         
         if ($user && $user->trashed()) {
-            parent::restore($id);
-            return $user->fresh(['roles', 'permissions']);
+            return parent::restore($id);
         }
         
-        return null;
+        return false;
     }
 }

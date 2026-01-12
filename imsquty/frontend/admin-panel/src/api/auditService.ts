@@ -116,7 +116,7 @@ export const getAuditLogs = async (
   filters: AuditLogFilters = {}
 ): Promise<ApiResponse<AuditLogsResponse>> => {
   try {
-    const response = await client.get('/api/audit/logs', {
+    const response = await client.get('/audit/logs', {
       params: filters,
     });
     return response.data;
@@ -135,7 +135,7 @@ export const getAuditLogById = async (
   id: number
 ): Promise<ApiResponse<AuditLog>> => {
   try {
-    const response = await client.get(`/api/audit/logs/${id}`);
+    const response = await client.get(`/audit/logs/${id}`);
     return response.data;
   } catch (error: any) {
     throw new Error(error.response?.data?.message || 'Failed to fetch audit log details');
@@ -152,7 +152,7 @@ export const exportAuditLogs = async (
   exportRequest: ExportRequest
 ): Promise<Blob> => {
   try {
-    const response = await client.post('/api/audit/logs/export', exportRequest, {
+    const response = await client.post('/audit/logs/export', exportRequest, {
       responseType: 'blob', // Important for file download
     });
     return response.data;
@@ -168,7 +168,7 @@ export const exportAuditLogs = async (
  */
 export const getAuditStatistics = async (): Promise<ApiResponse<AuditStatistics>> => {
   try {
-    const response = await client.get('/api/audit/statistics');
+    const response = await client.get('/audit/statistics');
     return response.data;
   } catch (error: any) {
     throw new Error(error.response?.data?.message || 'Failed to fetch audit statistics');
@@ -182,7 +182,7 @@ export const getAuditStatistics = async (): Promise<ApiResponse<AuditStatistics>
  */
 export const getAvailableActions = async (): Promise<ApiResponse<string[]>> => {
   try {
-    const response = await client.get('/api/audit/actions');
+    const response = await client.get('/audit/actions');
     return response.data;
   } catch (error: any) {
     throw new Error(error.response?.data?.message || 'Failed to fetch available actions');
@@ -196,7 +196,7 @@ export const getAvailableActions = async (): Promise<ApiResponse<string[]>> => {
  */
 export const getAvailableModules = async (): Promise<ApiResponse<string[]>> => {
   try {
-    const response = await client.get('/api/audit/modules');
+    const response = await client.get('/audit/modules');
     return response.data;
   } catch (error: any) {
     throw new Error(error.response?.data?.message || 'Failed to fetch available modules');
@@ -213,7 +213,7 @@ export const purgeOldLogs = async (
   daysToKeep: number
 ): Promise<ApiResponse<{ deleted_count: number }>> => {
   try {
-    const response = await client.post('/api/audit/logs/purge', { days_to_keep: daysToKeep });
+    const response = await client.post('/audit/logs/purge', { days_to_keep: daysToKeep });
     return response.data;
   } catch (error: any) {
     throw new Error(error.response?.data?.message || 'Failed to purge old logs');

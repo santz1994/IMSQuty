@@ -36,16 +36,12 @@ class UserController extends Controller
         
         $users = $this->userService->getAllUsers($filters, $perPage);
         
-        return $this->paginatedResponse(
-            [
-                'data' => UserResource::collection($users->items()),
-                'current_page' => $users->currentPage(),
-                'total' => $users->total(),
-                'per_page' => $users->perPage(),
-                'last_page' => $users->lastPage(),
-            ],
-            'Users retrieved successfully'
-        );
+        // Transform paginated users with UserResource
+        $users->getCollection()->transform(function ($user) {
+            return new UserResource($user);
+        });
+        
+        return $this->paginatedResponse($users, 'Users retrieved successfully');
     }
 
     /**

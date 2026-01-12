@@ -27,8 +27,8 @@ WORKDIR /var/www/html
 # Copy composer files
 COPY services/user-service/composer.json services/user-service/composer.lock ./
 
-# Copy shared folder (needed for autoload)
-COPY shared /var/www/shared
+# Copy shared folder to the application directory (needed for autoload)
+COPY shared ./shared
 
 # Install dependencies
 RUN composer install --no-scripts --no-autoloader --prefer-dist --no-dev

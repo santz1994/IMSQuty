@@ -50,7 +50,7 @@ class RoleService {
    * Get all roles
    */
   async getAllRoles(): Promise<ApiResponse<Role[]>> {
-    const response = await client.get<ApiResponse<Role[]>>('/auth/roles')
+    const response = await client.get<ApiResponse<Role[]>>('/roles')
     return response.data
   }
 
@@ -59,7 +59,7 @@ class RoleService {
    */
   async getRoleById(id: number): Promise<ApiResponse<RoleWithPermissions>> {
     const response = await client.get<ApiResponse<RoleWithPermissions>>(
-      `/auth/roles/${id}`
+      `/roles/${id}`
     )
     return response.data
   }
@@ -68,7 +68,7 @@ class RoleService {
    * Create new role
    */
   async createRole(data: CreateRoleRequest): Promise<ApiResponse<Role>> {
-    const response = await client.post<ApiResponse<Role>>('/auth/roles', data)
+    const response = await client.post<ApiResponse<Role>>('/roles', data)
     return response.data
   }
 
@@ -80,7 +80,7 @@ class RoleService {
     data: UpdateRoleRequest
   ): Promise<ApiResponse<Role>> {
     const response = await client.put<ApiResponse<Role>>(
-      `/auth/roles/${id}`,
+      `/roles/${id}`,
       data
     )
     return response.data
@@ -90,7 +90,7 @@ class RoleService {
    * Delete role
    */
   async deleteRole(id: number): Promise<ApiResponse<null>> {
-    const response = await client.delete<ApiResponse<null>>(`/auth/roles/${id}`)
+    const response = await client.delete<ApiResponse<null>>(`/roles/${id}`)
     return response.data
   }
 
@@ -99,7 +99,7 @@ class RoleService {
    */
   async getAllPermissions(): Promise<ApiResponse<Permission[]>> {
     const response = await client.get<ApiResponse<Permission[]>>(
-      '/auth/permissions'
+      '/permissions'
     )
     return response.data
   }
@@ -112,7 +112,7 @@ class RoleService {
     permissionIds: number[]
   ): Promise<ApiResponse<null>> {
     const response = await client.post<ApiResponse<null>>(
-      `/auth/roles/${roleId}/permissions`,
+      `/roles/${roleId}/permissions`,
       { permission_ids: permissionIds }
     )
     return response.data
@@ -126,7 +126,7 @@ class RoleService {
     permissionId: number
   ): Promise<ApiResponse<null>> {
     const response = await client.delete<ApiResponse<null>>(
-      `/auth/roles/${roleId}/permissions/${permissionId}`
+      `/roles/${roleId}/permissions/${permissionId}`
     )
     return response.data
   }
@@ -136,7 +136,7 @@ class RoleService {
    */
   async getPermissionsByModule(): Promise<ApiResponse<Record<string, Permission[]>>> {
     const response = await client.get<ApiResponse<Permission[]>>(
-      '/auth/permissions'
+      '/permissions'
     )
 
     // Group permissions by module

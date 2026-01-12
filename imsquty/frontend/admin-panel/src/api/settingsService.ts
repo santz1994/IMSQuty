@@ -114,7 +114,7 @@ class SettingsService {
    * Get all system settings
    */
   async getAllSettings(): Promise<ApiResponse<AllSettings>> {
-    const response = await client.get<ApiResponse<AllSettings>>('/api/settings')
+    const response = await client.get<ApiResponse<AllSettings>>('/settings')
     return response.data
   }
 
@@ -122,7 +122,7 @@ class SettingsService {
    * Get settings by category
    */
   async getSettingsByCategory(category: string): Promise<ApiResponse<any>> {
-    const response = await client.get<ApiResponse<any>>(`/api/settings/${category}`)
+    const response = await client.get<ApiResponse<any>>(`/settings/${category}`)
     return response.data
   }
 
@@ -138,7 +138,7 @@ class SettingsService {
    * Test email configuration
    */
   async testEmailSettings(emailSettings: Partial<EmailSettings>): Promise<ApiResponse<{ message: string }>> {
-    const response = await client.post<ApiResponse<{ message: string }>>('/api/settings/email/test', emailSettings)
+    const response = await client.post<ApiResponse<{ message: string }>>('/settings/email/test', emailSettings)
     return response.data
   }
 
@@ -146,7 +146,7 @@ class SettingsService {
    * Test storage connection (MinIO)
    */
   async testStorageSettings(storageSettings: Partial<StorageSettings>): Promise<ApiResponse<{ message: string }>> {
-    const response = await client.post<ApiResponse<{ message: string }>>('/api/settings/storage/test', storageSettings)
+    const response = await client.post<ApiResponse<{ message: string }>>('/settings/storage/test', storageSettings)
     return response.data
   }
 
@@ -154,7 +154,7 @@ class SettingsService {
    * Get queue statistics
    */
   async getQueueStats(): Promise<ApiResponse<QueueStats>> {
-    const response = await client.get<ApiResponse<QueueStats>>('/api/settings/queue/stats')
+    const response = await client.get<ApiResponse<QueueStats>>('/settings/queue/stats')
     return response.data
   }
 
@@ -162,7 +162,7 @@ class SettingsService {
    * Clear failed queue jobs
    */
   async clearFailedJobs(): Promise<ApiResponse<{ message: string, cleared_count: number }>> {
-    const response = await client.post<ApiResponse<{ message: string, cleared_count: number }>>('/api/settings/queue/clear-failed')
+    const response = await client.post<ApiResponse<{ message: string, cleared_count: number }>>('/settings/queue/clear-failed')
     return response.data
   }
 
@@ -170,7 +170,7 @@ class SettingsService {
    * Get cache statistics
    */
   async getCacheStats(): Promise<ApiResponse<CacheStats>> {
-    const response = await client.get<ApiResponse<CacheStats>>('/api/settings/cache/stats')
+    const response = await client.get<ApiResponse<CacheStats>>('/settings/cache/stats')
     return response.data
   }
 
@@ -178,7 +178,7 @@ class SettingsService {
    * Clear all cache
    */
   async clearCache(): Promise<ApiResponse<{ message: string }>> {
-    const response = await client.post<ApiResponse<{ message: string }>>('/api/settings/cache/clear')
+    const response = await client.post<ApiResponse<{ message: string }>>('/settings/cache/clear')
     return response.data
   }
 
@@ -186,7 +186,7 @@ class SettingsService {
    * Flush specific cache keys by pattern
    */
   async flushCacheByPattern(pattern: string): Promise<ApiResponse<{ message: string, flushed_count: number }>> {
-    const response = await client.post<ApiResponse<{ message: string, flushed_count: number }>>('/api/settings/cache/flush', { pattern })
+    const response = await client.post<ApiResponse<{ message: string, flushed_count: number }>>('/settings/cache/flush', { pattern })
     return response.data
   }
 

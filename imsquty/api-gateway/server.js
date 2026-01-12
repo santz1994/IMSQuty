@@ -113,11 +113,14 @@ const authenticateJWT = (req, res, next) => {
   const token = authHeader.substring(7);
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key-change-in-production');
+    const jwtSecret = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+    logger.info(`Using JWT_SECRET: ${jwtSecret.substring(0, 10)}...`);
+    const decoded = jwt.verify(token, jwtSecret);
     req.user = decoded;
     next();
   } catch (error) {
     logger.error('JWT verification failed:', error.message);
+    logger.error('Error details:', error);
     return res.status(401).json({
       success: false,
       message: 'Invalid or expired token'
@@ -168,6 +171,12 @@ const proxyOptions = (target, serviceName, skipPathRewrite = false) => ({
       breaker.recordFailure();
       logger.warn(`Circuit breaker state for ${serviceName}: ${breaker.state}`);
     }
+
+    // Set CORS headers on error response
+    res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
 
     // Return standardized error response
     const statusCode = ErrorHandler.getStatusCode(err);
@@ -262,31 +271,35 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // User Service - UPDATED with dynamic service resolution
-app.use('/api/v1/users', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('user-service'), 'user')));
+app.use('/api/v1/users', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('user-service'), 'user', true)));
+
+// Roles & Permissions (part of user-service)
+app.use('/api/v1/roles', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('user-service'), 'user', true)));
+app.use('/api/v1/permissions', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('user-service'), 'user', true)));
 
 // Asset Service - UPDATED with dynamic service resolution
-app.use('/api/v1/assets', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('asset-service'), 'asset')));
+app.use('/api/v1/assets', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('asset-service'), 'asset', true)));
 
 // Ticket Service - UPDATED with dynamic service resolution
-app.use('/api/v1/tickets', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('ticket-service'), 'ticket')));
+app.use('/api/v1/tickets', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('ticket-service'), 'ticket', true)));
 
 // Inventory Service - UPDATED with dynamic service resolution
-app.use('/api/v1/inventory', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('inventory-service'), 'inventory')));
+app.use('/api/v1/inventory', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('inventory-service'), 'inventory', true)));
 
 // Financial Service - UPDATED with stricter rate limiting for data export
-app.use('/api/v1/financial', authenticateJWT, exportLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('financial-service'), 'financial')));
+app.use('/api/v1/financial', authenticateJWT, exportLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('financial-service'), 'financial', true)));
 
 // Meeting Room Service - UPDATED with dynamic service resolution
-app.use('/api/v1/meeting-rooms', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('meeting-room-service'), 'meetingRoom')));
+app.use('/api/v1/meeting-rooms', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('meeting-room-service'), 'meetingRoom', true)));
 
 // Master Data Service - UPDATED with admin rate limiting
-app.use('/api/v1/master-data', authenticateJWT, adminLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('master-data-service'), 'masterData')));
+app.use('/api/v1/master-data', authenticateJWT, adminLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('master-data-service'), 'masterData', true)));
 
 // Reporting Service - UPDATED with export rate limiting
-app.use('/api/v1/reporting', authenticateJWT, exportLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('reporting-service'), 'reporting')));
+app.use('/api/v1/reporting', authenticateJWT, exportLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('reporting-service'), 'reporting', true)));
 
 // Notification Service - UPDATED with dynamic service resolution
-app.use('/api/v1/notifications', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('notification-service'), 'notification')));
+app.use('/api/v1/notifications', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('notification-service'), 'notification', true)));
 
 // ============================================
 // HEALTH CHECK ENDPOINT

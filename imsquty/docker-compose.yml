@@ -112,6 +112,7 @@ services:
       - "8000:8000"
     environment:
       - PORT=8000
+      - JWT_SECRET=${JWT_SECRET}
       - AUTH_SERVICE_URL=http://auth-service:8001
       - USER_SERVICE_URL=http://user-service:8002
       - ASSET_SERVICE_URL=http://asset-service:8003

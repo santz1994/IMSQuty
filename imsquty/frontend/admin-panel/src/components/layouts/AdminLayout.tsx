@@ -23,7 +23,7 @@ interface AdminLayoutProps {
 }
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
-  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(true)
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
@@ -106,11 +106,18 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         </Toolbar>
       </AppBar>
 
+      {/* Collapsible drawer */}
       <Drawer
-        anchor="left"
+        variant="temporary"
         open={drawerOpen}
         onClose={handleDrawerToggle}
-        sx={{ display: { xs: 'block', sm: 'none' } }}
+        sx={{
+          width: 250,
+          '& .MuiDrawer-paper': {
+            width: 250,
+            pt: '64px',
+          },
+        }}
       >
         {drawer}
       </Drawer>
@@ -119,7 +126,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         sx={{
           flexGrow: 1,
           pt: 8,
-          pl: { xs: 0, sm: 0 },
           backgroundColor: '#f5f5f5',
           minHeight: '100vh',
         }}

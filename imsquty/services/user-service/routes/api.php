@@ -5,6 +5,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\UserBulkController;
 use App\Http\Controllers\MetricsController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\PermissionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,8 +34,8 @@ Route::prefix('v1')->group(function () {
         ]);
     });
 
-    // User management endpoints (require authentication)
-    Route::middleware('auth:sanctum')->group(function () {
+    // User management endpoints (API Gateway handles authentication)
+    // Route::middleware('auth:sanctum')->group(function () {
         
         // User CRUD
         Route::prefix('users')->group(function () {
@@ -46,6 +48,10 @@ Route::prefix('v1')->group(function () {
             Route::post('/{user}/roles', [UserController::class, 'assignRoles']);
             Route::get('/{user}/permissions', [UserController::class, 'permissions']);
         });
+        
+        // Roles & Permissions
+        Route::apiResource('roles', RoleController::class);
+        Route::apiResource('permissions', PermissionController::class)->only(['index', 'show']);
         
         // User Profile Management
         Route::prefix('users/{user}/profile')->group(function () {
@@ -67,5 +73,5 @@ Route::prefix('v1')->group(function () {
             Route::post('/delete', [UserBulkController::class, 'bulkDelete']);
             Route::post('/assign-roles', [UserBulkController::class, 'bulkAssignRoles']);
         });
-    });
+    // }); // End of auth:sanctum middleware - commented out since API Gateway handles auth
 });
