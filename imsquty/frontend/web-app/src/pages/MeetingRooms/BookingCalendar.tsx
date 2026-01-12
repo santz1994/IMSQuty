@@ -2,12 +2,11 @@ import {
   Add as AddIcon,
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
-  Event as EventIcon,
   Refresh as RefreshIcon,
   Today as TodayIcon,
   ViewDay as ViewDayIcon,
   ViewModule as ViewModuleIcon,
-  ViewWeek as ViewWeekIcon,
+  ViewWeek as ViewWeekIcon
 } from '@mui/icons-material'
 import {
   Alert,
@@ -30,9 +29,9 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material'
-import React, { useCallback, useEffect, useState } from 'react'
-import { useMeetingRooms, useBookings } from '../../hooks/useMeetingRooms'
-import { Booking, MeetingRoom } from '../../services/MeetingRoomService'
+import React, { useCallback, useState } from 'react'
+import { useBookings, useMeetingRooms } from '../../hooks/useMeetingRooms'
+import { Booking } from '../../services/MeetingRoomService'
 import BookingDialog from './BookingDialog'
 
 type ViewMode = 'day' | 'week' | 'month'
