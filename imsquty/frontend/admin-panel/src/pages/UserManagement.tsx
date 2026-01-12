@@ -222,10 +222,10 @@ const UserManagement: React.FC = () => {
         last_name: currentUser.last_name,
         password: '',
         password_confirmation: '',
-        role_id: currentUser.role_id,
+        role_id: currentUser.roles?.[0]?.id || 0,
         department: currentUser.department || '',
         team: currentUser.team || '',
-        is_active: currentUser.is_active,
+        is_active: currentUser.status === 'active',
       })
     }
   }, [currentUser, dialogMode])
@@ -360,7 +360,7 @@ const UserManagement: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={getRoleName(user.role_id)}
+                          label={user.roles?.[0]?.display_name || user.roles?.[0]?.name || 'No Role'}
                           size="small"
                           color="primary"
                           variant="outlined"
@@ -368,8 +368,10 @@ const UserManagement: React.FC = () => {
                       </TableCell>
                       <TableCell>{user.department || '-'}</TableCell>
                       <TableCell>
-                        {user.is_active ? (
+                        {user.status === 'active' ? (
                           <Chip label="Active" size="small" color="success" />
+                        ) : user.status === 'suspended' ? (
+                          <Chip label="Suspended" size="small" color="warning" />
                         ) : (
                           <Chip label="Inactive" size="small" color="error" />
                         )}

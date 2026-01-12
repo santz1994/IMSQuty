@@ -28,7 +28,6 @@ import {
   XAxis,
   YAxis
 } from 'recharts'
-import { getErrorMessage } from '../../api/client'
 import { dashboardService } from '../../api/dashboardService'
 import { useRole } from '../../context/RoleContext'
 
@@ -72,7 +71,7 @@ const ManagerDashboard: React.FC = () => {
       setPendingApprovals(approvals)
       setError(null)
     } catch (err) {
-      setError(getErrorMessage(err))
+      setError(err instanceof Error ? err.message : 'Failed to load dashboard data')
     } finally {
       setLoading(false)
     }

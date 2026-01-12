@@ -14,8 +14,7 @@ import {
   ListItemText,
   Paper,
   Stack,
-  Typography,
-  useTheme
+  Typography
 } from '@mui/material'
 import React, { useEffect, useState } from 'react'
 import {
@@ -30,9 +29,9 @@ import {
   XAxis,
   YAxis
 } from 'recharts'
-import { getErrorMessage } from '../../api/client'
 import { dashboardService } from '../../api/dashboardService'
 import { useRole } from '../../context/RoleContext'
+const theme = { palette: { background: { default: '#f5f5f5' }, primary: { main: '#1976d2', contrastText: '#fff' }, text: { secondary: '#666', primary: '#000' } } }
 
 /**
  * HR (Human Resources) Dashboard
@@ -66,7 +65,7 @@ const HRDashboard: React.FC = () => {
       setHRMetrics(metrics)
       setError(null)
     } catch (err) {
-      setError(getErrorMessage(err))
+      setError(err instanceof Error ? err.message : 'Failed to fetch HR metrics')
     } finally {
       setLoading(false)
     }

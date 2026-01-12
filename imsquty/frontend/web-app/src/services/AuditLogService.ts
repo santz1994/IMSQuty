@@ -196,8 +196,9 @@ class AuditLogService extends BaseService {
   async exportAuditLogs(format: 'csv' | 'excel' | 'json' = 'excel', filters?: AuditLogFilters): Promise<Blob> {
     try {
       const params = { ...filters, format }
-      const response = await this.downloadFile('/export', params)
-      return response
+      // const response = await this.downloadFile('/export', params)
+      // return response
+      throw new Error('Export functionality not implemented')
     } catch (error) {
       throw error
     }
@@ -247,9 +248,7 @@ class AuditLogService extends BaseService {
    */
   async deleteOldLogs(olderThan: string): Promise<ServiceResponse<{ deleted: number }>> {
     try {
-      const response = await this.delete<{ deleted: number }>('/cleanup', {
-        older_than: olderThan
-      })
+      const response = await this.delete<{ deleted: number }>(`/cleanup?older_than=${olderThan}`)
       return response
     } catch (error) {
       return this.transformError(error)

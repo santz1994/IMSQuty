@@ -4,21 +4,22 @@
  */
 
 import {
-    Remove,
-    TrendingDown,
-    TrendingUp
+  Remove,
+  TrendingDown,
+  TrendingUp
 } from '@mui/icons-material'
 import {
-    Box,
-    Card,
-    CardContent,
-    Chip,
-    Grid,
-    LinearProgress,
-    Typography,
-    useTheme
+  Box,
+  Card,
+  CardContent,
+  Chip,
+  Grid,
+  LinearProgress,
+  Typography,
+  useTheme
 } from '@mui/material'
 import React from 'react'
+import { formatDateTimeID } from '../../utils/dateTimeFormat'
 
 interface StatCardProps {
   title: string

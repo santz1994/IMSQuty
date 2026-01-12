@@ -14,7 +14,6 @@ const AssetDetail = lazy(() => import('./pages/Assets/AssetDetail'))
 const TicketList = lazy(() => import('./pages/Tickets/TicketList'))
 const TicketCreate = lazy(() => import('./pages/Tickets/TicketCreate'))
 const TicketDetail = lazy(() => import('./pages/Tickets/TicketDetail'))
-const UsersList = lazy(() => import('./pages/Users/UsersList'))
 const ReportsList = lazy(() => import('./pages/Reports/ReportsList'))
 const InventoryList = lazy(() => import('./pages/Inventory/InventoryList'))
 const FinancialList = lazy(() => import('./pages/Financial/FinancialList'))
@@ -25,6 +24,15 @@ const BookingApprovals = lazy(() => import('./pages/MeetingRooms/BookingApproval
 const ReceptionistPanel = lazy(() => import('./pages/MeetingRooms/ReceptionistPanel'))
 const AuditLogsList = lazy(() => import('./pages/AuditLogs/AuditLogsList'))
 const SettingsPage = lazy(() => import('./pages/Settings/SettingsPage'))
+
+// Role-based dashboards
+const SuperAdminDashboard = lazy(() => import('./pages/SuperAdmin/SuperAdminDashboard'))
+const AdminDashboard = lazy(() => import('./pages/Admin/AdminDashboard'))
+const DirectorDashboard = lazy(() => import('./pages/Director/DirectorDashboard'))
+const ManagerDashboard = lazy(() => import('./pages/Manager/ManagerDashboard'))
+const HRDashboard = lazy(() => import('./pages/HR/HRDashboard'))
+const UserDashboard = lazy(() => import('./pages/User/UserDashboard'))
+const KPIDashboard = lazy(() => import('./pages/KPI/KPIDashboard'))
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -236,15 +244,6 @@ function App() {
         />
 
         <Route
-          path="/users"
-          element={
-            <ProtectedDashboardRoute>
-              <UsersList />
-            </ProtectedDashboardRoute>
-          }
-        />
-
-        <Route
           path="/audit-logs"
           element={
             <ProtectedDashboardRoute>
@@ -258,6 +257,70 @@ function App() {
           element={
             <ProtectedDashboardRoute>
               <SettingsPage />
+            </ProtectedDashboardRoute>
+          }
+        />
+
+        {/* Role-based dashboard routes */}
+        <Route
+          path="/dashboard/superadmin"
+          element={
+            <ProtectedDashboardRoute>
+              <SuperAdminDashboard />
+            </ProtectedDashboardRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/admin"
+          element={
+            <ProtectedDashboardRoute>
+              <AdminDashboard />
+            </ProtectedDashboardRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/director"
+          element={
+            <ProtectedDashboardRoute>
+              <DirectorDashboard />
+            </ProtectedDashboardRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/manager"
+          element={
+            <ProtectedDashboardRoute>
+              <ManagerDashboard />
+            </ProtectedDashboardRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/hr"
+          element={
+            <ProtectedDashboardRoute>
+              <HRDashboard />
+            </ProtectedDashboardRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/user"
+          element={
+            <ProtectedDashboardRoute>
+              <UserDashboard />
+            </ProtectedDashboardRoute>
+          }
+        />
+
+        <Route
+          path="/kpi"
+          element={
+            <ProtectedDashboardRoute>
+              <KPIDashboard />
             </ProtectedDashboardRoute>
           }
         />

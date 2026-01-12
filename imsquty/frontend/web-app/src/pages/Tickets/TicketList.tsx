@@ -39,8 +39,9 @@ interface Ticket {
   due_date: string
 }
 
-const priorityColor = (priority: Ticket['priority']): any => {
+const priorityColor = (priority: string): any => {
   switch (priority) {
+    case 'urgent': return 'error'
     case 'high': return 'error'
     case 'medium': return 'warning'
     case 'low': return 'success'
@@ -48,10 +49,11 @@ const priorityColor = (priority: Ticket['priority']): any => {
   }
 }
 
-const statusColor = (status: Ticket['status']): any => {
+const statusColor = (status: string): any => {
   switch (status) {
     case 'open': return 'error'
     case 'in_progress': return 'info'
+    case 'pending': return 'warning'
     case 'resolved': return 'success'
     case 'closed': return 'default'
     default: return 'default'
@@ -113,7 +115,7 @@ export default function TicketList() {
     setOpenDialog(true)
   }
 
-  const handleEditTicket = (ticket: Ticket) => {
+  const handleEditTicket = (ticket: any) => {
     setEditingTicket(ticket)
     setFormData({
       ticket_number: ticket.ticket_number,
@@ -233,8 +235,8 @@ export default function TicketList() {
                       size="small"
                     />
                   </TableCell>
-                  <TableCell>{ticket.created_by}</TableCell>
-                  <TableCell>{ticket.assigned_to || '-'}</TableCell>
+                  <TableCell>{(ticket as any).created_by || ticket.requester?.username || '-'}</TableCell>
+                  <TableCell>{ticket.assignedTo?.username || '-'}</TableCell>
                   <TableCell>{ticket.due_date}</TableCell>
                   <TableCell align="right">
                     <IconButton

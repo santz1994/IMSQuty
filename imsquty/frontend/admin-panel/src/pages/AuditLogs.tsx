@@ -418,7 +418,11 @@ const AuditLogs: React.FC = () => {
                 <Typography color="text.secondary" gutterBottom>
                   Total Logs
                 </Typography>
-                <Typography variant="h4">{statistics.total_logs.toLocaleString()}</Typography>
+                <Typography variant="h4">
+                  {statistics?.total_logs !== undefined && statistics.total_logs !== null
+                    ? statistics.total_logs.toLocaleString()
+                    : '0'}
+                </Typography>
               </CardContent>
             </Card>
           </Grid>
@@ -428,7 +432,11 @@ const AuditLogs: React.FC = () => {
                 <Typography color="text.secondary" gutterBottom>
                   Logs Today
                 </Typography>
-                <Typography variant="h4">{statistics.logs_today.toLocaleString()}</Typography>
+                <Typography variant="h4">
+                  {statistics?.today_logs !== undefined && statistics.today_logs !== null
+                    ? statistics.today_logs.toLocaleString()
+                    : '0'}
+                </Typography>
               </CardContent>
             </Card>
           </Grid>
@@ -438,7 +446,11 @@ const AuditLogs: React.FC = () => {
                 <Typography color="text.secondary" gutterBottom>
                   Logs This Week
                 </Typography>
-                <Typography variant="h4">{statistics.logs_this_week.toLocaleString()}</Typography>
+                <Typography variant="h4">
+                  {statistics?.week_logs !== undefined && statistics.week_logs !== null
+                    ? statistics.week_logs.toLocaleString()
+                    : '0'}
+                </Typography>
               </CardContent>
             </Card>
           </Grid>
@@ -448,7 +460,11 @@ const AuditLogs: React.FC = () => {
                 <Typography color="text.secondary" gutterBottom>
                   Logs This Month
                 </Typography>
-                <Typography variant="h4">{statistics.logs_this_month.toLocaleString()}</Typography>
+                <Typography variant="h4">
+                  {statistics?.month_logs !== undefined && statistics.month_logs !== null
+                    ? statistics.month_logs.toLocaleString()
+                    : '0'}
+                </Typography>
               </CardContent>
             </Card>
           </Grid>

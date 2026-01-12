@@ -52,6 +52,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     { label: 'System Settings', path: '/admin/settings' },
     { label: 'Audit Logs', path: '/admin/audit-logs' },
     { label: 'Roles & Permissions', path: '/admin/roles' },
+    { label: 'Page Permissions', path: '/admin/page-permissions' },
   ]
 
   const drawer = (

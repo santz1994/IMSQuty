@@ -116,8 +116,8 @@ const ReportsList: React.FC = () => {
                 type="date"
                 fullWidth
                 InputLabelProps={{ shrink: true }}
-                value={formData.dateRange}
-                onChange={(e) => setFormData({ ...formData, dateRange: e.target.value })}
+                value={(formData as any).dateRange || ''}
+                onChange={(e) => setFormData({ ...formData, dateRange: e.target.value } as any)}
               />
             </Stack>
           </DialogContent>

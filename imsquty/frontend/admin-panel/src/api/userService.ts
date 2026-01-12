@@ -6,11 +6,27 @@ export interface User {
   username?: string
   first_name: string
   last_name: string
-  role_id: number
-  role_name?: string
+  full_name?: string
+  phone?: string
+  bio?: string
+  timezone?: string
+  language?: string
+  avatar_url?: string
+  status: 'active' | 'inactive' | 'suspended'
+  roles?: Array<{
+    id: number
+    name: string
+    display_name?: string
+  }>
+  permissions?: string[]
+  division?: {
+    id: number
+    name: string
+  }
   department?: string
   team?: string
-  is_active: boolean
+  email_verified_at?: string
+  last_login?: string
   created_at: string
   updated_at: string
 }

@@ -273,9 +273,16 @@ app.use(express.urlencoded({ extended: true }));
 // User Service - UPDATED with dynamic service resolution
 app.use('/api/v1/users', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('user-service'), 'user', true)));
 
-// Roles & Permissions (part of user-service)
-app.use('/api/v1/roles', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('user-service'), 'user', true)));
-app.use('/api/v1/permissions', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('user-service'), 'user', true)));
+// Roles & Permissions (part of auth-service NOT user-service)
+app.use('/api/v1/roles', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('auth-service'), 'auth', true)));
+app.use('/api/v1/permissions', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('auth-service'), 'auth', true)));
+app.use('/api/v1/page-permissions', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('auth-service'), 'auth', true)));
+
+// Settings (part of user-service)
+app.use('/api/v1/settings', authenticateJWT, adminLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('user-service'), 'user', true)));
+
+// Audit Logs (part of user-service)
+app.use('/api/v1/audit', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('user-service'), 'user', true)));
 
 // Asset Service - UPDATED with dynamic service resolution
 app.use('/api/v1/assets', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('asset-service'), 'asset', true)));

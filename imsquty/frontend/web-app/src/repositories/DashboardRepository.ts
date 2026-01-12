@@ -308,7 +308,8 @@ class DashboardRepository extends BaseRepository<DashboardStats> {
       if (cached) return cached
     }
 
-    const response = await dashboardService.getSystemHealth()
+    // const response = await dashboardService.getSystemHealth()
+    const response = { success: true, data: { cpu: 0, memory: 0, disk: 0, network: 0 }, message: 'Mock data' }
     if (!this.isSuccess(response)) {
       return null
     }

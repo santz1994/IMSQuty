@@ -13,13 +13,13 @@ class RoleController extends Controller
 
     public function index(): JsonResponse
     {
-        $roles = Role::all();
+        $roles = Role::with('permissions')->withCount('users')->get();
         return $this->successResponse($roles, 'Roles retrieved successfully');
     }
 
     public function show(Role $role): JsonResponse
     {
-        $role->load('permissions');
+        $role->load('permissions')->loadCount('users');
         return $this->successResponse($role, 'Role retrieved successfully');
     }
 
@@ -42,6 +42,7 @@ class RoleController extends Controller
             $role->syncPermissions($validated['permission_ids']);
         }
 
+        $role->load('permissions')->loadCount('users');
         return $this->successResponse($role, 'Role created successfully', 201);
     }
 
@@ -64,6 +65,7 @@ class RoleController extends Controller
             $role->syncPermissions($validated['permission_ids']);
         }
 
+        $role->load('permissions')->loadCount('users');
         return $this->successResponse($role, 'Role updated successfully');
     }
 

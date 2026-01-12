@@ -10,9 +10,9 @@ import {
   Menu as MenuIcon,
   Notifications,
   Payment,
-  People,
   Settings,
-  ShoppingCart
+  ShoppingCart,
+  TrendingUp
 } from '@mui/icons-material'
 import {
   AppBar,
@@ -67,8 +67,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     { label: 'Financial', icon: <Payment />, path: '/financial', roles: ['admin', 'superadmin'] },
     { label: 'Reports', icon: <Description />, path: '/reports', roles: ['admin', 'superadmin'] },
     { label: 'Meeting Rooms', icon: <MeetingRoom />, path: '/meeting-rooms', roles: ['admin', 'superadmin'] },
+    { label: 'KPI Dashboard', icon: <TrendingUp />, path: '/kpi', roles: ['admin', 'superadmin'] },
     { label: 'Notifications', icon: <Notifications />, path: '/notifications', roles: ['admin', 'superadmin'] },
-    { label: 'Users', icon: <People />, path: '/users', roles: ['admin', 'superadmin'] },
     { label: 'Audit Logs', icon: <Assessment />, path: '/audit-logs', roles: ['admin', 'superadmin'] },
     { label: 'Settings', icon: <Settings />, path: '/settings', roles: ['admin', 'superadmin'] },
   ]

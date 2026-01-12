@@ -252,9 +252,7 @@ class FinancialService extends BaseService {
         }
       })
 
-      const response = await this.post<Expense>('/expenses', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
+      const response = await this.post<Expense>('/expenses', formData)
       return response
     } catch (error) {
       return this.transformError(error)

@@ -1,6 +1,5 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import { authService, User } from '../../api/authService'
-import { getErrorMessage } from '../../api/client'
 
 interface AuthState {
   user: User | null
@@ -42,7 +41,7 @@ export const login = createAsyncThunk(
         token: response.data.access_token,
       }
     } catch (error: any) {
-      const errorMessage = getErrorMessage(error)
+      const errorMessage = error instanceof Error ? error.message : 'Login failed'
       return rejectWithValue(errorMessage)
     }
   },
@@ -67,7 +66,7 @@ export const fetchCurrentUser = createAsyncThunk(
       const user = await authService.fetchCurrentUser()
       return user
     } catch (error: any) {
-      return rejectWithValue(getErrorMessage(error))
+      return rejectWithValue(error instanceof Error ? error.message : 'Registration failed')
     }
   },
 )

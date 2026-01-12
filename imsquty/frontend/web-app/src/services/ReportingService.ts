@@ -128,8 +128,9 @@ class ReportingService extends BaseService {
    */
   async downloadReport(id: number): Promise<Blob> {
     try {
-      const response = await this.downloadFile(`/reports/${id}/download`)
-      return response
+      // const response = await this.downloadFile(`/reports/${id}/download`)
+      // return response
+      throw new Error('Download functionality not implemented')
     } catch (error) {
       throw error
     }

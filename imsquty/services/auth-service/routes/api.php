@@ -6,6 +6,7 @@ use App\Http\Controllers\MetricsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\PagePermissionController;
 use App\Http\Controllers\UserRBACController;
 use App\Http\Controllers\AuditLogController;
 use Illuminate\Support\Facades\Route;
@@ -122,6 +123,18 @@ Route::prefix('v1')->group(function () {
         Route::prefix('permissions')->group(function () {
             Route::get('/', [PermissionController::class, 'index'])->name('permissions.index');
             Route::get('/{id}', [PermissionController::class, 'show'])->name('permissions.show');
+        });
+
+        // Page Permissions Management (NEW)
+        Route::prefix('page-permissions')->group(function () {
+            Route::get('/pages', [PagePermissionController::class, 'getAllPages'])->name('pages.index');
+            Route::get('/my-pages', [PagePermissionController::class, 'getMyAccessiblePages'])->name('pages.my');
+            
+            // Role-based page permissions
+            Route::get('/roles/{roleId}/pages', [PagePermissionController::class, 'getRolePages'])->name('roles.pages');
+            Route::post('/roles/{roleId}/pages', [PagePermissionController::class, 'assignPageToRole'])->name('roles.pages.assign');
+            Route::post('/roles/{roleId}/pages/sync', [PagePermissionController::class, 'syncRolePages'])->name('roles.pages.sync');
+            Route::delete('/roles/{roleId}/pages/{pageId}', [PagePermissionController::class, 'removePageFromRole'])->name('roles.pages.remove');
         });
 
         // User Role & Permission Management

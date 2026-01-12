@@ -386,42 +386,58 @@ const RolesPermissions: React.FC = () => {
                 Select Permissions
               </Typography>
               <Paper variant="outlined" sx={{ p: 2, maxHeight: 300, overflow: 'auto' }}>
-                {Object.entries(permissionsByModule).map(([module, perms]) => (
-                  <Accordion key={module}>
-                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                      <Typography variant="subtitle2">
-                        {module.toUpperCase()} ({perms.length} permissions)
-                      </Typography>
-                    </AccordionSummary>
-                    <AccordionDetails>
-                      <Grid container spacing={1}>
-                        {perms.map((permission) => (
-                          <Grid item xs={12} sm={6} key={permission.id}>
-                            <FormControlLabel
-                              control={
-                                <Checkbox
-                                  checked={formData.permission_ids.includes(permission.id)}
-                                  onChange={() => handleTogglePermission(permission.id)}
-                                  size="small"
+                {Object.keys(permissionsByModule).length === 0 ? (
+                  <Typography variant="body2" color="text.secondary">
+                    No permissions available
+                  </Typography>
+                ) : (
+                  Object.entries(permissionsByModule).map(([module, perms]) => (
+                    <Accordion key={module}>
+                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <Typography variant="subtitle2">
+                          {module.toUpperCase()} ({perms?.length || 0} permissions)
+                        </Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <Grid container spacing={1}>
+                          {Array.isArray(perms) && perms.length > 0 ? (
+                            perms.map((permission) => (
+                              <Grid item xs={12} sm={6} key={permission.id}>
+                                <FormControlLabel
+                                  control={
+                                    <Checkbox
+                                      checked={formData.permission_ids.includes(permission.id)}
+                                      onChange={() => handleTogglePermission(permission.id)}
+                                      size="small"
+                                    />
+                                  }
+                                  label={
+                                    <Box>
+                                      <Typography variant="body2">
+                                        {permission.display_name || permission.name || 'Unnamed Permission'}
+                                      </Typography>
+                                      {permission.description && (
+                                        <Typography variant="caption" color="text.secondary">
+                                          {permission.description}
+                                        </Typography>
+                                      )}
+                                    </Box>
+                                  }
                                 />
-                              }
-                              label={
-                                <Box>
-                                  <Typography variant="body2">{permission.display_name}</Typography>
-                                  {permission.description && (
-                                    <Typography variant="caption" color="text.secondary">
-                                      {permission.description}
-                                    </Typography>
-                                  )}
-                                </Box>
-                              }
-                            />
-                          </Grid>
-                        ))}
-                      </Grid>
-                    </AccordionDetails>
-                  </Accordion>
-                ))}
+                              </Grid>
+                            ))
+                          ) : (
+                            <Grid item xs={12}>
+                              <Typography variant="caption" color="text.secondary">
+                                No permissions in this module
+                              </Typography>
+                            </Grid>
+                          )}
+                        </Grid>
+                      </AccordionDetails>
+                    </Accordion>
+                  ))
+                )}
               </Paper>
               <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
                 Selected: {formData.permission_ids.length} / {permissions.length} permissions
@@ -459,61 +475,73 @@ const RolesPermissions: React.FC = () => {
         <DialogContent>
           {selectedRole && (
             <Box sx={{ mt: 2 }}>
-              {Object.entries(permissionsByModule).map(([module, perms]) => (
-                <Accordion key={module} defaultExpanded>
-                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <Typography variant="h6">
-                      {module.toUpperCase()} Module
-                      <Chip
-                        label={`${perms.filter((p) =>
-                          selectedRole.permissions?.some((sp) => sp.id === p.id)
-                        ).length} / ${perms.length}`}
-                        size="small"
-                        sx={{ ml: 2 }}
-                      />
-                    </Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <Grid container spacing={2}>
-                      {perms.map((permission) => {
-                        const hasPermission = selectedRole.permissions?.some(
-                          (p) => p.id === permission.id
-                        )
-                        return (
-                          <Grid item xs={12} sm={6} md={4} key={permission.id}>
-                            <Paper
-                              variant="outlined"
-                              sx={{
-                                p: 2,
-                                bgcolor: hasPermission ? 'success.light' : 'grey.100',
-                                borderColor: hasPermission ? 'success.main' : 'grey.300',
-                              }}
-                            >
-                              <Typography variant="body2" fontWeight="bold">
-                                {permission.display_name}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                {permission.name}
-                              </Typography>
-                              {permission.description && (
-                                <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                                  {permission.description}
-                                </Typography>
-                              )}
-                              <Chip
-                                label={hasPermission ? 'Granted' : 'Not Granted'}
-                                size="small"
-                                color={hasPermission ? 'success' : 'default'}
-                                sx={{ mt: 1 }}
-                              />
-                            </Paper>
+              {Object.keys(permissionsByModule).length === 0 ? (
+                <Alert severity="info">No permissions available</Alert>
+              ) : (
+                Object.entries(permissionsByModule).map(([module, perms]) => (
+                  <Accordion key={module} defaultExpanded>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                      <Typography variant="h6">
+                        {module.toUpperCase()} Module
+                        <Chip
+                          label={`${Array.isArray(perms) ? perms.filter((p) =>
+                            selectedRole.permissions?.some((sp) => sp.id === p.id)
+                          ).length : 0} / ${Array.isArray(perms) ? perms.length : 0}`}
+                          size="small"
+                          sx={{ ml: 2 }}
+                        />
+                      </Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <Grid container spacing={2}>
+                        {Array.isArray(perms) && perms.length > 0 ? (
+                          perms.map((permission) => {
+                            const hasPermission = selectedRole.permissions?.some(
+                              (p) => p.id === permission.id
+                            )
+                            return (
+                              <Grid item xs={12} sm={6} md={4} key={permission.id}>
+                                <Paper
+                                  variant="outlined"
+                                  sx={{
+                                    p: 2,
+                                    bgcolor: hasPermission ? 'success.light' : 'grey.100',
+                                    borderColor: hasPermission ? 'success.main' : 'grey.300',
+                                  }}
+                                >
+                                  <Typography variant="body2" fontWeight="bold">
+                                    {permission.display_name || permission.name?.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') || 'Unnamed'}
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary">
+                                    {permission.name || 'N/A'}
+                                  </Typography>
+                                  {permission.description && (
+                                    <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                                      {permission.description}
+                                    </Typography>
+                                  )}
+                                  <Chip
+                                    label={hasPermission ? 'Granted' : 'Not Granted'}
+                                    size="small"
+                                    color={hasPermission ? 'success' : 'default'}
+                                    sx={{ mt: 1 }}
+                                  />
+                                </Paper>
+                              </Grid>
+                            )
+                          })
+                        ) : (
+                          <Grid item xs={12}>
+                            <Typography variant="caption" color="text.secondary">
+                              No permissions in this module
+                            </Typography>
                           </Grid>
-                        )
-                      })}
-                    </Grid>
-                  </AccordionDetails>
-                </Accordion>
-              ))}
+                        )}
+                      </Grid>
+                    </AccordionDetails>
+                  </Accordion>
+                ))
+              )}
             </Box>
           )}
         </DialogContent>

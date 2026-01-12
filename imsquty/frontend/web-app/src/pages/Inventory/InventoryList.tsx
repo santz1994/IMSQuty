@@ -95,7 +95,7 @@ const InventoryList: React.FC = () => {
                   <TableCell>{item.name}</TableCell>
                   <TableCell align="right">{item.quantity}</TableCell>
                   <TableCell>{item.unit}</TableCell>
-                  <TableCell>{item.location}</TableCell>
+                  <TableCell>{(item as any).location || '-'}</TableCell>
                   <TableCell>
                     <Chip
                       label={item.status.toUpperCase()}

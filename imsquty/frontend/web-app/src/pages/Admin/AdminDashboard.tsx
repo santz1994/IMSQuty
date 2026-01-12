@@ -49,7 +49,7 @@ const AdminDashboard: React.FC = () => {
   const { user } = useAuth()
   const { stats, loading: statsLoading, refreshStats } = useDashboard(true)
   const { users, loading: usersLoading } = useUsers(true, { per_page: 10 })
-  const { tickets, loading: ticketsLoading } = useTickets(true, { per_page: 10 })
+  const { tickets, loading: ticketsLoading } = useTickets(true, { perPage: 10 })
 
   // Check admin access
   const isAdmin = user?.role?.slug === 'admin'
@@ -86,7 +86,7 @@ const AdminDashboard: React.FC = () => {
             💼 Admin Dashboard
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Welcome back, {user?.first_name}! Here's your system overview
+            Welcome back, {(user as any)?.first_name || user?.username}! Here's your system overview
           </Typography>
         </Box>
         <Button

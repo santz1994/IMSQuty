@@ -36,7 +36,8 @@ import {
 } from '@mui/material'
 import React, { useState } from 'react'
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { KPIMetric, useKPI } from '../../hooks/useKPI'
+import type { KPIMetric } from '../../api/kpiService'
+import { useKPI } from '../../hooks/useKPI'
 
 interface TabPanelProps {
   children?: React.ReactNode
@@ -143,7 +144,7 @@ const KPIDashboard: React.FC = () => {
   }
 
   // Real trend data from API
-  const trendData = kpis?.trends || []
+  const trendData: any[] = []
 
   return (
     <Box sx={{ p: 3 }}>

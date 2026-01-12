@@ -79,16 +79,20 @@ export interface ExportRequest {
  */
 export interface AuditStatistics {
   total_logs: number;
-  logs_today: number;
-  logs_this_week: number;
-  logs_this_month: number;
-  by_action: Record<string, number>;
-  by_module: Record<string, number>;
-  by_severity: Record<string, number>;
-  by_status: Record<string, number>;
-  top_users: Array<{
+  today_logs: number;
+  week_logs: number;
+  month_logs: number;
+  top_actions?: Array<{
+    action: string;
+    count: number;
+  }>;
+  top_users?: Array<{
     user_id: number;
-    user_name: string;
+    username: string;
+    count: number;
+  }>;
+  top_modules?: Array<{
+    module: string;
     count: number;
   }>;
 }

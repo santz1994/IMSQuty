@@ -4,6 +4,7 @@ import AdminLayout from './components/layouts/AdminLayout'
 import AdminDashboard from './pages/AdminDashboard'
 import AuditLogs from './pages/AuditLogs'
 import Login from './pages/Login'
+import PagePermissions from './pages/PagePermissions'
 import RolesPermissions from './pages/RolesPermissions'
 import SystemSettings from './pages/SystemSettings'
 import UserManagement from './pages/UserManagement'
@@ -81,6 +82,17 @@ function App() {
           <ProtectedRoute>
             <AdminLayout>
               <RolesPermissions />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/page-permissions"
+        element={
+          <ProtectedRoute>
+            <AdminLayout>
+              <PagePermissions />
             </AdminLayout>
           </ProtectedRoute>
         }

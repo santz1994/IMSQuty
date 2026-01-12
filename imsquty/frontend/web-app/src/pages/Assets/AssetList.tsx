@@ -93,7 +93,7 @@ export default function AssetList() {
     setOpenDialog(true)
   }
 
-  const handleEditAsset = (asset: Asset) => {
+  const handleEditAsset = (asset: any) => {
     setEditingAsset(asset)
     setFormData({
       asset_tag: asset.asset_tag,
@@ -108,12 +108,16 @@ export default function AssetList() {
 
   const handleSaveAsset = async () => {
     try {
+      const dataToSave = {
+        ...formData,
+        asset_type_id: parseInt(String(formData.asset_type_id))
+      }
       if (editingAsset) {
         // Update existing asset via API
-        await updateAsset(editingAsset.id, formData)
+        await updateAsset(editingAsset.id, dataToSave)
       } else {
         // Create new asset via API
-        await createAsset(formData)
+        await createAsset(dataToSave)
       }
       setOpenDialog(false)
       // Refresh list

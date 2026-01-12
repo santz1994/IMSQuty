@@ -27,7 +27,7 @@ import { useInvoices } from '../../hooks/useFinancial'
 
 const FinancialList: React.FC = () => {
   const { invoices, loading, error, fetchInvoices, createInvoice, deleteInvoice } = useInvoices(true)
-  const transactions = invoices.map(inv => ({
+  const [transactions, setTransactions] = React.useState(invoices.map(inv => ({
     id: inv.id,
     date: inv.issue_date,
     description: inv.vendor_name,
@@ -35,7 +35,7 @@ const FinancialList: React.FC = () => {
     type: 'expense',
     category: 'Invoice',
     status: inv.status
-  }))
+  })))
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
@@ -103,7 +103,7 @@ const FinancialList: React.FC = () => {
                     {tx.type === 'expense' ? '-' : '+'} ${tx.amount}
                   </TableCell>
                   <TableCell><Chip label={tx.type.toUpperCase()} size="small" /></TableCell>
-                  <TableCell><Chip label={tx.status.toUpperCase()} color={tx.status === 'completed' ? 'success' : 'warning'} size="small" /></TableCell>
+                  <TableCell><Chip label={tx.status.toUpperCase()} color={tx.status === 'paid' ? 'success' : 'warning'} size="small" /></TableCell>
                   <TableCell align="center">
                     <IconButton size="small" color="info"><Edit /></IconButton>
                     <IconButton size="small" color="error" onClick={() => setTransactions(transactions.filter(t => t.id !== tx.id))}><Delete /></IconButton>

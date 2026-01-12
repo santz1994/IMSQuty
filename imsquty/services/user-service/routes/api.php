@@ -7,6 +7,8 @@ use App\Http\Controllers\UserBulkController;
 use App\Http\Controllers\MetricsController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\AuditController;
 
 /*
 |--------------------------------------------------------------------------
@@ -52,6 +54,30 @@ Route::prefix('v1')->group(function () {
         // Roles & Permissions
         Route::apiResource('roles', RoleController::class);
         Route::apiResource('permissions', PermissionController::class)->only(['index', 'show']);
+        
+        // Settings
+        Route::prefix('settings')->group(function () {
+            Route::get('/', [SettingsController::class, 'index']);
+            Route::get('/{category}', [SettingsController::class, 'show']);
+            Route::get('/cache/stats', [SettingsController::class, 'getCacheStats']);
+            Route::post('/cache/clear', [SettingsController::class, 'clearCache']);
+            Route::post('/cache/flush', [SettingsController::class, 'flushCacheByPattern']);
+            Route::get('/queue/stats', [SettingsController::class, 'getQueueStats']);
+            Route::post('/queue/clear-failed', [SettingsController::class, 'clearFailedJobs']);
+            Route::post('/email/test', [SettingsController::class, 'testEmail']);
+            Route::post('/storage/test', [SettingsController::class, 'testStorage']);
+            Route::post('/maintenance', [SettingsController::class, 'toggleMaintenance']);
+        });
+        
+        // Audit Logs
+        Route::prefix('audit')->group(function () {
+            Route::get('/logs', [AuditController::class, 'index']);
+            Route::get('/logs/{id}', [AuditController::class, 'show']);
+            Route::get('/statistics', [AuditController::class, 'statistics']);
+            Route::get('/actions', [AuditController::class, 'actions']);
+            Route::get('/modules', [AuditController::class, 'modules']);
+            Route::post('/export', [AuditController::class, 'export']);
+        });
         
         // User Profile Management
         Route::prefix('users/{user}/profile')->group(function () {

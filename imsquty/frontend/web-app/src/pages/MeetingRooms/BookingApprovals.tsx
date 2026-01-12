@@ -145,7 +145,7 @@ const BookingApprovals: React.FC = () => {
 
     try {
       const promises = selectedRows.map((id) =>
-        meetingRoomService.approveBooking(id)
+        meetingRoomService.approveBooking(Number(id))
       )
       await Promise.all(promises)
       setSuccessMessage(`${selectedRows.length} booking(s) approved successfully!`)
@@ -172,7 +172,7 @@ const BookingApprovals: React.FC = () => {
 
     try {
       const promises = selectedRows.map((id) =>
-        meetingRoomService.rejectBooking(id, rejectionReason.trim())
+        meetingRoomService.rejectBooking(Number(id), rejectionReason.trim())
       )
       await Promise.all(promises)
       setSuccessMessage(`${selectedRows.length} booking(s) rejected successfully!`)

@@ -61,7 +61,7 @@ const AdminDashboard: React.FC = () => {
   const roleDistributionData = useMemo(() => {
     const roleCounts: Record<string, number> = {}
     users.forEach((user) => {
-      const role = user.role_name || 'Unknown'
+      const role = user.roles?.[0]?.display_name || user.roles?.[0]?.name || 'No Role'
       roleCounts[role] = (roleCounts[role] || 0) + 1
     })
 
@@ -92,7 +92,7 @@ const AdminDashboard: React.FC = () => {
     },
     {
       label: 'Active Users',
-      value: users.filter((u) => u.is_active).length,
+      value: users.filter((u) => u.status === 'active').length,
       icon: People,
       color: '#4caf50',
     },
