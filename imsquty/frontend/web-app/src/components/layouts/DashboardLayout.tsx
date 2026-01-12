@@ -71,6 +71,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     { label: 'Notifications', icon: <Notifications />, path: '/notifications', roles: ['admin', 'superadmin'] },
     { label: 'Audit Logs', icon: <Assessment />, path: '/audit-logs', roles: ['admin', 'superadmin'] },
     { label: 'Settings', icon: <Settings />, path: '/settings', roles: ['admin', 'superadmin'] },
+    // Note: User Management is admin-only, accessible at /admin/users in admin-panel
   ]
 
   // Filter menu items based on user role

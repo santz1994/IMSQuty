@@ -155,6 +155,11 @@ const roleSlice = createSlice({
     clearError: (state) => {
       state.error = null
     },
+    updateSelectedRolePermissions: (state, action: PayloadAction<Permission[]>) => {
+      if (state.selectedRole) {
+        state.selectedRole.permissions = action.payload
+      }
+    },
   },
   extraReducers: (builder) => {
     // Fetch Roles
@@ -290,5 +295,5 @@ const roleSlice = createSlice({
   },
 })
 
-export const { clearSelectedRole, clearError } = roleSlice.actions
+export const { clearSelectedRole, clearError, updateSelectedRolePermissions } = roleSlice.actions
 export default roleSlice.reducer

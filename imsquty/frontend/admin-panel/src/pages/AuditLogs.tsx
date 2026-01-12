@@ -65,7 +65,8 @@ import {
 /**
  * Get severity color
  */
-const getSeverityColor = (severity: string) => {
+const getSeverityColor = (severity: string | undefined) => {
+  if (!severity) return 'default';
   switch (severity) {
     case 'critical':
       return 'error';
@@ -82,7 +83,8 @@ const getSeverityColor = (severity: string) => {
 /**
  * Get severity icon
  */
-const getSeverityIcon = (severity: string) => {
+const getSeverityIcon = (severity: string | undefined) => {
+  if (!severity) return <InfoIcon fontSize="small" />;
   switch (severity) {
     case 'critical':
       return <ErrorIcon fontSize="small" />;
@@ -99,7 +101,8 @@ const getSeverityIcon = (severity: string) => {
 /**
  * Get status color
  */
-const getStatusColor = (status: string) => {
+const getStatusColor = (status: string | undefined) => {
+  if (!status) return 'default';
   return status === 'success' ? 'success' : 'error';
 };
 
@@ -342,7 +345,7 @@ const AuditLogs: React.FC = () => {
       renderCell: (params: GridRenderCellParams<AuditLog>) => (
         <Chip
           icon={getSeverityIcon(params.row.severity)}
-          label={params.row.severity.toUpperCase()}
+          label={(params.row.severity || 'UNKNOWN').toUpperCase()}
           size="small"
           color={getSeverityColor(params.row.severity)}
         />
@@ -355,7 +358,7 @@ const AuditLogs: React.FC = () => {
       sortable: true,
       renderCell: (params: GridRenderCellParams<AuditLog>) => (
         <Chip
-          label={params.row.status.toUpperCase()}
+          label={(params.row.status || 'UNKNOWN').toUpperCase()}
           size="small"
           color={getStatusColor(params.row.status)}
         />

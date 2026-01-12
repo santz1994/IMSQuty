@@ -79,6 +79,34 @@ app.use(cors({
 // NEW: Response formatter middleware
 app.use(ResponseFormatter.middleware());
 
+// CORS ERROR RESPONSE WRAPPER - Ensure CORS headers on ALL responses including errors
+const ensureCorsHeaders = (req, res, next) => {
+  const originalJson = res.json;
+  res.json = function (data) {
+    // Add CORS headers if not already set
+    if (!res.getHeader('Access-Control-Allow-Origin')) {
+      const origin = req.get('origin');
+      if (origin && allowedOrigins.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+      } else if (!origin) {
+        res.setHeader('Access-Control-Allow-Origin', '*');
+      }
+    }
+    if (!res.getHeader('Access-Control-Allow-Credentials')) {
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
+    if (!res.getHeader('Access-Control-Allow-Methods')) {
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    }
+    if (!res.getHeader('Access-Control-Allow-Headers')) {
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    }
+    return originalJson.call(this, data);
+  };
+  next();
+};
+app.use(ensureCorsHeaders);
+
 // HTTP request logger
 app.use(morgan('combined', {
   stream: {
@@ -104,6 +132,9 @@ const authenticateJWT = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    // Make sure CORS headers are sent before 401 error
+    res.setHeader('Access-Control-Allow-Origin', req.get('origin') || '*');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
     return res.status(401).json({
       success: false,
       message: 'Authentication token required'
@@ -121,6 +152,9 @@ const authenticateJWT = (req, res, next) => {
   } catch (error) {
     logger.error('JWT verification failed:', error.message);
     logger.error('Error details:', error);
+    // Make sure CORS headers are sent before 401 error
+    res.setHeader('Access-Control-Allow-Origin', req.get('origin') || '*');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
     return res.status(401).json({
       success: false,
       message: 'Invalid or expired token'

@@ -19,7 +19,7 @@ import {
   Typography
 } from '@mui/material'
 import React, { useEffect, useState } from 'react'
-import client from '../../api/client'
+import client from '../api/client'
 
 interface Page {
   id: number
@@ -98,7 +98,7 @@ const PagePermissionsManager: React.FC = () => {
         // Set initially selected pages
         const selected = new Set(
           pagesData
-            .filter(p => p.can_access === true || p.can_access === 1)
+            .filter(p => p.can_access === true)
             .map(p => p.id)
         )
         setSelectedPages(selected)
@@ -244,7 +244,10 @@ const PagePermissionsManager: React.FC = () => {
               </Box>
             ) : (
               <>
-                <Box mb={2}>
+                <Box mb={2} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="subtitle1" fontWeight="bold">
+                    Managing Pages for: {roles.find(r => r.id === selectedRoleId)?.display_name || 'Unknown Role'}
+                  </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Selected: {selectedPages.size} / {pages.length} pages
                   </Typography>

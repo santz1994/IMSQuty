@@ -56,6 +56,7 @@ class Permission extends Model
      */
     protected $appends = [
         'roles_count',
+        'display_name',
     ];
 
     /**
@@ -110,6 +111,17 @@ class Permission extends Model
     public function scopeGrouped($query)
     {
         return $query->get()->groupBy('group');
+    }
+
+    /**
+     * Get display name accessor - generates human-readable name
+     *
+     * @return string
+     */
+    public function getDisplayNameAttribute(): string
+    {
+        // Convert "user.create.all" to "User Create All"
+        return ucwords(str_replace(['.', '_'], ' ', $this->name));
     }
 
     /**

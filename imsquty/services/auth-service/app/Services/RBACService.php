@@ -79,7 +79,7 @@ class RBACService
     /**
      * Create new role
      *
-     * @param array $data ['name', 'description', 'guard_name', 'is_system']
+     * @param array $data ['name', 'display_name', 'description', 'guard_name', 'is_system']
      * @return Role
      * @throws ValidationException
      */
@@ -95,11 +95,17 @@ class RBACService
             throw new ValidationException(['name' => 'Role name already exists']);
         }
 
+        // Generate display_name if not provided
+        if (empty($data['display_name'])) {
+            $data['display_name'] = ucwords(str_replace(['_', '-'], ' ', $data['name']));
+        }
+
         DB::beginTransaction();
         try {
             $role = Role::create([
                 'name' => $data['name'],
-                'guard_name' => $data['guard_name'] ?? 'web',
+                'display_name' => $data['display_name'],
+                'guard_name' => $data['guard_name'] ?? 'api',
                 'description' => $data['description'] ?? null,
                 'is_system' => $data['is_system'] ?? false,
             ]);
@@ -107,6 +113,11 @@ class RBACService
             // Assign permissions if provided
             if (!empty($data['permissions']) && is_array($data['permissions'])) {
                 $this->syncRolePermissions($role->id, $data['permissions']);
+            }
+
+            // Also handle permission_ids (alternative format from frontend)
+            if (!empty($data['permission_ids']) && is_array($data['permission_ids'])) {
+                $this->syncRolePermissions($role->id, $data['permission_ids']);
             }
 
             DB::commit();
@@ -132,7 +143,7 @@ class RBACService
      * Update existing role
      *
      * @param int $roleId
-     * @param array $data ['name', 'description']
+     * @param array $data ['name', 'display_name', 'description', 'permissions', 'permission_ids']
      * @return Role
      * @throws NotFoundException
      * @throws ValidationException
@@ -155,14 +166,32 @@ class RBACService
 
         DB::beginTransaction();
         try {
-            $role->update([
-                'name' => $data['name'] ?? $role->name,
-                'description' => $data['description'] ?? $role->description,
-            ]);
+            $updateData = [];
+            
+            if (isset($data['name'])) {
+                $updateData['name'] = $data['name'];
+            }
+            
+            if (isset($data['display_name'])) {
+                $updateData['display_name'] = $data['display_name'];
+            }
+            
+            if (isset($data['description'])) {
+                $updateData['description'] = $data['description'];
+            }
+            
+            if (!empty($updateData)) {
+                $role->update($updateData);
+            }
 
             // Update permissions if provided
             if (isset($data['permissions']) && is_array($data['permissions'])) {
                 $this->syncRolePermissions($role->id, $data['permissions']);
+            }
+
+            // Also handle permission_ids (alternative format from frontend)
+            if (isset($data['permission_ids']) && is_array($data['permission_ids'])) {
+                $this->syncRolePermissions($role->id, $data['permission_ids']);
             }
 
             DB::commit();

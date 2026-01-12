@@ -3,9 +3,10 @@ import client from './client'
 export interface Permission {
   id: number
   name: string
-  display_name: string
+  display_name?: string
   description?: string
-  module: string
+  group: string
+  guard_name?: string
   created_at?: string
   updated_at?: string
 }
@@ -95,12 +96,36 @@ class RoleService {
   }
 
   /**
-   * Get all permissions
+   * Get all permissions (flattened from grouped response)
    */
   async getAllPermissions(): Promise<ApiResponse<Permission[]>> {
-    const response = await client.get<ApiResponse<Permission[]>>(
-      '/permissions'
-    )
+    const response = await client.get<any>('/permissions')
+    
+    // Backend returns grouped permissions: { data: { group1: [perms], group2: [perms] } }
+    // We need to flatten this into a single array
+    if (response.data.success && response.data.data) {
+      const groupedData = response.data.data
+      let flatPermissions: Permission[] = []
+      
+      // Check if data is already an array (flat) or an object (grouped)
+      if (Array.isArray(groupedData)) {
+        flatPermissions = groupedData
+      } else {
+        // Flatten grouped permissions
+        Object.values(groupedData).forEach((perms: any) => {
+          if (Array.isArray(perms)) {
+            flatPermissions = flatPermissions.concat(perms)
+          }
+        })
+      }
+      
+      return {
+        success: true,
+        data: flatPermissions,
+        message: response.data.message || 'Permissions fetched successfully'
+      }
+    }
+    
     return response.data
   }
 
@@ -132,27 +157,42 @@ class RoleService {
   }
 
   /**
-   * Get permissions grouped by module
+   * Get permissions grouped by module (group)
    */
   async getPermissionsByModule(): Promise<ApiResponse<Record<string, Permission[]>>> {
-    const response = await client.get<ApiResponse<Permission[]>>(
-      '/permissions'
-    )
+    const response = await client.get<any>('/permissions')
 
-    // Group permissions by module
-    const groupedPermissions: Record<string, Permission[]> = {}
-    response.data.data.forEach((permission) => {
-      if (!groupedPermissions[permission.module]) {
-        groupedPermissions[permission.module] = []
+    // Backend already returns grouped permissions
+    if (response.data.success && response.data.data) {
+      const groupedData = response.data.data
+      
+      // If already grouped, return as-is
+      if (!Array.isArray(groupedData)) {
+        return {
+          success: response.data.success,
+          data: groupedData,
+          message: response.data.message || 'Permissions fetched successfully'
+        }
       }
-      groupedPermissions[permission.module].push(permission)
-    })
+      
+      // If it's an array, group it by 'group' field
+      const groupedPermissions: Record<string, Permission[]> = {}
+      groupedData.forEach((permission: Permission) => {
+        const group = permission.group || 'Other'
+        if (!groupedPermissions[group]) {
+          groupedPermissions[group] = []
+        }
+        groupedPermissions[group].push(permission)
+      })
 
-    return {
-      success: response.data.success,
-      data: groupedPermissions,
-      message: response.data.message,
+      return {
+        success: response.data.success,
+        data: groupedPermissions,
+        message: response.data.message || 'Permissions fetched successfully'
+      }
     }
+
+    return response.data
   }
 }
 

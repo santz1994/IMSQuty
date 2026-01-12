@@ -91,12 +91,16 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             IMSQuty - Admin Panel
           </Typography>
-          <Typography variant="body2" sx={{ mr: 2 }}>
-            {user?.first_name} {user?.last_name}
-          </Typography>
-          <IconButton color="inherit" onClick={handleMenuOpen}>
-            <AccountCircle />
-          </IconButton>
+          {user && (
+            <>
+              <Typography variant="body2" sx={{ mr: 2 }}>
+                {user.first_name} {user.last_name}
+              </Typography>
+              <IconButton color="inherit" onClick={handleMenuOpen}>
+                <AccountCircle />
+              </IconButton>
+            </>
+          )}
           <Menu
             anchorEl={anchorEl}
             open={Boolean(anchorEl)}

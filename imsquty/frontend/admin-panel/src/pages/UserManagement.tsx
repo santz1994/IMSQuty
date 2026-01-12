@@ -511,22 +511,36 @@ const UserManagement: React.FC = () => {
             )}
 
             <Stack direction="row" spacing={2}>
-              <FormControl fullWidth disabled={dialogMode === 'view'}>
-                <InputLabel>Role *</InputLabel>
-                <Select
-                  value={formData.role_id}
-                  label="Role *"
-                  onChange={(e) =>
-                    setFormData({ ...formData, role_id: e.target.value as number })
-                  }
-                >
-                  {roles.map((role) => (
-                    <MenuItem key={role.id} value={role.id}>
-                      {role.display_name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              {dialogMode === 'view' ? (
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Role
+                  </Typography>
+                  <Chip
+                    label={currentUser?.roles?.[0]?.display_name || 'Unknown Role'}
+                    color="primary"
+                    variant="outlined"
+                    sx={{ mt: 0.5 }}
+                  />
+                </Box>
+              ) : (
+                <FormControl fullWidth>
+                  <InputLabel>Role *</InputLabel>
+                  <Select
+                    value={formData.role_id}
+                    label="Role *"
+                    onChange={(e) =>
+                      setFormData({ ...formData, role_id: e.target.value as number })
+                    }
+                  >
+                    {roles.map((role) => (
+                      <MenuItem key={role.id} value={role.id}>
+                        {role.display_name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
               {dialogMode !== 'view' && (
                 <FormControlLabel
                   control={

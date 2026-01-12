@@ -130,7 +130,7 @@ class SettingsService {
    * Update settings for a specific category
    */
   async updateSettings(data: UpdateSettingsRequest): Promise<ApiResponse<any>> {
-    const response = await client.put<ApiResponse<any>>(`/api/settings/${data.category}`, data.settings)
+    const response = await client.put<ApiResponse<any>>(`/settings/${data.category}`, data.settings)
     return response.data
   }
 
@@ -194,7 +194,7 @@ class SettingsService {
    * Enable/disable maintenance mode
    */
   async toggleMaintenanceMode(enabled: boolean, message?: string): Promise<ApiResponse<{ message: string }>> {
-    const response = await client.post<ApiResponse<{ message: string }>>('/api/settings/maintenance', {
+    const response = await client.post<ApiResponse<{ message: string }>>('/settings/maintenance', {
       enabled,
       message: message || 'System is under maintenance. Please check back later.'
     })

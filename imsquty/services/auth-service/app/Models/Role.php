@@ -34,6 +34,7 @@ class Role extends Model
      */
     protected $fillable = [
         'name',
+        'display_name',
         'slug',
         'guard_name',
         'description',
@@ -61,6 +62,7 @@ class Role extends Model
      * @var array<string>
      */
     protected $appends = [
+        'display_name',
         'permissions_count',
         'users_count',
     ];
@@ -165,6 +167,22 @@ class Role extends Model
         }
 
         $this->permissions()->sync($permissionIds);
+    }
+
+    /**
+     * Get display name accessor - generates human-readable name if not set
+     *
+     * @return string
+     */
+    public function getDisplayNameAttribute(): string
+    {
+        // If display_name column exists and has value, return it
+        if (isset($this->attributes['display_name']) && !empty($this->attributes['display_name'])) {
+            return $this->attributes['display_name'];
+        }
+        
+        // Otherwise, generate from name
+        return ucwords(str_replace(['_', '-'], ' ', $this->name));
     }
 
     /**

@@ -485,11 +485,12 @@ const SystemSettings: React.FC = () => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                type="number"
-                label="Max Upload Size (MB)"
-                value={localSettings.max_upload_size || 10}
-                onChange={(e) => handleFieldChange('max_upload_size', parseInt(e.target.value))}
+                label="Max Upload Size"
+                value={localSettings.max_upload_size || '2M'}
+                onChange={(e) => handleFieldChange('max_upload_size', e.target.value)}
                 disabled={saving}
+                placeholder="e.g., 2M, 100MB, 1GB"
+                helperText="Use format: 2M, 100MB, 1GB"
               />
             </Grid>
             <Grid item xs={12}>
@@ -929,14 +930,16 @@ const SystemSettings: React.FC = () => {
                 <Divider />
                 <CardContent>
                   <Stack spacing={2}>
-                    <Typography variant="body2" color="text.secondary">
-                      Status:{' '}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        Status:
+                      </Typography>
                       <Chip
                         label={localSettings.maintenance_mode ? 'ENABLED' : 'DISABLED'}
                         color={localSettings.maintenance_mode ? 'error' : 'success'}
                         size="small"
                       />
-                    </Typography>
+                    </Box>
                     {localSettings.maintenance_mode && (
                       <TextField
                         fullWidth

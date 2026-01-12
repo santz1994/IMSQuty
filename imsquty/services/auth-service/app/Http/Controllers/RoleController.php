@@ -88,7 +88,7 @@ class RoleController extends Controller
      * Create new role
      * 
      * POST /api/v1/roles
-     * Body: {name, description?, guard_name?, is_system?, permissions?}
+     * Body: {name, display_name?, description?, guard_name?, is_system?, permissions?, permission_ids?}
      *
      * @param Request $request
      * @return JsonResponse
@@ -97,11 +97,14 @@ class RoleController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:roles,name',
+            'display_name' => 'required|string|max:255',
             'description' => 'nullable|string|max:500',
             'guard_name' => 'nullable|string|max:255',
             'is_system' => 'nullable|boolean',
             'permissions' => 'nullable|array',
             'permissions.*' => 'exists:permissions,id',
+            'permission_ids' => 'nullable|array',
+            'permission_ids.*' => 'exists:permissions,id',
         ]);
 
         if ($validator->fails()) {
@@ -134,7 +137,7 @@ class RoleController extends Controller
      * Update role
      * 
      * PUT /api/v1/roles/{id}
-     * Body: {name?, description?, permissions?}
+     * Body: {name?, display_name?, description?, permissions?, permission_ids?}
      *
      * @param Request $request
      * @param int $id
@@ -144,9 +147,12 @@ class RoleController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|required|string|max:255',
+            'display_name' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string|max:500',
             'permissions' => 'nullable|array',
             'permissions.*' => 'exists:permissions,id',
+            'permission_ids' => 'nullable|array',
+            'permission_ids.*' => 'exists:permissions,id',
         ]);
 
         if ($validator->fails()) {
@@ -218,7 +224,7 @@ class RoleController extends Controller
      * Sync permissions for role
      * 
      * POST /api/v1/roles/{id}/permissions/sync
-     * Body: {permissions: [1, 2, 3]}
+     * Body: {permissions: [1, 2, 3]} or {permission_ids: [1, 2, 3]}
      *
      * @param Request $request
      * @param int $id
@@ -227,8 +233,10 @@ class RoleController extends Controller
     public function syncPermissions(Request $request, int $id): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'permissions' => 'required|array',
+            'permissions' => 'sometimes|required|array',
             'permissions.*' => 'exists:permissions,id',
+            'permission_ids' => 'sometimes|required|array',
+            'permission_ids.*' => 'exists:permissions,id',
         ]);
 
         if ($validator->fails()) {
@@ -240,7 +248,10 @@ class RoleController extends Controller
         }
 
         try {
-            $this->rbacService->syncRolePermissions($id, $request->input('permissions'));
+            // Support both 'permissions' and 'permission_ids' fields
+            $permissionIds = $request->input('permissions') ?? $request->input('permission_ids') ?? [];
+            
+            $this->rbacService->syncRolePermissions($id, $permissionIds);
 
             $role = $this->rbacService->getRoleById($id, true);
 

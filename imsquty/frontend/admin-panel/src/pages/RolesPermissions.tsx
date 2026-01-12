@@ -48,6 +48,7 @@ import {
   fetchRoleById,
   fetchRoles,
   updateRole,
+  updateSelectedRolePermissions,
 } from '../store/slices/roleSlice'
 
 interface RoleFormData {
@@ -176,21 +177,49 @@ const RolesPermissions: React.FC = () => {
   }
 
   const handleTogglePermission = (permissionId: number) => {
-    setFormData((prev) => {
-      const newIds = prev.permission_ids.includes(permissionId)
-        ? prev.permission_ids.filter((id) => id !== permissionId)
-        : [...prev.permission_ids, permissionId]
-      return { ...prev, permission_ids: newIds }
+    if (!selectedRole) {
+      // For create/edit dialog
+      setFormData((prev) => {
+        const isSelected = prev.permission_ids.includes(permissionId)
+        return {
+          ...prev,
+          permission_ids: isSelected
+            ? prev.permission_ids.filter((id) => id !== permissionId)
+            : [...prev.permission_ids, permissionId],
+        }
+      })
+      return
+    }
+    
+    // For permission matrix dialog
+    // Find the permission object
+    const allPerms = Object.values(permissionsByModule).flat() as any[]
+    const permission = allPerms.find((p: any) => p.id === permissionId)
+    
+    if (!permission) return
+    
+    // Check if permission already exists
+    const hasPermission = selectedRole.permissions?.some((p) => p.id === permissionId)
+    
+    // Update selectedRole permissions
+    const updatedPermissions = hasPermission
+      ? selectedRole.permissions?.filter((p) => p.id !== permissionId) || []
+      : [...(selectedRole.permissions || []), permission]
+    
+    // Dispatch update to Redux store
+    dispatch({
+      type: 'roles/updateSelectedRolePermissions',
+      payload: updatedPermissions,
     })
   }
 
   const handleSavePermissions = async () => {
-    if (editingRole) {
+    if (editingRole && selectedRole) {
       try {
         await dispatch(
           assignPermissions({
             roleId: editingRole.id,
-            permissionIds: selectedRole?.permissions?.map((p) => p.id) || [],
+            permissionIds: selectedRole.permissions?.map((p) => p.id) || [],
           })
         ).unwrap()
         setSuccessMessage('Permissions updated successfully')
@@ -284,7 +313,7 @@ const RolesPermissions: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={`${role.permissions?.length || 0} permissions`}
+                      label={`${Array.isArray(role.permissions) && role.permissions.length > 0 ? role.permissions.length : 0} permissions`}
                       size="small"
                       color="primary"
                       onClick={() => handleOpenPermissionDialog(role)}
@@ -470,13 +499,27 @@ const RolesPermissions: React.FC = () => {
         fullWidth
       >
         <DialogTitle>
-          Permission Matrix - {selectedRole?.display_name || editingRole?.display_name}
+          Manage Permissions - {selectedRole?.display_name || editingRole?.display_name}
         </DialogTitle>
         <DialogContent>
-          {selectedRole && (
+          {!selectedRole ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 300 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
             <Box sx={{ mt: 2 }}>
+              <Alert severity="info" sx={{ mb: 2 }}>
+                Toggle permissions by checking/unchecking the boxes below
+              </Alert>
               {Object.keys(permissionsByModule).length === 0 ? (
-                <Alert severity="info">No permissions available</Alert>
+                <Box>
+                  <Alert severity="warning" sx={{ mb: 2 }}>
+                    Loading permissions...
+                  </Alert>
+                  <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
+                    <CircularProgress size={40} />
+                  </Box>
+                </Box>
               ) : (
                 Object.entries(permissionsByModule).map(([module, perms]) => (
                   <Accordion key={module} defaultExpanded>
@@ -505,27 +548,36 @@ const RolesPermissions: React.FC = () => {
                                   variant="outlined"
                                   sx={{
                                     p: 2,
+                                    cursor: 'pointer',
                                     bgcolor: hasPermission ? 'success.light' : 'grey.100',
                                     borderColor: hasPermission ? 'success.main' : 'grey.300',
+                                    '&:hover': {
+                                      borderColor: 'primary.main',
+                                      boxShadow: 1,
+                                    },
                                   }}
+                                  onClick={() => handleTogglePermission(permission.id)}
                                 >
-                                  <Typography variant="body2" fontWeight="bold">
-                                    {permission.display_name || permission.name?.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') || 'Unnamed'}
-                                  </Typography>
-                                  <Typography variant="caption" color="text.secondary">
-                                    {permission.name || 'N/A'}
-                                  </Typography>
-                                  {permission.description && (
-                                    <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                                      {permission.description}
-                                    </Typography>
-                                  )}
-                                  <Chip
-                                    label={hasPermission ? 'Granted' : 'Not Granted'}
-                                    size="small"
-                                    color={hasPermission ? 'success' : 'default'}
-                                    sx={{ mt: 1 }}
-                                  />
+                                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                                    <Checkbox
+                                      checked={hasPermission}
+                                      onChange={() => handleTogglePermission(permission.id)}
+                                      size="small"
+                                    />
+                                    <Box sx={{ flex: 1 }}>
+                                      <Typography variant="body2" fontWeight="bold">
+                                        {permission.display_name || permission.name?.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') || 'Unnamed'}
+                                      </Typography>
+                                      <Typography variant="caption" color="text.secondary">
+                                        {permission.name || 'N/A'}
+                                      </Typography>
+                                      {permission.description && (
+                                        <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                                          {permission.description}
+                                        </Typography>
+                                      )}
+                                    </Box>
+                                  </Box>
                                 </Paper>
                               </Grid>
                             )
@@ -546,7 +598,10 @@ const RolesPermissions: React.FC = () => {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClosePermissionDialog}>Close</Button>
+          <Button onClick={handleClosePermissionDialog}>Cancel</Button>
+          <Button onClick={handleSavePermissions} variant="contained" color="primary" disabled={loading}>
+            Save Permissions
+          </Button>
         </DialogActions>
       </Dialog>
 
