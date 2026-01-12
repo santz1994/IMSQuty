@@ -47,9 +47,11 @@ app.use(helmet({
 // CORS configuration - MUST come after helmet
 // Use dynamic origin to reflect the requesting origin in Access-Control-Allow-Origin header
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
-  'http://localhost:5173',
+  'http://localhost:5173',  // web-app
+  'http://localhost:5174',  // admin-panel
   'http://localhost:3000',
   'http://127.0.0.1:5173',
+  'http://127.0.0.1:5174',
   'http://127.0.0.1:3000'
 ];
 
@@ -252,10 +254,8 @@ app.get('/api/v1', (req, res) => {
 // SERVICE PROXIES (UPDATED WITH RESILIENCE)
 // ============================================
 
-// Auth Service (no authentication required) - UPDATED to use mock backend
-// Use host machine IP instead of host.docker.internal for better compatibility
-const MOCK_BACKEND_URL = process.env.MOCK_BACKEND_URL || 'http://192.168.1.122:3000';
-app.use('/api/v1/auth', authLimiter, createProxyMiddleware(proxyOptions(MOCK_BACKEND_URL, 'auth', true)));
+// Auth Service (no authentication required) - Using real auth-service
+app.use('/api/v1/auth', authLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('auth-service'), 'auth', true)));
 
 // NOW add body parsers for authenticated routes (after auth proxy which handles raw body)
 app.use(express.json());

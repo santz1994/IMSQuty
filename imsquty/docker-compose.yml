@@ -163,6 +163,11 @@ services:
       - imsquty-network
     volumes:
       - ./services/auth-service:/var/www/auth-service
+    healthcheck:
+      test: ["CMD", "php", "-r", "echo 'OK';"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
 
   # User Service
   user-service:
@@ -233,6 +238,11 @@ services:
       - imsquty-network
     volumes:
       - ./services/asset-service:/var/www/asset-service
+    healthcheck:
+      test: ["CMD", "php", "-r", "echo 'OK';"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
 
   # Ticket Service
   ticket-service:
@@ -302,6 +312,11 @@ services:
       - imsquty-network
     volumes:
       - ./services/inventory-service:/var/www/inventory-service
+    healthcheck:
+      test: ["CMD", "php", "-r", "echo 'OK';"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
 
   # Financial Service
   financial-service:
@@ -333,6 +348,11 @@ services:
       - imsquty-network
     volumes:
       - ./services/financial-service:/var/www/financial-service
+    healthcheck:
+      test: ["CMD", "php", "-r", "echo 'OK';"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
 
   # Meeting Room Service
   meeting-room-service:
@@ -426,6 +446,11 @@ services:
       - imsquty-network
     volumes:
       - ./services/reporting-service:/var/www/reporting-service
+    healthcheck:
+      test: ["CMD", "php", "-r", "echo 'OK';"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
 
   # Notification Service
   notification-service:
@@ -467,6 +492,11 @@ services:
       - imsquty-network
     volumes:
       - ./services/notification-service:/var/www/notification-service
+    healthcheck:
+      test: ["CMD", "php", "-r", "echo 'OK';"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
 
 # ===========================================
 # NETWORKS
