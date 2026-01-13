@@ -34,7 +34,7 @@ Write-Host "[INFO] Checking database connection..." -ForegroundColor Yellow
 Write-Host ""
 
 # Test database connection
-php artisan migrate:status 2>&1 | Out-Null
+$null = php artisan migrate:status 2>&1
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[ERROR] Cannot connect to database" -ForegroundColor Red
     Write-Host "   Please check your .env database configuration" -ForegroundColor Yellow
@@ -50,23 +50,23 @@ php artisan migrate:status
 Write-Host ""
 
 # Run migrations
-Write-Host "🚀 Running migrations..." -ForegroundColor Yellow
+Write-Host "[INFO] Running migrations..." -ForegroundColor Yellow
 Write-Host ""
 
 php artisan migrate --force
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host ""
-    Write-Host "✅ Migrations completed successfully!" -ForegroundColor Green
+    Write-Host "[OK] Migrations completed successfully!" -ForegroundColor Green
     Write-Host ""
     
     # Show updated migration status
-    Write-Host "📋 Updated migration status:" -ForegroundColor Cyan
+    Write-Host "[INFO] Updated migration status:" -ForegroundColor Cyan
     php artisan migrate:status
     Write-Host ""
     
     Write-Host "============================================" -ForegroundColor Cyan
-    Write-Host "  ✅ Migration Complete!" -ForegroundColor Green
+    Write-Host "  [SUCCESS] Migration Complete!" -ForegroundColor Green
     Write-Host "============================================" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "Next steps:" -ForegroundColor Yellow
@@ -74,10 +74,9 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "  2. Restart frontend admin-panel" -ForegroundColor White
     Write-Host "  3. Test Roles & Permissions page" -ForegroundColor White
     Write-Host ""
-}
-else {
+} else {
     Write-Host ""
-    Write-Host "❌ Migration failed!" -ForegroundColor Red
+    Write-Host "[ERROR] Migration failed!" -ForegroundColor Red
     Write-Host "   Please check the error message above" -ForegroundColor Yellow
     Write-Host ""
     exit 1

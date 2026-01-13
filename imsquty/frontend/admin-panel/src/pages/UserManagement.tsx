@@ -532,13 +532,25 @@ const UserManagement: React.FC = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, role_id: e.target.value as number })
                     }
+                    disabled={roles.length === 0}
                   >
-                    {roles.map((role) => (
-                      <MenuItem key={role.id} value={role.id}>
-                        {role.display_name}
+                    {roles.length === 0 ? (
+                      <MenuItem value="" disabled>
+                        Loading roles...
                       </MenuItem>
-                    ))}
+                    ) : (
+                      roles.map((role) => (
+                        <MenuItem key={role.id} value={role.id}>
+                          {role.display_name || role.name}
+                        </MenuItem>
+                      ))
+                    )}
                   </Select>
+                  {roles.length === 0 && (
+                    <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                      No roles available. Please check API connection.
+                    </Typography>
+                  )}
                 </FormControl>
               )}
               {dialogMode !== 'view' && (

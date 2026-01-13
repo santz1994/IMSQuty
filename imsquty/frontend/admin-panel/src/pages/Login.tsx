@@ -1,29 +1,47 @@
 import { Login as LoginIcon } from '@mui/icons-material'
 import {
-    Alert,
-    Box,
-    Button,
-    Container,
-    Paper,
-    TextField,
-    Typography,
+  Alert,
+  Box,
+  Button,
+  Container,
+  Paper,
+  TextField,
+  Typography,
 } from '@mui/material'
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { canAccessAdminPanel } from '../hooks/useAdminAccess'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { login } from '../store/slices/authSlice'
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState('admin@example.com')
-  const [password, setPassword] = useState('password')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [accessError, setAccessError] = useState<string | null>(null)
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const { loading, error } = useAppSelector((state) => state.auth)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setAccessError(null)
+
     const result = await dispatch(login({ email, password }))
+
     if (result.type === login.fulfilled.type) {
+      const user = (result.payload as any)?.user
+
+      // Check if user has admin panel access
+      if (!canAccessAdminPanel(user)) {
+        const userName = user?.name || user?.username || email
+        setAccessError(
+          `Access Denied: ${userName}, only Developers and Superadmins can access the Admin Panel.`
+        )
+        // Don't navigate, show error
+        return
+      }
+
+      // Success - navigate to admin
       navigate('/admin')
     }
   }
@@ -47,13 +65,14 @@ const Login: React.FC = () => {
           }}
         >
           <Typography variant="h4" align="center" sx={{ mb: 3 }}>
-            IMSQuty Admin
+            IMSQuty Admin Panel
           </Typography>
-          <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 2 }}>
-            Demo: admin@example.com / password
+          <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 3 }}>
+            🔒 Restricted Access: Developers & Superadmins Only
           </Typography>
 
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+          {accessError && <Alert severity="error" sx={{ mb: 2 }}>{accessError}</Alert>}
 
           <Box component="form" onSubmit={handleSubmit}>
             <TextField
@@ -63,6 +82,7 @@ const Login: React.FC = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               margin="normal"
+              placeholder="daniel@quty.co.id"
               required
             />
             <TextField

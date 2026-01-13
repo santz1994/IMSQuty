@@ -47,8 +47,7 @@ import {
   fetchPermissionsByModule,
   fetchRoleById,
   fetchRoles,
-  updateRole,
-  updateSelectedRolePermissions,
+  updateRole
 } from '../store/slices/roleSlice'
 
 interface RoleFormData {
@@ -190,22 +189,22 @@ const RolesPermissions: React.FC = () => {
       })
       return
     }
-    
+
     // For permission matrix dialog
     // Find the permission object
     const allPerms = Object.values(permissionsByModule).flat() as any[]
     const permission = allPerms.find((p: any) => p.id === permissionId)
-    
+
     if (!permission) return
-    
+
     // Check if permission already exists
     const hasPermission = selectedRole.permissions?.some((p) => p.id === permissionId)
-    
+
     // Update selectedRole permissions
     const updatedPermissions = hasPermission
       ? selectedRole.permissions?.filter((p) => p.id !== permissionId) || []
       : [...(selectedRole.permissions || []), permission]
-    
+
     // Dispatch update to Redux store
     dispatch({
       type: 'roles/updateSelectedRolePermissions',

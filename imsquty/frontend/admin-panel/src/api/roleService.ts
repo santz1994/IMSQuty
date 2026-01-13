@@ -100,13 +100,13 @@ class RoleService {
    */
   async getAllPermissions(): Promise<ApiResponse<Permission[]>> {
     const response = await client.get<any>('/permissions')
-    
+
     // Backend returns grouped permissions: { data: { group1: [perms], group2: [perms] } }
     // We need to flatten this into a single array
     if (response.data.success && response.data.data) {
       const groupedData = response.data.data
       let flatPermissions: Permission[] = []
-      
+
       // Check if data is already an array (flat) or an object (grouped)
       if (Array.isArray(groupedData)) {
         flatPermissions = groupedData
@@ -118,14 +118,14 @@ class RoleService {
           }
         })
       }
-      
+
       return {
         success: true,
         data: flatPermissions,
         message: response.data.message || 'Permissions fetched successfully'
       }
     }
-    
+
     return response.data
   }
 
@@ -165,7 +165,7 @@ class RoleService {
     // Backend already returns grouped permissions
     if (response.data.success && response.data.data) {
       const groupedData = response.data.data
-      
+
       // If already grouped, return as-is
       if (!Array.isArray(groupedData)) {
         return {
@@ -174,7 +174,7 @@ class RoleService {
           message: response.data.message || 'Permissions fetched successfully'
         }
       }
-      
+
       // If it's an array, group it by 'group' field
       const groupedPermissions: Record<string, Permission[]> = {}
       groupedData.forEach((permission: Permission) => {

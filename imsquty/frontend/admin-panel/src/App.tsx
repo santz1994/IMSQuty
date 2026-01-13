@@ -1,26 +1,15 @@
-import React from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import AdminLayout from './components/layouts/AdminLayout'
+import ProtectedRoute from './components/ProtectedRoute'
 import AdminDashboard from './pages/AdminDashboard'
 import AuditLogs from './pages/AuditLogs'
 import Login from './pages/Login'
 import PagePermissions from './pages/PagePermissions'
 import RolesPermissions from './pages/RolesPermissions'
 import SystemSettings from './pages/SystemSettings'
+import Unauthorized from './pages/Unauthorized'
 import UserManagement from './pages/UserManagement'
 import { useAppSelector } from './store/hooks'
-
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  const { isAuthenticated } = useAppSelector((state) => state.auth)
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />
-  }
-
-  return <>{children}</>
-}
 
 function App() {
   const { isAuthenticated } = useAppSelector((state) => state.auth)
@@ -31,6 +20,8 @@ function App() {
         path="/login"
         element={isAuthenticated ? <Navigate to="/admin" replace /> : <Login />}
       />
+
+      <Route path="/unauthorized" element={<Unauthorized />} />
 
       <Route
         path="/admin"
