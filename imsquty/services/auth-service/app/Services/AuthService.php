@@ -7,6 +7,7 @@ use App\Exceptions\InvalidCredentialsException;
 use App\Exceptions\AccountLockedException;
 use App\Exceptions\InvalidTokenException;
 use App\Models\User;
+use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -55,8 +56,34 @@ class AuthService
 
         // Find user by email or username
         $user = $this->findUserByIdentifier($identifier);
+        
+        // DEBUG
+        Log::info('Login attempt', [
+            'identifier' => $identifier,
+            'user_found' => $user ? true : false,
+            'user_id' => $user?->id,
+            'password_hash' => $user?->password ? substr($user->password, 0, 30) : 'N/A'
+        ]);
+        
+        // Eager load roles relationship
+        if ($user) {
+            $user->load('roles');
+        }
 
-        if (!$user || !Hash::check($password, $user->password)) {
+        if (!$user) {
+            Log::info('User not found', ['identifier' => $identifier]);
+            $this->incrementFailedAttempts($identifier);
+            $this->logLoginAttempt($identifier, false, request()->ip());
+            throw new InvalidCredentialsException();
+        }
+
+        $passwordMatches = Hash::check($password, $user->password);
+        Log::info('Password check', [
+            'matches' => $passwordMatches,
+            'user_id' => $user->id
+        ]);
+
+        if (!$passwordMatches) {
             // Increment failed attempts
             $this->incrementFailedAttempts($identifier);
             
@@ -97,16 +124,13 @@ class AuthService
             'user_agent' => request()->userAgent()
         ]);
 
-        // Prepare user data with roles and permissions
-        $userData = $user->toArray();
-        $userData['roles'] = $user->roles->toArray();
-
+        // Use UserResource to properly serialize user with roles
         return [
             'access_token' => $accessToken,
             'refresh_token' => $refreshToken,
             'token_type' => 'bearer',
             'expires_in' => config('jwt.ttl') * 60,
-            'user' => $userData
+            'user' => new UserResource($user)
         ];
     }
 

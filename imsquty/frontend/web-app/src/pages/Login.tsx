@@ -31,9 +31,9 @@ import { login } from '../store/slices/authSlice'
 const Login: React.FC = () => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [emailError, setEmailError] = useState('')
+  const [usernameError, setUsernameError] = useState('')
   const [passwordError, setPasswordError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loginSuccess, setLoginSuccess] = useState(false)
@@ -43,14 +43,11 @@ const Login: React.FC = () => {
 
   const validateForm = () => {
     let isValid = true
-    setEmailError('')
+    setUsernameError('')
     setPasswordError('')
 
-    if (!email) {
-      setEmailError('Email is required')
-      isValid = false
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setEmailError('Invalid email format')
+    if (!username) {
+      setUsernameError('Username or email is required')
       isValid = false
     }
 
@@ -70,7 +67,7 @@ const Login: React.FC = () => {
     if (!validateForm()) return
 
     try {
-      await dispatch(login({ email, password })).unwrap()
+      await dispatch(login({ username, password })).unwrap()
       setLoginSuccess(true)
 
       setTimeout(() => {
@@ -296,18 +293,18 @@ const Login: React.FC = () => {
                   )}
 
                   <form onSubmit={handleSubmit}>
-                    {/* Email field */}
+                    {/* Username/Email field */}
                     <Box sx={{ mb: 2 }}>
                       <TextField
                         fullWidth
-                        label="Email Address/username"
-                        type="email"
+                        label="Username or Email"
+                        type="text"
                         variant="outlined"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
                         disabled={loading}
-                        error={!!emailError}
-                        helperText={emailError}
+                        error={!!usernameError}
+                        helperText={usernameError}
                         InputProps={{
                           startAdornment: (
                             <InputAdornment position="start">
@@ -487,7 +484,7 @@ const Login: React.FC = () => {
                             transform: 'translateX(4px)',
                           },
                         }}
-                        onClick={() => setEmail(cred.email)}
+                        onClick={() => setUsername(cred.email)}
                       >
                         <Typography
                           variant="caption"

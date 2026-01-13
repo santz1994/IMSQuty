@@ -27,6 +27,7 @@ class RolesSeeder extends Seeder
         $roles = [
             [
                 'name' => 'developer',
+                'display_name' => 'Developer',
                 'guard_name' => 'api',
                 'description' => 'System Developer & Architect - Highest level access for system development and architecture. Reserved for daniel@quty.co.id.',
                 'is_system' => true,
@@ -34,6 +35,7 @@ class RolesSeeder extends Seeder
             ],
             [
                 'name' => 'superadmin',
+                'display_name' => 'Super Administrator',
                 'guard_name' => 'api',
                 'description' => 'Pengguna dengan akses tertinggi dalam sistem IT. Mengelola infrastruktur, keamanan, database, dan konfigurasi sistem.',
                 'is_system' => true,
@@ -41,6 +43,7 @@ class RolesSeeder extends Seeder
             ],
             [
                 'name' => 'director',
+                'display_name' => 'Director',
                 'guard_name' => 'api',
                 'description' => 'Eksekutif dengan tanggung jawab strategis perusahaan. Menentukan kebijakan dan strategi bisnis.',
                 'is_system' => true,
@@ -48,6 +51,7 @@ class RolesSeeder extends Seeder
             ],
             [
                 'name' => 'manager',
+                'display_name' => 'Manager',
                 'guard_name' => 'api',
                 'description' => 'Pimpinan tim/departemen yang mengelola operasional tim dan melakukan approval level-1.',
                 'is_system' => true,
@@ -55,6 +59,7 @@ class RolesSeeder extends Seeder
             ],
             [
                 'name' => 'admin',
+                'display_name' => 'Administrator',
                 'guard_name' => 'api',
                 'description' => 'Pengguna dengan akses terbatas untuk mengelola modul tertentu dan mendukung operasional harian.',
                 'is_system' => true,
@@ -62,6 +67,7 @@ class RolesSeeder extends Seeder
             ],
             [
                 'name' => 'hr',
+                'display_name' => 'Human Resources',
                 'guard_name' => 'api',
                 'description' => 'Tim yang mengelola sumber daya manusia termasuk rekrutmen, cuti, dan data karyawan.',
                 'is_system' => true,
@@ -69,6 +75,7 @@ class RolesSeeder extends Seeder
             ],
             [
                 'name' => 'receptionist',
+                'display_name' => 'Receptionist',
                 'guard_name' => 'api',
                 'description' => 'Receptionist dengan akses khusus untuk mengelola meeting room dan penjadwalan.',
                 'is_system' => true,
@@ -76,6 +83,7 @@ class RolesSeeder extends Seeder
             ],
             [
                 'name' => 'user',
+                'display_name' => 'User',
                 'guard_name' => 'api',
                 'description' => 'Pengguna biasa atau staf yang menggunakan sistem untuk tugas harian seperti membuat tiket dan melihat aset.',
                 'is_system' => true,

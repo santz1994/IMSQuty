@@ -10,12 +10,11 @@ import {
 } from '@mui/material'
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { canAccessAdminPanel } from '../hooks/useAdminAccess'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { login } from '../store/slices/authSlice'
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [accessError, setAccessError] = useState<string | null>(null)
   const dispatch = useAppDispatch()
@@ -26,22 +25,10 @@ const Login: React.FC = () => {
     e.preventDefault()
     setAccessError(null)
 
-    const result = await dispatch(login({ email, password }))
+    const result = await dispatch(login({ username, password }))
 
     if (result.type === login.fulfilled.type) {
-      const user = (result.payload as any)?.user
-
-      // Check if user has admin panel access
-      if (!canAccessAdminPanel(user)) {
-        const userName = user?.name || user?.username || email
-        setAccessError(
-          `Access Denied: ${userName}, only Developers and Superadmins can access the Admin Panel.`
-        )
-        // Don't navigate, show error
-        return
-      }
-
-      // Success - navigate to admin
+      // Success - navigate to admin (ProtectedRoute will handle access control)
       navigate('/admin')
     }
   }
@@ -77,12 +64,12 @@ const Login: React.FC = () => {
           <Box component="form" onSubmit={handleSubmit}>
             <TextField
               fullWidth
-              label="Email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              label="Username or Email"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               margin="normal"
-              placeholder="daniel@quty.co.id"
+              placeholder="Enter your email address"
               required
             />
             <TextField

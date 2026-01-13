@@ -80,6 +80,73 @@ router.use('/auth', createProxyMiddleware({
 // Apply authentication middleware to all protected routes
 router.use(authMiddleware);
 
+// RBAC ENDPOINTS - Route to AUTH SERVICE
+router.use('/roles', createProxyMiddleware({
+  target: SERVICES.auth,
+  changeOrigin: true,
+  pathRewrite: {
+    '^/api/v1/roles': '/api/v1/roles'
+  },
+  onProxyReq: (proxyReq, req, res) => {
+    proxyReq.setHeader('X-User-Id', req.user?.id);
+    proxyReq.setHeader('X-User-Email', req.user?.email);
+    proxyReq.setHeader('X-User-Roles', JSON.stringify(req.user?.roles || []));
+    proxyReq.setHeader('X-Real-IP', req.ip);
+    proxyReq.setHeader('X-Forwarded-For', req.get('x-forwarded-for') || req.ip);
+  },
+  onError: (err, req, res) => {
+    res.status(503).json({
+      success: false,
+      message: 'Auth Service unavailable',
+      error: process.env.DEBUG ? err.message : undefined
+    });
+  }
+}));
+
+router.use('/permissions', createProxyMiddleware({
+  target: SERVICES.auth,
+  changeOrigin: true,
+  pathRewrite: {
+    '^/api/v1/permissions': '/api/v1/permissions'
+  },
+  onProxyReq: (proxyReq, req, res) => {
+    proxyReq.setHeader('X-User-Id', req.user?.id);
+    proxyReq.setHeader('X-User-Email', req.user?.email);
+    proxyReq.setHeader('X-User-Roles', JSON.stringify(req.user?.roles || []));
+    proxyReq.setHeader('X-Real-IP', req.ip);
+    proxyReq.setHeader('X-Forwarded-For', req.get('x-forwarded-for') || req.ip);
+  },
+  onError: (err, req, res) => {
+    res.status(503).json({
+      success: false,
+      message: 'Auth Service unavailable',
+      error: process.env.DEBUG ? err.message : undefined
+    });
+  }
+}));
+
+router.use('/audit-logs', createProxyMiddleware({
+  target: SERVICES.auth,
+  changeOrigin: true,
+  pathRewrite: {
+    '^/api/v1/audit-logs': '/api/v1/audit-logs'
+  },
+  onProxyReq: (proxyReq, req, res) => {
+    proxyReq.setHeader('X-User-Id', req.user?.id);
+    proxyReq.setHeader('X-User-Email', req.user?.email);
+    proxyReq.setHeader('X-User-Roles', JSON.stringify(req.user?.roles || []));
+    proxyReq.setHeader('X-Real-IP', req.ip);
+    proxyReq.setHeader('X-Forwarded-For', req.get('x-forwarded-for') || req.ip);
+  },
+  onError: (err, req, res) => {
+    res.status(503).json({
+      success: false,
+      message: 'Auth Service unavailable',
+      error: process.env.DEBUG ? err.message : undefined
+    });
+  }
+}));
+
 // USER SERVICE
 router.use('/users', createProxyMiddleware({
   target: SERVICES.user,

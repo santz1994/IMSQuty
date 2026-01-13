@@ -25,10 +25,11 @@ class DeveloperSeeder extends Seeder
             ['email' => 'daniel@quty.co.id'],
             [
                 'username' => 'daniel',
-                'name' => 'Daniel Rizaldy',
+                'first_name' => 'Daniel',
+                'last_name' => 'Rizaldy',
                 'email' => 'daniel@quty.co.id',
                 'password' => Hash::make('Dev@2026!Secure'), // Change this password!
-                'is_active' => true,
+                'status' => 'active',
                 'email_verified_at' => now(),
             ]
         );

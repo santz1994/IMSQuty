@@ -157,7 +157,8 @@ class UserRepository extends BaseRepository
         $user = User::withTrashed()->find($id);
         
         if ($user && $user->trashed()) {
-            return parent::restore($id);
+            $user->restore();
+            return true;
         }
         
         return false;

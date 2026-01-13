@@ -5,7 +5,7 @@ import apiClient from './client'
 // ============================================================================
 
 export interface LoginRequest {
-  email: string
+  username: string
   password: string
 }
 
@@ -172,15 +172,22 @@ function transformUserData(userData: any): User {
 
 export const authService = {
   /**
-   * Login with email and password - REAL DATABASE ONLY
+   * Login with username/email and password - REAL DATABASE ONLY
+   * Automatically detects if input is email or username and sends appropriate field
    */
-  login: async (email: string, password: string): Promise<LoginResponse> => {
+  login: async (usernameOrEmail: string, password: string): Promise<LoginResponse> => {
     try {
       console.log('[AUTH] 🔑 Attempting real database login...')
 
+      // Detect if input is email or username
+      const isEmail = usernameOrEmail.includes('@')
+      const requestBody = isEmail
+        ? { email: usernameOrEmail, password }
+        : { username: usernameOrEmail, password }
+
       const response = await apiClient.post<LoginResponse>(
         `${AUTH_API_BASE}/login`,
-        { email, password }
+        requestBody
       )
 
       if (response.data.success) {

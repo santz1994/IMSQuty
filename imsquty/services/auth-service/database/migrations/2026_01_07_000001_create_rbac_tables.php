@@ -50,8 +50,10 @@ return new class extends Migration
         Schema::create($tableNames['roles'], function (Blueprint $table) {
             $table->id();
             $table->string('name', 255);
+            $table->string('display_name', 255)->default(''); // Display name for UI
             $table->string('guard_name', 255);
             $table->string('description', 500)->nullable();
+            $table->integer('level')->default(6); // Role hierarchy level
             $table->boolean('is_system')->default(false); // System roles cannot be deleted
             $table->timestamps();
 

@@ -1,15 +1,24 @@
 import client from './client'
 
+export interface Role {
+  id: number
+  name: string
+  display_name: string
+  level: number
+}
+
 export interface User {
   id: number
   email: string
   first_name: string
   last_name: string
+  username?: string
   role_id?: number
+  roles?: Role[]
 }
 
 export interface LoginRequest {
-  email: string
+  username: string
   password: string
 }
 
@@ -24,11 +33,14 @@ export interface LoginResponse {
 }
 
 class AuthService {
-  async login(email: string, password: string): Promise<LoginResponse> {
-    const response = await client.post<LoginResponse>('/auth/login', {
-      email,
-      password,
-    })
+  async login(usernameOrEmail: string, password: string): Promise<LoginResponse> {
+    // Detect if input is email or username
+    const isEmail = usernameOrEmail.includes('@')
+    const requestBody = isEmail
+      ? { email: usernameOrEmail, password }
+      : { username: usernameOrEmail, password }
+
+    const response = await client.post<LoginResponse>('/auth/login', requestBody)
     if (response.data.data.access_token) {
       localStorage.setItem('token', response.data.data.access_token)
       localStorage.setItem('user', JSON.stringify(response.data.data.user))

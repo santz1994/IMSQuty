@@ -20,11 +20,11 @@ const initialState: AuthState = {
 export const login = createAsyncThunk(
   'auth/login',
   async (
-    credentials: { email: string; password: string },
+    credentials: { username: string; password: string },
     { rejectWithValue },
   ) => {
     try {
-      const response = await authService.login(credentials.email, credentials.password)
+      const response = await authService.login(credentials.username, credentials.password)
       return response.data
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Login failed')

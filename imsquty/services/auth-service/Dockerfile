@@ -39,6 +39,9 @@ COPY services/auth-service/ .
 # Generate autoload files
 RUN composer dump-autoload --optimize
 
+# Install netcat for database connectivity check
+RUN apt-get update && apt-get install -y netcat-openbsd
+
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage \
@@ -47,6 +50,10 @@ RUN chown -R www-data:www-data /var/www/html \
 # Create non-root user
 RUN groupadd -g 1000 imsquty && \
     useradd -u 1000 -g imsquty -m imsquty
+
+# Copy entrypoint script
+COPY services/auth-service/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 USER imsquty
 
@@ -57,4 +64,4 @@ EXPOSE 8001
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:8001/api/v1/health || exit 1
 
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8001"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

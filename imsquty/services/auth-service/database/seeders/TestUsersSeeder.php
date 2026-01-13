@@ -27,28 +27,49 @@ class TestUsersSeeder extends Seeder
         $itDevDept = Department::where('code', 'IT-DEV')->first();
         $hrDept = Department::where('code', 'HR')->first();
         $opsDept = Department::where('code', 'OPS')->first();
-
         $networkTeam = Team::where('code', 'IT-INF-NET')->first();
         $backendTeam = Team::where('code', 'IT-DEV-BE')->first();
         $helpdeskTeam = Team::where('code', 'IT-SUP-HD1')->first();
         $qaTeam = Team::where('code', 'OPS-QA')->first();
 
+        // LEVEL 0: Developer (System Architect - daniel@quty.co.id)
+        $daniel = User::updateOrCreate(
+            ['email' => 'daniel@quty.co.id'],
+            [
+                'username' => 'daniel',
+                'password' => Hash::make('Password123!'),
+                'first_name' => 'Daniel',
+                'last_name' => 'Rizaldy',
+                'phone' => '+62-812-8741-2570',
+                'department_id' => $itDevDept?->id,
+                'team_id' => $backendTeam?->id,
+                'position' => 'System Architect & Lead Developer',
+                'bio' => 'System architect and lead developer with full system access',
+                'status' => 'active',
+                'email_verified_at' => now(),
+            ]
+        );
+        if (!$daniel->hasRole('developer')) {
+            $daniel->assignRole('developer');
+        }
+
         // LEVEL 1: Superadmin (IT Infrastructure)
-        $superadmin = User::create([
-            'username' => 'superadmin',
-            'email' => 'superadmin@quty.co.id',
-            'password' => Hash::make('password123'),
-            'first_name' => 'System',
-            'last_name' => 'Administrator',
-            'phone' => '+62-812-1234-0001',
-            'department_id' => $itInfraDept?->id,
+        $superadmin = User::updateOrCreate(
+            ['email' => 'superadmin@quty.co.id'],
+            [
+                'username' => 'superadmin',
+                'password' => Hash::make('password123'),
+                'first_name' => 'System',
+                'last_name' => 'Administrator',
+                'phone' => '+62-812-1234-0001',
+                'department_id' => $itInfraDept?->id,
             'team_id' => $networkTeam?->id,
             'position' => 'Chief Technology Officer',
             'bio' => 'Responsible for all IT infrastructure and system administration',
             'status' => 'active',
             'email_verified_at' => now(),
         ]);
-        $superadmin->assignRole('Super Admin');
+        $superadmin->assignRole('superadmin');
 
         // LEVEL 2: Director (Strategic Business)
         $director = User::create([
@@ -64,7 +85,7 @@ class TestUsersSeeder extends Seeder
             'status' => 'active',
             'email_verified_at' => now(),
         ]);
-        $director->assignRole('Manager'); // Using Manager role as closest to Director
+        $director->assignRole('director');
 
         // Update department director
         if ($itDept) {
@@ -86,7 +107,7 @@ class TestUsersSeeder extends Seeder
             'status' => 'active',
             'email_verified_at' => now(),
         ]);
-        $manager->assignRole('Manager');
+        $manager->assignRole('manager');
 
         // Update department and team manager
         if ($itDevDept) {
@@ -111,7 +132,7 @@ class TestUsersSeeder extends Seeder
             'status' => 'active',
             'email_verified_at' => now(),
         ]);
-        $admin->assignRole('Admin');
+        $admin->assignRole('admin');
 
         // LEVEL 4B: HR (Human Resources)
         $hr = User::create([
@@ -127,7 +148,7 @@ class TestUsersSeeder extends Seeder
             'status' => 'active',
             'email_verified_at' => now(),
         ]);
-        $hr->assignRole('Manager'); // Using Manager role for HR
+        $hr->assignRole('hr');
 
         // Update HR department manager
         if ($hrDept) {
@@ -149,7 +170,7 @@ class TestUsersSeeder extends Seeder
             'status' => 'active',
             'email_verified_at' => now(),
         ]);
-        $user->assignRole('User');
+        $user->assignRole('user');
 
         // Additional developers for testing
         $dev1 = User::create([
@@ -200,17 +221,18 @@ class TestUsersSeeder extends Seeder
 
         $this->command->info('✅ Test users created successfully!');
         $this->command->info('');
-        $this->command->warn('⚠️  DEFAULT PASSWORD: password123');
+        $this->command->warn('⚠️  DEFAULT PASSWORD: password123 (daniel: Password123!)');
         $this->command->info('');
         $this->command->table(
             ['Username', 'Email', 'Role', 'Department', 'Team'],
             [
-                ['superadmin', 'superadmin@quty.co.id', 'Superadmin', $itInfraDept?->name ?? 'N/A', $networkTeam?->name ?? 'N/A'],
-                ['director', 'director@quty.co.id', 'Director', $itDept?->name ?? 'N/A', '-'],
-                ['manager', 'manager@quty.co.id', 'Manager', $itDevDept?->name ?? 'N/A', $backendTeam?->name ?? 'N/A'],
-                ['admin', 'admin@quty.co.id', 'Admin', $itDevDept?->name ?? 'N/A', $backendTeam?->name ?? 'N/A'],
-                ['hr', 'hr@quty.co.id', 'HR', $hrDept?->name ?? 'N/A', '-'],
-                ['user', 'user@quty.co.id', 'User', $opsDept?->name ?? 'N/A', $qaTeam?->name ?? 'N/A'],
+                ['daniel', 'daniel@quty.co.id', 'Developer (Level 0)', $itDevDept?->name ?? 'N/A', $backendTeam?->name ?? 'N/A'],
+                ['superadmin', 'superadmin@quty.co.id', 'Superadmin (Level 1)', $itInfraDept?->name ?? 'N/A', $networkTeam?->name ?? 'N/A'],
+                ['director', 'director@quty.co.id', 'Director (Level 2)', $itDept?->name ?? 'N/A', '-'],
+                ['manager', 'manager@quty.co.id', 'Manager (Level 3)', $itDevDept?->name ?? 'N/A', $backendTeam?->name ?? 'N/A'],
+                ['admin', 'admin@quty.co.id', 'Admin (Level 4)', $itDevDept?->name ?? 'N/A', $backendTeam?->name ?? 'N/A'],
+                ['hr', 'hr@quty.co.id', 'HR (Level 4)', $hrDept?->name ?? 'N/A', '-'],
+                ['user', 'user@quty.co.id', 'User (Level 6)', $opsDept?->name ?? 'N/A', $qaTeam?->name ?? 'N/A'],
                 ['developer1', 'dev1@quty.co.id', 'User', $itDevDept?->name ?? 'N/A', $backendTeam?->name ?? 'N/A'],
                 ['developer2', 'dev2@quty.co.id', 'User', $itDevDept?->name ?? 'N/A', $backendTeam?->name ?? 'N/A'],
                 ['helpdesk', 'helpdesk@quty.co.id', 'User', $itInfraDept?->name ?? 'N/A', $helpdeskTeam?->name ?? 'N/A'],
