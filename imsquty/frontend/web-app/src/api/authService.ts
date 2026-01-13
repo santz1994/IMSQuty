@@ -177,6 +177,18 @@ export const authService = {
    */
   login: async (usernameOrEmail: string, password: string): Promise<LoginResponse> => {
     try {
+      console.log('[AUTH SERVICE] login() called')
+      console.log('[AUTH SERVICE] Param 1 (usernameOrEmail):', usernameOrEmail, 'type:', typeof usernameOrEmail)
+      console.log('[AUTH SERVICE] Param 2 (password):', password ? '***' : password, 'type:', typeof password)
+
+      // Validate input parameters
+      if (!usernameOrEmail || !password) {
+        console.error('[AUTH SERVICE] ❌ VALIDATION FAILED - Missing parameters')
+        console.error('[AUTH SERVICE] usernameOrEmail:', usernameOrEmail)
+        console.error('[AUTH SERVICE] password:', password)
+        throw new Error('Username/email and password are required')
+      }
+
       console.log('[AUTH] 🔑 Attempting real database login...')
 
       // Detect if input is email or username

@@ -49,6 +49,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const navigationItems = [
     { label: 'Dashboard', path: '/admin' },
     { label: 'Users', path: '/admin/users' },
+    { label: 'Meeting Rooms', path: '/admin/meeting-rooms' },
     { label: 'System Settings', path: '/admin/settings' },
     { label: 'Audit Logs', path: '/admin/audit-logs' },
     { label: 'Roles & Permissions', path: '/admin/roles' },

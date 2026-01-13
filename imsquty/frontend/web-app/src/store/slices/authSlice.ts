@@ -1,5 +1,8 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
-import { authService, User } from '../../api/authService'
+import authService, { User } from '../../api/authService'
+
+// FORCE REBUILD: 2026-01-13 15:35 - authSlice fix applied, module cache invalidation required
+const CACHE_BUST = Math.random() + Date.now()
 
 interface AuthState {
   user: User | null
@@ -20,15 +23,21 @@ const initialState: AuthState = {
 /**
  * Login thunk - Authenticates user with backend API
  * Uses authService which handles token storage and user data
+ * COPIED FROM WORKING ADMIN PANEL CODE
  */
 export const login = createAsyncThunk(
   'auth/login',
   async (
-    { username, password }: { username: string; password: string },
+    credentials: { username: string; password: string },
     { rejectWithValue },
   ) => {
     try {
-      const response = await authService.login(username, password)
+      console.log('[WEB-APP-LOGIN-V2] Timestamp:', new Date().toISOString())
+      console.log('[WEB-APP-LOGIN-V2] Credentials object:', credentials)
+      console.log('[WEB-APP-LOGIN-V2] Username:', credentials.username)
+      console.log('[WEB-APP-LOGIN-V2] Password exists:', !!credentials.password)
+      const response = await authService.login(credentials.username, credentials.password)
+      console.log('[WEB-APP LOGIN] Response success:', response.success)
 
       if (!response.success) {
         return rejectWithValue(response.message || 'Login failed')
@@ -42,6 +51,7 @@ export const login = createAsyncThunk(
       }
     } catch (error: any) {
       const errorMessage = error instanceof Error ? error.message : 'Login failed'
+      console.error('[WEB-APP LOGIN] Error:', errorMessage)
       return rejectWithValue(errorMessage)
     }
   },

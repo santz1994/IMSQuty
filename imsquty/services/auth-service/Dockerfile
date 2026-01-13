@@ -42,14 +42,14 @@ RUN composer dump-autoload --optimize
 # Install netcat for database connectivity check
 RUN apt-get update && apt-get install -y netcat-openbsd
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html/storage \
-    && chmod -R 755 /var/www/html/bootstrap/cache
-
 # Create non-root user
 RUN groupadd -g 1000 imsquty && \
     useradd -u 1000 -g imsquty -m imsquty
+
+# Set permissions
+RUN chown -R imsquty:imsquty /var/www/html \
+    && chmod -R 775 /var/www/html/storage \
+    && chmod -R 775 /var/www/html/bootstrap/cache
 
 # Copy entrypoint script
 COPY services/auth-service/entrypoint.sh /usr/local/bin/entrypoint.sh

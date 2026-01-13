@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Direct Login Test</title>
+</head>
+
+<body>
+    <h1>Direct API Login Test</h1>
+    <form id="loginForm">
+        <input type="text" id="email" value="daniel@quty.co.id" placeholder="Email"><br>
+        <input type="password" id="password" value="Password123!" placeholder="Password"><br>
+        <button type="submit">Login</button>
+    </form>
+    <pre id="result"></pre>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            console.log('Sending:', { email, password });
+
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+
+                if (data.success) {
+                    alert('✅ LOGIN SUCCESSFUL! Backend works perfectly.');
+                    console.log('Token:', data.data.access_token);
+                }
+            } catch (error) {
+                document.getElementById('result').textContent = 'Error: ' + error.message;
+            }
+        });
+    </script>
+</body>
+
+</html>

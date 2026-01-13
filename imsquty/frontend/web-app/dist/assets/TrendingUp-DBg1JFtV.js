@@ -1,1 +1,0 @@
-import{i as r,j as t}from"./index-CIm3m-in.js";import{r as a}from"./createSvgIcon-BDtfUQSh.js";var e={},i=r;Object.defineProperty(e,"__esModule",{value:!0});var o=e.default=void 0,u=i(a()),d=t;o=e.default=(0,u.default)((0,d.jsx)("path",{d:"m16 6 2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"}),"TrendingUp");export{o as d};

@@ -4,6 +4,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import AdminDashboard from './pages/AdminDashboard'
 import AuditLogs from './pages/AuditLogs'
 import Login from './pages/Login'
+import MeetingRooms from './pages/MeetingRooms'
 import PagePermissions from './pages/PagePermissions'
 import RolesPermissions from './pages/RolesPermissions'
 import SystemSettings from './pages/SystemSettings'
@@ -84,6 +85,17 @@ function App() {
           <ProtectedRoute>
             <AdminLayout>
               <PagePermissions />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/meeting-rooms"
+        element={
+          <ProtectedRoute>
+            <AdminLayout>
+              <MeetingRooms />
             </AdminLayout>
           </ProtectedRoute>
         }

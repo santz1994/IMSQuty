@@ -66,6 +66,8 @@ const Login: React.FC = () => {
     e.preventDefault()
     if (!validateForm()) return
 
+    console.log('[LOGIN] About to dispatch with username:', username, 'password:', password ? '***' : 'undefined')
+
     try {
       await dispatch(login({ username, password })).unwrap()
       setLoginSuccess(true)
