@@ -33,6 +33,17 @@ import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import axios from 'axios'
 import React, { useCallback, useEffect, useState } from 'react'
 
+/// <reference types="vite/client" />
+
+interface ImportMetaEnv {
+  readonly VITE_API_BASE_URL: string
+  // Add other env variables here as needed
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv
+}
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
 interface MeetingRoom {
