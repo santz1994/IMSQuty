@@ -6,15 +6,19 @@ use App\Repositories\BookingRepository;
 use App\DTOs\CheckInDTO;
 use App\DTOs\CheckOutDTO;
 use App\DTOs\BookingFeedbackDTO;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class BookingWorkflowService
 {
     protected BookingRepository $bookingRepository;
+    protected EmailService $emailService;
 
-    public function __construct(BookingRepository $bookingRepository)
+    public function __construct(BookingRepository $bookingRepository, EmailService $emailService)
     {
         $this->bookingRepository = $bookingRepository;
+        $this->emailService = $emailService;
     }
 
     /**
@@ -173,11 +177,32 @@ class BookingWorkflowService
             ];
         }
 
+        // Get approver details
+        $approver = User::find($approvedBy);
+        if (!$approver) {
+            Log::warning('Approver user not found', ['user_id' => $approvedBy]);
+            $approver = null;
+        }
+
+        // Update booking status
         $updated = $this->bookingRepository->update($bookingId, [
             'status' => 'Confirmed',
             'approved_by' => $approvedBy,
             'approved_at' => Carbon::now(),
         ]);
+
+        // Send approval email to all participants
+        if ($approver && $updated) {
+            try {
+                $this->emailService->sendBookingApproved($updated, $approver);
+            } catch (\Exception $e) {
+                Log::error('Failed to send approval email', [
+                    'booking_id' => $bookingId,
+                    'error' => $e->getMessage(),
+                ]);
+                // Don't fail the approval if email fails
+            }
+        }
 
         return [
             'success' => true,
@@ -207,12 +232,33 @@ class BookingWorkflowService
             ];
         }
 
+        // Get rejecter details
+        $rejecter = User::find($rejectedBy);
+        if (!$rejecter) {
+            Log::warning('Rejecter user not found', ['user_id' => $rejectedBy]);
+            $rejecter = null;
+        }
+
+        // Update booking status
         $updated = $this->bookingRepository->update($bookingId, [
             'status' => 'Rejected',
             'rejection_reason' => $reason,
             'rejected_by' => $rejectedBy,
             'rejected_at' => Carbon::now(),
         ]);
+
+        // Send rejection email to all participants
+        if ($rejecter && $updated) {
+            try {
+                $this->emailService->sendBookingRejected($updated, $rejecter, $reason);
+            } catch (\Exception $e) {
+                Log::error('Failed to send rejection email', [
+                    'booking_id' => $bookingId,
+                    'error' => $e->getMessage(),
+                ]);
+                // Don't fail the rejection if email fails
+            }
+        }
 
         return [
             'success' => true,

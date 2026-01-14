@@ -8,7 +8,7 @@ use App\Http\Resources\MeetingRoomResource;
 use App\Services\MeetingRoomService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Shared\Traits\ApiResponses;
+use App\Traits\ApiResponses;
 
 class MeetingRoomController extends Controller
 {

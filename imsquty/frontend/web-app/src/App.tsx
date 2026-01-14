@@ -14,6 +14,7 @@ const AssetDetail = lazy(() => import('./pages/Assets/AssetDetail'))
 const TicketList = lazy(() => import('./pages/Tickets/TicketList'))
 const TicketCreate = lazy(() => import('./pages/Tickets/TicketCreate'))
 const TicketDetail = lazy(() => import('./pages/Tickets/TicketDetail'))
+const SLADashboard = lazy(() => import('./pages/Tickets/SLADashboard'))
 const ReportsList = lazy(() => import('./pages/Reports/ReportsList'))
 const InventoryList = lazy(() => import('./pages/Inventory/InventoryList'))
 const FinancialList = lazy(() => import('./pages/Financial/FinancialList'))
@@ -22,8 +23,13 @@ const MeetingRoomsList = lazy(() => import('./pages/MeetingRooms/MeetingRoomsLis
 const BookingCalendar = lazy(() => import('./pages/MeetingRooms/BookingCalendar'))
 const BookingApprovals = lazy(() => import('./pages/MeetingRooms/BookingApprovals'))
 const ReceptionistPanel = lazy(() => import('./pages/MeetingRooms/ReceptionistPanel'))
+const BookingForm = lazy(() => import('./pages/MeetingRooms/BookingForm'))
+const BookingsList = lazy(() => import('./pages/MeetingRooms/BookingsList'))
+const ApprovalDashboard = lazy(() => import('./pages/MeetingRooms/ApprovalDashboard'))
+const ReceptionistView = lazy(() => import('./pages/MeetingRooms/ReceptionistView'))
 const AuditLogsList = lazy(() => import('./pages/AuditLogs/AuditLogsList'))
 const SettingsPage = lazy(() => import('./pages/Settings/SettingsPage'))
+const DailyActivities = lazy(() => import('./pages/Admin/DailyActivities'))
 
 // Role-based dashboards
 const SuperAdminDashboard = lazy(() => import('./pages/SuperAdmin/SuperAdminDashboard'))
@@ -153,6 +159,15 @@ function App() {
         />
 
         <Route
+          path="/tickets/sla/dashboard"
+          element={
+            <ProtectedDashboardRoute>
+              <SLADashboard />
+            </ProtectedDashboardRoute>
+          }
+        />
+
+        <Route
           path="/inventory"
           element={
             <ProtectedDashboardRoute>
@@ -215,6 +230,45 @@ function App() {
           }
         />
 
+        {/* User Booking Module Routes - A.1 Implementation */}
+        <Route
+          path="/meeting-room-bookings"
+          element={
+            <ProtectedDashboardRoute>
+              <BookingsList />
+            </ProtectedDashboardRoute>
+          }
+        />
+
+        <Route
+          path="/meeting-room-bookings/create"
+          element={
+            <ProtectedDashboardRoute>
+              <BookingForm />
+            </ProtectedDashboardRoute>
+          }
+        />
+
+        {/* Director Approval Dashboard Routes - A.2 Implementation */}
+        <Route
+          path="/meeting-room-bookings/approvals"
+          element={
+            <ProtectedDashboardRoute>
+              <ApprovalDashboard />
+            </ProtectedDashboardRoute>
+          }
+        />
+
+        {/* Receptionist View Routes - A.3 Implementation */}
+        <Route
+          path="/meeting-room-bookings/receptionist"
+          element={
+            <ProtectedDashboardRoute>
+              <ReceptionistView />
+            </ProtectedDashboardRoute>
+          }
+        />
+
         {/* LCD Display routes - fullscreen without navigation */}
         <Route
           path="/meeting-rooms/display/:roomId"
@@ -257,6 +311,15 @@ function App() {
           element={
             <ProtectedDashboardRoute>
               <SettingsPage />
+            </ProtectedDashboardRoute>
+          }
+        />
+
+        <Route
+          path="/daily-activities"
+          element={
+            <ProtectedDashboardRoute>
+              <DailyActivities />
             </ProtectedDashboardRoute>
           }
         />

@@ -22,6 +22,9 @@ return new class extends Migration
             $table->dateTime('end_time');
             $table->unsignedInteger('attendees_count')->default(0);
             $table->json('attendees_list')->nullable()->comment('Array of attendee user IDs or names');
+            $table->json('participant_emails')->nullable()->comment('Emails of external participants to receive notifications');
+            $table->boolean('email_sent')->default(false)->comment('Track if initial booking confirmation email sent');
+            $table->boolean('approval_email_sent')->default(false)->comment('Track if approval/rejection email sent');
             $table->text('special_requirements')->nullable()->comment('Catering, setup requirements, etc.');
             $table->enum('status', ['pending', 'approved', 'rejected', 'cancelled', 'completed'])->default('pending');
             $table->unsignedBigInteger('approved_by')->nullable()->comment('User ID who approved');

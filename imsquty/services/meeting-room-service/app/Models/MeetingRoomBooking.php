@@ -28,6 +28,9 @@ class MeetingRoomBooking extends Model
         'end_time',
         'attendees_count',
         'attendees_list',
+        'participant_emails',
+        'email_sent',
+        'approval_email_sent',
         'special_requirements',
         'status',
         'approved_by',
@@ -44,6 +47,9 @@ class MeetingRoomBooking extends Model
      */
     protected $casts = [
         'attendees_list' => 'array',
+        'participant_emails' => 'array',
+        'email_sent' => 'boolean',
+        'approval_email_sent' => 'boolean',
         'attendees_count' => 'integer',
         'start_time' => 'datetime',
         'end_time' => 'datetime',

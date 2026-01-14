@@ -6,12 +6,14 @@ use App\Repositories\BookingRepository;
 use App\Repositories\MeetingRoomRepository;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class BookingService
 {
     public function __construct(
         private BookingRepository $bookingRepository,
-        private MeetingRoomRepository $meetingRoomRepository
+        private MeetingRoomRepository $meetingRoomRepository,
+        private EmailService $emailService
     ) {}
 
     /**
@@ -124,13 +126,27 @@ class BookingService
             DB::beginTransaction();
 
             $booking = $this->bookingRepository->create($data);
+            
+            // Reload with relationships
+            $booking = $booking->load(['meetingRoom', 'user']);
+
+            // Send confirmation email to requester and participants
+            try {
+                $this->emailService->sendBookingConfirmation($booking);
+            } catch (\Exception $e) {
+                Log::error('Failed to send booking confirmation email', [
+                    'booking_id' => $booking->id,
+                    'error' => $e->getMessage(),
+                ]);
+                // Don't fail the booking if email fails
+            }
 
             DB::commit();
 
             return [
                 'success' => true,
                 'message' => 'Booking created successfully',
-                'data' => $booking->load(['meetingRoom', 'user']),
+                'data' => $booking,
             ];
         } catch (\Exception $e) {
             DB::rollBack();
@@ -336,5 +352,13 @@ class BookingService
             'success' => true,
             'data' => $this->bookingRepository->getStatistics($filters),
         ];
+    }
+
+    /**
+     * Check if there's a conflict for the given time slot
+     */
+    public function hasConflict(int $roomId, string $startTime, string $endTime, ?int $excludeBookingId = null): bool
+    {
+        return $this->bookingRepository->checkConflicts($roomId, $startTime, $endTime, $excludeBookingId);
     }
 }

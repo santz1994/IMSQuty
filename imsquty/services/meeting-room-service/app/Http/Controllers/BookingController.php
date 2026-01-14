@@ -12,7 +12,7 @@ use App\Services\BookingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Shared\Traits\ApiResponses;
+use App\Traits\ApiResponses;
 
 class BookingController extends Controller
 {
@@ -200,5 +200,112 @@ class BookingController extends Controller
         $result = $this->bookingService->getStatistics($filters);
 
         return response()->json($result);
+    }
+
+    /**
+     * Reschedule a booking (receptionist privilege)
+     */
+    public function reschedule(Request $request, int $id): JsonResponse
+    {
+        $request->validate([
+            'start_time' => 'required|date',
+            'end_time' => 'required|date|after:start_time',
+            'reschedule_reason' => 'required|string|max:500',
+            'notify_user' => 'boolean',
+        ]);
+
+        $booking = $this->bookingService->getBookingById($id);
+        if (!$booking) {
+            return $this->notFoundResponse('Booking not found');
+        }
+
+        // Check for conflicts (excluding current booking)
+        if ($this->bookingService->hasConflict(
+            $booking->meeting_room_id,
+            $request->start_time,
+            $request->end_time,
+            $id
+        )) {
+            return $this->errorResponse('New time slot conflicts with another booking', 400);
+        }
+
+        $result = $this->bookingService->updateBooking($id, [
+            'start_time' => $request->start_time,
+            'end_time' => $request->end_time,
+            'rescheduled_by' => Auth::id(),
+            'reschedule_reason' => $request->reschedule_reason,
+            'rescheduled_at' => now(),
+        ]);
+
+        if (!$result['success']) {
+            return $this->errorResponse($result['message'], 400);
+        }
+
+        // TODO: Send notification to original booker
+        if ($request->input('notify_user', true)) {
+            // Notification logic
+        }
+
+        return $this->successResponse(
+            new BookingResource($result['data']),
+            'Booking rescheduled successfully'
+        );
+    }
+
+    /**
+     * Override an existing booking (emergency use by receptionist)
+     */
+    public function override(Request $request, int $id): JsonResponse
+    {
+        $request->validate([
+            'override_reason' => 'required|string|max:500',
+            'new_booking' => 'required|array',
+            'new_booking.room_id' => 'required|exists:meeting_rooms,id',
+            'new_booking.title' => 'required|string|max:255',
+            'new_booking.start_time' => 'required|date',
+            'new_booking.end_time' => 'required|date|after:new_booking.start_time',
+            'new_booking.attendees_count' => 'required|integer|min:1',
+            'notify_original_user' => 'boolean',
+        ]);
+
+        $originalBooking = $this->bookingService->getBookingById($id);
+        if (!$originalBooking) {
+            return $this->notFoundResponse('Original booking not found');
+        }
+
+        \Illuminate\Support\Facades\DB::beginTransaction();
+        try {
+            // Cancel original booking
+            $this->bookingService->cancelBooking($id, $request->override_reason);
+
+            // Create new booking
+            $newBookingData = $request->new_booking;
+            $newBookingData['user_id'] = Auth::id();
+            $newBookingData['overridden_booking_id'] = $id;
+            $newBookingData['status'] = 'approved'; // Auto-approve receptionist overrides
+            
+            $newResult = $this->bookingService->createBooking($newBookingData);
+
+            if (!$newResult['success']) {
+                \Illuminate\Support\Facades\DB::rollBack();
+                return $this->errorResponse($newResult['message'], 400);
+            }
+
+            \Illuminate\Support\Facades\DB::commit();
+
+            // TODO: Notify original booker
+            if ($request->input('notify_original_user', true)) {
+                // Notification logic
+            }
+
+            return $this->successResponse([
+                'cancelled_booking' => $originalBooking,
+                'new_booking' => new BookingResource($newResult['data']),
+            ], 'Booking overridden successfully');
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            return $this->errorResponse('Override failed: ' . $e->getMessage(), 500);
+        }
     }
 }

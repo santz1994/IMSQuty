@@ -1,6 +1,7 @@
 import {
   AccountCircle,
   Assessment,
+  Assignment,
   ConfirmationNumber,
   Dashboard,
   Description,
@@ -12,6 +13,7 @@ import {
   Payment,
   Settings,
   ShoppingCart,
+  Timer,
   TrendingUp
 } from '@mui/icons-material'
 import {
@@ -58,20 +60,26 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     navigate('/login')
   }
 
-  // Role-based menu items
+  // Role-based menu items - All roles should see their permitted pages
   const allMenuItems = [
-    { label: 'Dashboard', icon: <Dashboard />, path: '/', roles: ['user', 'admin', 'superadmin'] },
-    { label: 'Assets', icon: <Inventory />, path: '/assets', roles: ['user', 'admin', 'superadmin'] },
-    { label: 'Tickets', icon: <ConfirmationNumber />, path: '/tickets', roles: ['user', 'admin', 'superadmin'] },
-    { label: 'Inventory', icon: <ShoppingCart />, path: '/inventory', roles: ['admin', 'superadmin'] },
-    { label: 'Financial', icon: <Payment />, path: '/financial', roles: ['admin', 'superadmin'] },
-    { label: 'Reports', icon: <Description />, path: '/reports', roles: ['admin', 'superadmin'] },
-    { label: 'Meeting Rooms', icon: <MeetingRoom />, path: '/meeting-rooms', roles: ['admin', 'superadmin'] },
-    { label: 'KPI Dashboard', icon: <TrendingUp />, path: '/kpi', roles: ['admin', 'superadmin'] },
-    { label: 'Notifications', icon: <Notifications />, path: '/notifications', roles: ['admin', 'superadmin'] },
-    { label: 'Audit Logs', icon: <Assessment />, path: '/audit-logs', roles: ['admin', 'superadmin'] },
-    { label: 'Settings', icon: <Settings />, path: '/settings', roles: ['admin', 'superadmin'] },
-    // Note: User Management is admin-only, accessible at /admin/users in admin-panel
+    { label: 'Dashboard', icon: <Dashboard />, path: '/', roles: ['user', 'admin', 'receptionist', 'hr', 'manager', 'director', 'superadmin', 'developer'] },
+    { label: 'Assets', icon: <Inventory />, path: '/assets', roles: ['user', 'admin', 'receptionist', 'hr', 'manager', 'director', 'superadmin', 'developer'] },
+    { label: 'Tickets', icon: <ConfirmationNumber />, path: '/tickets', roles: ['user', 'admin', 'receptionist', 'hr', 'manager', 'director', 'superadmin', 'developer'] },
+    { label: 'SLA Dashboard', icon: <Timer />, path: '/tickets/sla/dashboard', roles: ['admin', 'manager', 'director', 'superadmin', 'developer'] },
+    { label: 'Daily Activities', icon: <Assignment />, path: '/daily-activities', roles: ['admin', 'manager', 'director', 'superadmin', 'developer'] },
+    { label: 'Inventory', icon: <ShoppingCart />, path: '/inventory', roles: ['admin', 'manager', 'director', 'superadmin', 'developer'] },
+    { label: 'Financial', icon: <Payment />, path: '/financial', roles: ['admin', 'manager', 'director', 'superadmin', 'developer'] },
+    { label: 'Reports', icon: <Description />, path: '/reports', roles: ['admin', 'hr', 'manager', 'director', 'superadmin', 'developer'] },
+    { label: 'Meeting Rooms', icon: <MeetingRoom />, path: '/meeting-rooms', roles: ['user', 'admin', 'receptionist', 'hr', 'manager', 'director', 'superadmin', 'developer'] },
+    { label: 'My Bookings', icon: <MeetingRoom />, path: '/meeting-room-bookings', roles: ['user', 'admin', 'receptionist', 'hr', 'manager', 'director', 'superadmin', 'developer'] },
+    { label: 'Booking Calendar', icon: <MeetingRoom />, path: '/meeting-rooms/calendar', roles: ['user', 'admin', 'receptionist', 'hr', 'manager', 'director', 'superadmin', 'developer'] },
+    { label: 'Booking Approvals', icon: <MeetingRoom />, path: '/meeting-rooms/approvals', roles: ['admin', 'manager', 'director', 'superadmin', 'developer'] },
+    { label: 'Approve Requests', icon: <MeetingRoom />, path: '/meeting-room-bookings/approvals', roles: ['admin', 'manager', 'director', 'superadmin', 'developer'] },
+    { label: 'Receptionist View', icon: <MeetingRoom />, path: '/meeting-room-bookings/receptionist', roles: ['receptionist', 'admin', 'superadmin', 'developer'] },
+    { label: 'KPI Dashboard', icon: <TrendingUp />, path: '/kpi', roles: ['manager', 'director', 'superadmin', 'developer'] },
+    { label: 'Notifications', icon: <Notifications />, path: '/notifications', roles: ['user', 'admin', 'receptionist', 'hr', 'manager', 'director', 'superadmin', 'developer'] },
+    { label: 'Audit Logs', icon: <Assessment />, path: '/audit-logs', roles: ['admin', 'superadmin', 'developer'] },
+    { label: 'Settings', icon: <Settings />, path: '/settings', roles: ['user', 'admin', 'receptionist', 'hr', 'manager', 'director', 'superadmin', 'developer'] },
   ]
 
   // Filter menu items based on user role

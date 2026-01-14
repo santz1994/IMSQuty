@@ -17,6 +17,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { logout } from '../../store/slices/authSlice'
+import ThemeToggle from '../ThemeToggle'
 
 interface AdminLayoutProps {
   children: React.ReactNode
@@ -97,6 +98,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               <Typography variant="body2" sx={{ mr: 2 }}>
                 {user.first_name} {user.last_name}
               </Typography>
+              <ThemeToggle />
               <IconButton color="inherit" onClick={handleMenuOpen}>
                 <AccountCircle />
               </IconButton>
@@ -132,7 +134,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         sx={{
           flexGrow: 1,
           pt: 8,
-          backgroundColor: '#f5f5f5',
+          backgroundColor: (theme) => theme.palette.background.default,
           minHeight: '100vh',
         }}
       >

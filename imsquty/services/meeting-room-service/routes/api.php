@@ -5,6 +5,7 @@ use App\Http\Controllers\MetricsController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\BookingWorkflowController;
 use App\Http\Controllers\AvailabilityController;
+use App\Http\Controllers\MeetingRoomBlockController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -34,8 +35,16 @@ Route::prefix('v1')->group(function () {
             Route::put('/{id}', [MeetingRoomController::class, 'update']);
             Route::delete('/{id}', [MeetingRoomController::class, 'destroy']);
             Route::get('/{id}/statistics', [MeetingRoomController::class, 'statistics']);
+            
+            // Room blocking endpoints
+            Route::post('/{id}/block', [MeetingRoomBlockController::class, 'block']);
+            Route::post('/{id}/unblock', [MeetingRoomBlockController::class, 'unblock']);
+            Route::get('/{id}/blocks', [MeetingRoomBlockController::class, 'getRoomBlocks']);
         });
     });
+
+    // Get blocked rooms list
+    Route::middleware(['auth:sanctum'])->get('/blocked-rooms', [MeetingRoomBlockController::class, 'getBlockedRooms']);
 
     // Bookings (all protected)
     Route::middleware(['auth:sanctum'])->prefix('bookings')->group(function () {
@@ -59,6 +68,10 @@ Route::prefix('v1')->group(function () {
         Route::post('/{id}/check-out', [BookingWorkflowController::class, 'checkOut']);
         Route::post('/{id}/feedback', [BookingWorkflowController::class, 'submitFeedback']);
         Route::get('/query/statistics', [BookingController::class, 'statistics']);
+        
+        // Receptionist override actions
+        Route::post('/{id}/reschedule', [BookingController::class, 'reschedule']);
+        Route::post('/{id}/override', [BookingController::class, 'override']);
     });
 
     // Availability (public access for checking)

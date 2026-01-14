@@ -11,7 +11,7 @@ const http = require('http');
 const https = require('https');
 
 console.log('\n🧪 SESSION 33 - WEB-APP LOGIN VERIFICATION TEST\n');
-console.log('=' .repeat(60));
+console.log('='.repeat(60));
 
 // Test 1: Backend API Login
 async function testBackendLogin() {
@@ -45,7 +45,7 @@ async function testBackendLogin() {
       res.on('end', () => {
         try {
           const response = JSON.parse(data);
-          
+
           if (res.statusCode === 200 && response.success) {
             console.log(`   ✅ PASS - Status: ${res.statusCode}`);
             console.log(`   ✅ User: ${response.data.user.full_name}`);
@@ -176,21 +176,21 @@ async function testAPIGateway() {
     console.log('   4. Verify successful redirect to dashboard');
   } else {
     console.log('\n⚠️  SOME TESTS FAILED - Check errors above');
-    
+
     if (!results.backend.success) {
       console.log('\n🔧 Backend Fix:');
       console.log('   - Check if auth-service container is running');
       console.log('   - Verify database has daniel@quty.co.id user');
       console.log('   - Check auth-service logs: docker-compose logs auth-service');
     }
-    
+
     if (!results.frontend.success) {
       console.log('\n🔧 Frontend Fix:');
       console.log('   - Start Vite dev server: npx vite --port 5173');
       console.log('   - Check if port 5173 is available');
       console.log('   - Look for compile errors in terminal');
     }
-    
+
     if (!results.gateway.success) {
       console.log('\n🔧 Gateway Fix:');
       console.log('   - Check if api-gateway container is running');

@@ -1,4 +1,4 @@
-import { Add, Delete, Edit } from '@mui/icons-material'
+import { Add, Delete, Download, Edit, Upload } from '@mui/icons-material'
 import {
   Alert,
   Box,
@@ -25,6 +25,8 @@ import {
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAssets } from '../../hooks/useAssets'
+import AssetExportDialog from './AssetExportDialog'
+import AssetImportDialog from './AssetImportDialog'
 
 interface Asset {
   id: number
@@ -53,6 +55,8 @@ export default function AssetList() {
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
   const [openDialog, setOpenDialog] = useState(false)
+  const [openImportDialog, setOpenImportDialog] = useState(false)
+  const [openExportDialog, setOpenExportDialog] = useState(false)
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null)
   const [formData, setFormData] = useState<{
     asset_tag: string
@@ -169,13 +173,29 @@ export default function AssetList() {
       <Stack spacing={3}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h5">Assets</Typography>
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={handleAddAsset}
-          >
-            Add Asset
-          </Button>
+          <Stack direction="row" spacing={1}>
+            <Button
+              variant="outlined"
+              startIcon={<Upload />}
+              onClick={() => setOpenImportDialog(true)}
+            >
+              Import
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<Download />}
+              onClick={() => setOpenExportDialog(true)}
+            >
+              Export
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              onClick={handleAddAsset}
+            >
+              Add Asset
+            </Button>
+          </Stack>
         </Box>
 
         <TextField
@@ -310,6 +330,22 @@ export default function AssetList() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Import Dialog */}
+      <AssetImportDialog
+        open={openImportDialog}
+        onClose={() => setOpenImportDialog(false)}
+        onImportComplete={() => {
+          setOpenImportDialog(false)
+          fetchAssets() // Refresh list after import
+        }}
+      />
+
+      {/* Export Dialog */}
+      <AssetExportDialog
+        open={openExportDialog}
+        onClose={() => setOpenExportDialog(false)}
+      />
     </Box>
   )
 }

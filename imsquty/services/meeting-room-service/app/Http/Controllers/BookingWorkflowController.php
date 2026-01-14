@@ -8,7 +8,7 @@ use App\DTOs\CheckOutDTO;
 use App\DTOs\BookingFeedbackDTO;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Shared\Traits\ApiResponses;
+use App\Traits\ApiResponses;
 
 /**
  * Booking Workflow Controller

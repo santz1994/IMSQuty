@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\AvailabilityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Shared\Traits\ApiResponses;
+use App\Traits\ApiResponses;
 
 /**
  * Availability Controller
