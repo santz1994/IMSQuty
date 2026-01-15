@@ -3,13 +3,13 @@ import { Box, Button, Paper, Typography } from '@mui/material';
 import React, { ReactNode } from 'react';
 
 interface Props {
-  children: ReactNode;
+    children: ReactNode;
 }
 
 interface State {
-  hasError: boolean;
-  error: Error | null;
-  errorInfo: React.ErrorInfo | null;
+    hasError: boolean;
+    error: Error | null;
+    errorInfo: React.ErrorInfo | null;
 }
 
 /**
@@ -53,11 +53,11 @@ export class ErrorBoundary extends React.Component<Props, State> {
                             Oops! Something went wrong
                         </Typography>
                         <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>
-                            {process.env.NODE_ENV === 'development'
+                            {import.meta.env.DEV
                                 ? this.state.error?.message
                                 : 'Please refresh the page or contact support'}
                         </Typography>
-                        {process.env.NODE_ENV === 'development' && (
+                        {import.meta.env.DEV && (
                             <Typography
                                 variant="caption"
                                 component="pre"

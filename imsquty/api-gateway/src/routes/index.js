@@ -74,6 +74,62 @@ router.use('/auth', createProxyMiddleware({
 }));
 
 // ============================================
+// MEETING-ROOM SERVICE (Optional Auth - Public Read, Protected Write)
+// ============================================
+
+// Apply optional auth for meeting rooms (passes user context if authenticated)
+router.use('/meeting-rooms', optionalAuthMiddleware, createProxyMiddleware({
+  target: SERVICES['meeting-room'],
+  changeOrigin: true,
+  pathRewrite: {
+    '^/api/v1/meeting-rooms': '/api/v1/meeting-rooms'
+  },
+  onProxyReq: (proxyReq, req, res) => {
+    // Forward user context if authenticated
+    if (req.user) {
+      proxyReq.setHeader('X-User-Id', req.user?.id);
+      proxyReq.setHeader('X-User-Email', req.user?.email);
+      proxyReq.setHeader('X-User-Roles', JSON.stringify(req.user?.roles || []));
+    }
+    proxyReq.setHeader('X-Real-IP', req.ip);
+    proxyReq.setHeader('X-Forwarded-For', req.get('x-forwarded-for') || req.ip);
+  },
+  onError: (err, req, res) => {
+    res.status(503).json({
+      success: false,
+      message: 'Meeting-Room Service unavailable',
+      error: process.env.DEBUG ? err.message : undefined
+    });
+  }
+}));
+
+// Apply optional auth for bookings routes (bookings require auth at service level)
+router.use('/bookings', optionalAuthMiddleware, createProxyMiddleware({
+  target: SERVICES['meeting-room'],
+  changeOrigin: true,
+  pathRewrite: {
+    '^/api/v1/bookings': '/api/v1/bookings'
+  },
+  onProxyReq: (proxyReq, req, res) => {
+    // Forward user context if authenticated
+    if (req.user) {
+      proxyReq.setHeader('X-User-Id', req.user?.id);
+      proxyReq.setHeader('X-User-Email', req.user?.email);
+      proxyReq.setHeader('X-User-Roles', JSON.stringify(req.user?.roles || []));
+    }
+    proxyReq.setHeader('X-Real-IP', req.ip);
+    proxyReq.setHeader('X-Forwarded-For', req.get('x-forwarded-for') || req.ip);
+  },
+  onError: (err, req, res) => {
+    res.status(503).json({
+      success: false,
+      message: 'Meeting-Room Service unavailable',
+      error: process.env.DEBUG ? err.message : undefined
+    });
+  }
+}));
+
+// ============================================
 // PROTECTED ROUTES (Require Authentication)
 // ============================================
 
@@ -304,29 +360,6 @@ router.use('/notifications', createProxyMiddleware({
     res.status(503).json({
       success: false,
       message: 'Notification Service unavailable',
-      error: process.env.DEBUG ? err.message : undefined
-    });
-  }
-}));
-
-// MEETING-ROOM SERVICE
-router.use('/meeting-rooms', createProxyMiddleware({
-  target: SERVICES['meeting-room'],
-  changeOrigin: true,
-  pathRewrite: {
-    '^/api/v1/meeting-rooms': '/api/v1/meeting-rooms'
-  },
-  onProxyReq: (proxyReq, req, res) => {
-    proxyReq.setHeader('X-User-Id', req.user?.id);
-    proxyReq.setHeader('X-User-Email', req.user?.email);
-    proxyReq.setHeader('X-User-Roles', JSON.stringify(req.user?.roles || []));
-    proxyReq.setHeader('X-Real-IP', req.ip);
-    proxyReq.setHeader('X-Forwarded-For', req.get('x-forwarded-for') || req.ip);
-  },
-  onError: (err, req, res) => {
-    res.status(503).json({
-      success: false,
-      message: 'Meeting-Room Service unavailable',
       error: process.env.DEBUG ? err.message : undefined
     });
   }

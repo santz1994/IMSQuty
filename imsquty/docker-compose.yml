@@ -31,6 +31,7 @@ services:
     image: redis:7-alpine
     container_name: imsquty-redis
     restart: unless-stopped
+    command: redis-server --requirepass redislabs
     ports:
       - "6379:6379"
     volumes:
@@ -38,7 +39,7 @@ services:
     networks:
       - imsquty-network
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "redislabs", "ping"]
       interval: 10s
       timeout: 3s
       retries: 5
@@ -119,10 +120,10 @@ services:
       - TICKET_SERVICE_URL=http://ticket-service:8004
       - INVENTORY_SERVICE_URL=http://inventory-service:8005
       - FINANCIAL_SERVICE_URL=http://financial-service:8006
-      - MEETING_ROOM_SERVICE_URL=http://meeting-room-service:8007
-      - MASTER_DATA_SERVICE_URL=http://master-data-service:8008
-      - REPORTING_SERVICE_URL=http://reporting-service:8009
-      - NOTIFICATION_SERVICE_URL=http://notification-service:8010
+      - MASTER_DATA_SERVICE_URL=http://master-data-service:8007
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8008
+      - MEETING_ROOM_SERVICE_URL=http://meeting-room-service:8009
+      - REPORTING_SERVICE_URL=http://reporting-service:8010
       - REDIS_HOST=redis
       - REDIS_PORT=6379
     depends_on:
@@ -363,12 +364,12 @@ services:
     container_name: imsquty-meeting-room-service
     restart: unless-stopped
     ports:
-      - "8007:8007"
+      - "8009:8009"
     environment:
       - APP_NAME=MeetingRoomService
       - APP_ENV=${APP_ENV}
       - APP_DEBUG=${APP_DEBUG}
-      - APP_PORT=8007
+      - APP_PORT=8009
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - DB_DATABASE=${DB_DATABASE}
@@ -394,12 +395,12 @@ services:
     container_name: imsquty-master-data-service
     restart: unless-stopped
     ports:
-      - "8008:8008"
+      - "8007:8007"
     environment:
       - APP_NAME=MasterDataService
       - APP_ENV=${APP_ENV}
       - APP_DEBUG=${APP_DEBUG}
-      - APP_PORT=8008
+      - APP_PORT=8007
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - DB_DATABASE=${DB_DATABASE}
@@ -425,12 +426,12 @@ services:
     container_name: imsquty-reporting-service
     restart: unless-stopped
     ports:
-      - "8009:8009"
+      - "8010:8010"
     environment:
       - APP_NAME=ReportingService
       - APP_ENV=${APP_ENV}
       - APP_DEBUG=${APP_DEBUG}
-      - APP_PORT=8009
+      - APP_PORT=8010
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - DB_DATABASE=${DB_DATABASE}
@@ -461,12 +462,12 @@ services:
     container_name: imsquty-notification-service
     restart: unless-stopped
     ports:
-      - "8010:8010"
+      - "8008:8008"
     environment:
       - APP_NAME=NotificationService
       - APP_ENV=${APP_ENV}
       - APP_DEBUG=${APP_DEBUG}
-      - APP_PORT=8010
+      - APP_PORT=8008
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - DB_DATABASE=${DB_DATABASE}

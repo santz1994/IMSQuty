@@ -25,7 +25,6 @@ import {
   Typography,
 } from '@mui/material'
 import React, { useState } from 'react'
-import ThemeSelector from '../../components/common/ThemeSelector'
 import { useAppSelector } from '../../store/hooks'
 
 interface TabPanelProps {
@@ -159,7 +158,6 @@ const SettingsPage: React.FC = () => {
             <Tab label="General" />
             <Tab label="Notifications" />
             <Tab label="Security" />
-            <Tab label="Appearance" />
           </Tabs>
         </Box>
 
@@ -396,19 +394,6 @@ const SettingsPage: React.FC = () => {
                     inputProps={{ min: 5, max: 120 }}
                   />
                 </Stack>
-              </CardContent>
-            </Card>
-          </Stack>
-        </TabPanel>
-
-        {/* Appearance Tab */}
-        <TabPanel value={tabValue} index={3}>
-          <Stack spacing={3}>
-            <Card>
-              <CardHeader title="Theme Settings" />
-              <Divider />
-              <CardContent>
-                <ThemeSelector />
               </CardContent>
             </Card>
           </Stack>

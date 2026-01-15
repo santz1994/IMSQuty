@@ -51,10 +51,14 @@ COPY . .
 # Generate optimized autoloader
 RUN composer dump-autoload --optimize --no-dev
 
+# Create non-root user
+RUN groupadd -g 1000 imsquty && \
+    useradd -u 1000 -g imsquty -m imsquty
+
 # Set permissions
-RUN chown -R www-data:www-data /var/www/meeting-room-service \
-    && chmod -R 755 /var/www/meeting-room-service/storage \
-    && chmod -R 755 /var/www/meeting-room-service/bootstrap/cache
+RUN chown -R imsquty:imsquty /var/www/meeting-room-service \
+    && chmod -R 775 /var/www/meeting-room-service/storage \
+    && chmod -R 775 /var/www/meeting-room-service/bootstrap/cache
 
 # Configure PHP
 RUN echo "memory_limit = 256M" > /usr/local/etc/php/conf.d/custom.ini && \
@@ -67,11 +71,13 @@ RUN echo "memory_limit = 256M" > /usr/local/etc/php/conf.d/custom.ini && \
     echo "opcache.max_accelerated_files = 10000" >> /usr/local/etc/php/conf.d/custom.ini && \
     echo "opcache.revalidate_freq = 2" >> /usr/local/etc/php/conf.d/custom.ini
 
+USER imsquty
+
 # Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
     CMD ps aux | grep -q '[p]hp' || exit 1
 
-EXPOSE 8000
+EXPOSE 8009
 
 # Start PHP-FPM and Laravel server
-CMD ["sh", "-c", "php artisan config:cache && php artisan route:cache && php artisan serve --host=0.0.0.0 --port=8000"]
+CMD ["sh", "-c", "php artisan config:cache && php artisan route:cache && php artisan serve --host=0.0.0.0 --port=${APP_PORT:-8009}"]

@@ -13,8 +13,9 @@ export interface User {
   first_name: string
   last_name: string
   username?: string
+  role?: string  // Single role string (primary role)
   role_id?: number
-  roles?: Role[]
+  roles?: Role[]  // Array of roles
 }
 
 export interface LoginRequest {

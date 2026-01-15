@@ -53,7 +53,7 @@ interface ConflictWarning {
 const BookingForm: React.FC = () => {
   const navigate = useNavigate()
   const { user } = useAppSelector((state) => state.auth)
-  const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:8000'
+  const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000'
 
   // Form state
   const [formData, setFormData] = useState({

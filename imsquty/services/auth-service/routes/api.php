@@ -123,6 +123,20 @@ Route::prefix('v1')->group(function () {
         Route::prefix('permissions')->group(function () {
             Route::get('/', [PermissionController::class, 'index'])->name('permissions.index');
             Route::get('/{id}', [PermissionController::class, 'show'])->name('permissions.show');
+            
+            // Enhanced Permission Features (B.5) - All in one controller
+            Route::get('/effective/{roleId}', [PermissionController::class, 'getEffectivePermissions'])
+                ->name('permissions.effective');
+            Route::post('/bulk-assign', [PermissionController::class, 'bulkAssignPermissions'])
+                ->name('permissions.bulk-assign');
+            Route::post('/bulk-revoke', [PermissionController::class, 'bulkRevokePermissions'])
+                ->name('permissions.bulk-revoke');
+            Route::post('/detect-conflicts', [PermissionController::class, 'detectConflicts'])
+                ->name('permissions.detect-conflicts');
+            Route::post('/templates/{templateId}/apply', [PermissionController::class, 'applyTemplate'])
+                ->name('permissions.templates.apply');
+            Route::post('/custom', [PermissionController::class, 'createCustomPermission'])
+                ->name('permissions.custom.create');
         });
 
         // Page Permissions Management (NEW)

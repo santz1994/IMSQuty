@@ -107,10 +107,10 @@ class ServiceRegistry {
       'ticket-service': env.TICKET_SERVICE_URL || 'http://ticket-service:8004',
       'inventory-service': env.INVENTORY_SERVICE_URL || 'http://inventory-service:8005',
       'financial-service': env.FINANCIAL_SERVICE_URL || 'http://financial-service:8006',
-      'meeting-room-service': env.MEETING_ROOM_SERVICE_URL || 'http://meeting-room-service:8007',
-      'master-data-service': env.MASTER_DATA_SERVICE_URL || 'http://master-data-service:8008',
-      'reporting-service': env.REPORTING_SERVICE_URL || 'http://reporting-service:8009',
-      'notification-service': env.NOTIFICATION_SERVICE_URL || 'http://notification-service:8010'
+      'master-data-service': env.MASTER_DATA_SERVICE_URL || 'http://master-data-service:8007',
+      'notification-service': env.NOTIFICATION_SERVICE_URL || 'http://notification-service:8008',
+      'meeting-room-service': env.MEETING_ROOM_SERVICE_URL || 'http://meeting-room-service:8009',
+      'reporting-service': env.REPORTING_SERVICE_URL || 'http://reporting-service:8010'
     };
 
     Object.entries(services).forEach(([key, url]) => {

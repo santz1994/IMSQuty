@@ -162,6 +162,34 @@ const authenticateJWT = (req, res, next) => {
   }
 };
 
+// Optional authentication middleware (for endpoints with public read, protected write)
+const optionalAuthenticateJWT = (req, res, next) => {
+  // Skip authentication for OPTIONS preflight requests
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
+
+  const authHeader = req.headers.authorization;
+
+  // No token provided - allow request to continue but without user context
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return next();
+  }
+
+  const token = authHeader.substring(7);
+
+  try {
+    const jwtSecret = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+    const decoded = jwt.verify(token, jwtSecret);
+    req.user = decoded; // Add user to request if token is valid
+    next();
+  } catch (error) {
+    // Invalid token - still allow request but log the error
+    logger.warn('Optional JWT verification failed:', error.message);
+    next(); // Continue without user context
+  }
+};
+
 // ============================================
 // SERVICE REGISTRY & DISCOVERY (NEW)
 // ============================================
@@ -330,8 +358,11 @@ app.use('/api/v1/inventory', authenticateJWT, generalLimiter, createProxyMiddlew
 // Financial Service - UPDATED with stricter rate limiting for data export
 app.use('/api/v1/financial', authenticateJWT, exportLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('financial-service'), 'financial', true)));
 
-// Meeting Room Service - UPDATED with dynamic service resolution
-app.use('/api/v1/meeting-rooms', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('meeting-room-service'), 'meetingRoom', true)));
+// Meeting Room Service - UPDATED with optional authentication (public read, protected write)
+app.use('/api/v1/meeting-rooms', optionalAuthenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('meeting-room-service'), 'meetingRoom', true)));
+
+// Bookings (part of meeting-room-service, requires authentication)
+app.use('/api/v1/bookings', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('meeting-room-service'), 'meetingRoom', true)));
 
 // Master Data Service - UPDATED with admin rate limiting
 app.use('/api/v1/master-data', authenticateJWT, adminLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('master-data-service'), 'masterData', true)));

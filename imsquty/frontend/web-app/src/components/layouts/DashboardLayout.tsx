@@ -35,6 +35,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { logout } from '../../store/slices/authSlice'
+import ThemeToggleButton from '../common/ThemeToggleButton'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -103,6 +104,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           <Typography sx={{ mr: 2 }}>
             {user?.first_name} {user?.last_name}
           </Typography>
+          <ThemeToggleButton />
           <IconButton
             color="inherit"
             onClick={handleMenuOpen}
