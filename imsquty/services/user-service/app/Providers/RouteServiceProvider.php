@@ -31,6 +31,9 @@ class RouteServiceProvider extends ServiceProvider
                 ->prefix('api')
                 ->group(base_path('routes/api.php'));
 
+            // Public search routes (no auth middleware)
+            Route::group(base_path('routes/search.php'));
+
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
         });

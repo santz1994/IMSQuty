@@ -339,8 +339,8 @@ app.get('/api/v1', (req, res) => {
 app.use('/api/v1/auth', authLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('auth-service'), 'auth', true)));
 
 // NOW add body parsers for authenticated routes (after auth proxy which handles raw body)
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // User Service - UPDATED with dynamic service resolution
 app.use('/api/v1/users', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('user-service'), 'user', true)));
@@ -352,6 +352,9 @@ app.use('/api/v1/page-permissions', authenticateJWT, generalLimiter, createProxy
 
 // Settings (part of user-service)
 app.use('/api/v1/settings', authenticateJWT, adminLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('user-service'), 'user', true)));
+
+// Search (part of user-service)
+app.use('/api/v1/search', optionalAuthenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('user-service'), 'user', true)));
 
 // Audit Logs (part of user-service)
 app.use('/api/v1/audit', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('user-service'), 'user', true)));

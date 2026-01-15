@@ -58,7 +58,8 @@ class RoleController extends Controller
     public function update(Request $request, Role $role): JsonResponse
     {
         // Increase execution time for large permission updates
-        set_time_limit(120);
+        set_time_limit(300);
+        ini_set('max_execution_time', 300);
         
         $validated = $request->validate([
             'name' => 'sometimes|string|unique:roles,name,' . $role->id,
@@ -68,40 +69,35 @@ class RoleController extends Controller
             'permission_ids.*' => 'exists:permissions,id'
         ]);
 
-        \DB::beginTransaction();
         try {
-            // Update basic fields
-            if (isset($validated['name'])) {
-                $role->name = $validated['name'];
-            }
-            if (isset($validated['display_name'])) {
-                $role->display_name = $validated['display_name'];
-            }
-            if (isset($validated['description'])) {
-                $role->description = $validated['description'];
-            }
+            \DB::beginTransaction();
             
+            // Update basic fields
+            $role->fill([
+                'name' => $validated['name'] ?? $role->name,
+                'display_name' => $validated['display_name'] ?? $role->display_name,
+                'description' => $validated['description'] ?? $role->description,
+            ]);
             $role->save();
 
-            // Update permissions - use direct DB query for better performance
+            // Update permissions - optimized bulk insert
             if (isset($validated['permission_ids'])) {
-                // Clear existing permissions
+                // Clear existing permissions in one query
                 \DB::table('role_has_permissions')
                     ->where('role_id', $role->id)
                     ->delete();
                 
-                // Insert new permissions in chunks
-                $permissionData = [];
-                foreach ($validated['permission_ids'] as $permissionId) {
-                    $permissionData[] = [
+                // Prepare bulk insert data
+                $permissionData = array_map(function($permissionId) use ($role) {
+                    return [
                         'role_id' => $role->id,
                         'permission_id' => $permissionId
                     ];
-                }
+                }, $validated['permission_ids']);
                 
-                // Insert in chunks of 50 to avoid memory issues
-                foreach (array_chunk($permissionData, 50) as $chunk) {
-                    \DB::table('role_has_permissions')->insert($chunk);
+                // Insert all at once (Laravel can handle this)
+                if (!empty($permissionData)) {
+                    \DB::table('role_has_permissions')->insert($permissionData);
                 }
                 
                 // Clear permission cache
@@ -110,11 +106,16 @@ class RoleController extends Controller
 
             \DB::commit();
 
+            // Return response immediately, load relations after
             $role->load('permissions')->loadCount('users');
             return $this->successResponse($role, 'Role updated successfully');
+            
         } catch (\Exception $e) {
             \DB::rollBack();
-            \Log::error('Role update error: ' . $e->getMessage());
+            \Log::error('Role update error: ' . $e->getMessage(), [
+                'role_id' => $role->id,
+                'trace' => $e->getTraceAsString()
+            ]);
             return $this->errorResponse('Failed to update role: ' . $e->getMessage(), 500);
         }
     }

@@ -8,6 +8,7 @@ use App\Http\Controllers\MetricsController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\AuditController;
 
 /*
@@ -58,7 +59,7 @@ Route::prefix('v1')->group(function () {
         // Settings
         Route::prefix('settings')->group(function () {
             Route::get('/', [SettingsController::class, 'index']);
-            Route::get('/{category}', [SettingsController::class, 'show']);
+            // Specific routes MUST come before dynamic {category} route
             Route::get('/cache/stats', [SettingsController::class, 'getCacheStats']);
             Route::post('/cache/clear', [SettingsController::class, 'clearCache']);
             Route::post('/cache/flush', [SettingsController::class, 'flushCacheByPattern']);
@@ -67,6 +68,8 @@ Route::prefix('v1')->group(function () {
             Route::post('/email/test', [SettingsController::class, 'testEmail']);
             Route::post('/storage/test', [SettingsController::class, 'testStorage']);
             Route::post('/maintenance', [SettingsController::class, 'toggleMaintenance']);
+            // Dynamic route MUST be last
+            Route::get('/{category}', [SettingsController::class, 'show']);
         });
         
         // Audit Logs
