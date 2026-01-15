@@ -19,10 +19,6 @@ const ReportsList = lazy(() => import('./pages/Reports/ReportsList'))
 const InventoryList = lazy(() => import('./pages/Inventory/InventoryList'))
 const FinancialList = lazy(() => import('./pages/Financial/FinancialList'))
 const NotificationsList = lazy(() => import('./pages/Notifications/NotificationsList'))
-const MeetingRoomsList = lazy(() => import('./pages/MeetingRooms/MeetingRoomsList'))
-const BookingCalendar = lazy(() => import('./pages/MeetingRooms/BookingCalendar'))
-const BookingApprovals = lazy(() => import('./pages/MeetingRooms/BookingApprovals'))
-const ReceptionistPanel = lazy(() => import('./pages/MeetingRooms/ReceptionistPanel'))
 const BookingForm = lazy(() => import('./pages/MeetingRooms/BookingForm'))
 const BookingsList = lazy(() => import('./pages/MeetingRooms/BookingsList'))
 const ApprovalDashboard = lazy(() => import('./pages/MeetingRooms/ApprovalDashboard'))
@@ -190,42 +186,6 @@ function App() {
           element={
             <ProtectedDashboardRoute>
               <ReportsList />
-            </ProtectedDashboardRoute>
-          }
-        />
-
-        <Route
-          path="/meeting-rooms"
-          element={
-            <ProtectedDashboardRoute>
-              <MeetingRoomsList />
-            </ProtectedDashboardRoute>
-          }
-        />
-
-        <Route
-          path="/meeting-rooms/calendar"
-          element={
-            <ProtectedDashboardRoute>
-              <BookingCalendar />
-            </ProtectedDashboardRoute>
-          }
-        />
-
-        <Route
-          path="/meeting-rooms/approvals"
-          element={
-            <ProtectedDashboardRoute>
-              <BookingApprovals />
-            </ProtectedDashboardRoute>
-          }
-        />
-
-        <Route
-          path="/meeting-rooms/receptionist"
-          element={
-            <ProtectedDashboardRoute>
-              <ReceptionistPanel />
             </ProtectedDashboardRoute>
           }
         />

@@ -410,66 +410,137 @@ const RolesPermissions: React.FC = () => {
 
             {/* Permission Selection */}
             <Grid item xs={12}>
-              <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
-                Select Permissions
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2, mb: 1 }}>
+                <Typography variant="subtitle1">
+                  Select Permissions
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => {
+                      // Select all permissions
+                      const allPermissionIds = permissions.map(p => p.id);
+                      setFormData(prev => ({ ...prev, permission_ids: allPermissionIds }));
+                    }}
+                    disabled={formData.permission_ids.length === permissions.length}
+                  >
+                    Select All
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => {
+                      // Deselect all permissions
+                      setFormData(prev => ({ ...prev, permission_ids: [] }));
+                    }}
+                    disabled={formData.permission_ids.length === 0}
+                  >
+                    Clear All
+                  </Button>
+                  <Chip
+                    label={`${formData.permission_ids.length} / ${permissions.length} Selected`}
+                    color={formData.permission_ids.length > 0 ? 'primary' : 'default'}
+                    size="small"
+                  />
+                </Box>
+              </Box>
               <Paper variant="outlined" sx={{ p: 2, maxHeight: 300, overflow: 'auto' }}>
                 {Object.keys(permissionsByModule).length === 0 ? (
                   <Typography variant="body2" color="text.secondary">
                     No permissions available
                   </Typography>
                 ) : (
-                  Object.entries(permissionsByModule).map(([module, perms]) => (
-                    <Accordion key={module}>
-                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                        <Typography variant="subtitle2">
-                          {module.toUpperCase()} ({perms?.length || 0} permissions)
-                        </Typography>
-                      </AccordionSummary>
-                      <AccordionDetails>
-                        <Grid container spacing={1}>
-                          {Array.isArray(perms) && perms.length > 0 ? (
-                            perms.map((permission) => (
-                              <Grid item xs={12} sm={6} key={permission.id}>
-                                <FormControlLabel
-                                  control={
-                                    <Checkbox
-                                      checked={formData.permission_ids.includes(permission.id)}
-                                      onChange={() => handleTogglePermission(permission.id)}
-                                      size="small"
-                                    />
+                  Object.entries(permissionsByModule).map(([module, perms]) => {
+                    const modulePerms = Array.isArray(perms) ? perms : [];
+                    const selectedInModule = modulePerms.filter(p => formData.permission_ids.includes(p.id)).length;
+                    return (
+                      <Accordion key={module}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', pr: 2 }}>
+                            <Typography variant="subtitle2">
+                              {module.toUpperCase()}
+                            </Typography>
+                            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
+                              <Button
+                                size="small"
+                                variant="text"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const modulePermIds = modulePerms.map(p => p.id);
+                                  const allSelected = modulePermIds.every(id => formData.permission_ids.includes(id));
+                                  if (allSelected) {
+                                    // Deselect all in module
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      permission_ids: prev.permission_ids.filter(id => !modulePermIds.includes(id))
+                                    }));
+                                  } else {
+                                    // Select all in module
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      permission_ids: [...new Set([...prev.permission_ids, ...modulePermIds])]
+                                    }));
                                   }
-                                  label={
-                                    <Box>
-                                      <Typography variant="body2">
-                                        {permission.display_name || permission.name || 'Unnamed Permission'}
-                                      </Typography>
-                                      {permission.description && (
-                                        <Typography variant="caption" color="text.secondary">
-                                          {permission.description}
+                                }}
+                                sx={{ minWidth: 'auto', p: 0.5, fontSize: '0.75rem' }}
+                              >
+                                {selectedInModule === modulePerms.length ? 'Clear' : 'All'}
+                              </Button>
+                              <Chip
+                                label={`${selectedInModule} / ${modulePerms.length}`}
+                                size="small"
+                                color={selectedInModule > 0 ? 'primary' : 'default'}
+                                variant={selectedInModule === modulePerms.length ? 'filled' : 'outlined'}
+                              />
+                            </Box>
+                          </Box>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                          <Grid container spacing={1}>
+                            {modulePerms.length > 0 ? (
+                              modulePerms.map((permission) => (
+                                <Grid item xs={12} sm={6} key={permission.id}>
+                                  <FormControlLabel
+                                    control={
+                                      <Checkbox
+                                        checked={formData.permission_ids.includes(permission.id)}
+                                        onChange={(e) => {
+                                          e.stopPropagation();
+                                          handleTogglePermission(permission.id);
+                                        }}
+                                        size="small"
+                                      />
+                                    }
+                                    label={
+                                      <Box>
+                                        <Typography variant="body2">
+                                          {permission.display_name || permission.name || 'Unnamed Permission'}
                                         </Typography>
-                                      )}
-                                    </Box>
-                                  }
-                                />
+                                        {permission.description && (
+                                          <Typography variant="caption" color="text.secondary">
+                                            {permission.description}
+                                          </Typography>
+                                        )}
+                                      </Box>
+                                    }
+                                  />
+                                </Grid>
+                              ))
+                            ) : (
+                              <Grid item xs={12}>
+                                <Typography variant="caption" color="text.secondary">
+                                  No permissions in this module
+                                </Typography>
                               </Grid>
-                            ))
-                          ) : (
-                            <Grid item xs={12}>
-                              <Typography variant="caption" color="text.secondary">
-                                No permissions in this module
-                              </Typography>
-                            </Grid>
-                          )}
-                        </Grid>
-                      </AccordionDetails>
-                    </Accordion>
-                  ))
+                            )}
+                          </Grid>
+                        </AccordionDetails>
+                      </Accordion>
+                    );
+                  })
                 )}
               </Paper>
-              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                Selected: {formData.permission_ids.length} / {permissions.length} permissions
-              </Typography>
             </Grid>
           </Grid>
         </DialogContent>

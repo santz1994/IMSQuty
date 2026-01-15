@@ -51,9 +51,9 @@ COPY . .
 # Generate optimized autoloader
 RUN composer dump-autoload --optimize --no-dev
 
-# Create non-root user
-RUN groupadd -g 1000 imsquty && \
-    useradd -u 1000 -g imsquty -m imsquty
+# Create non-root user (Alpine uses addgroup/adduser instead of groupadd/useradd)
+RUN addgroup -g 1000 imsquty && \
+    adduser -u 1000 -G imsquty -D imsquty
 
 # Set permissions
 RUN chown -R imsquty:imsquty /var/www/meeting-room-service \

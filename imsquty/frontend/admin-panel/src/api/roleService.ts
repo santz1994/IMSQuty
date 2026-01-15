@@ -80,10 +80,15 @@ class RoleService {
     id: number,
     data: UpdateRoleRequest
   ): Promise<ApiResponse<Role>> {
+    console.log('Updating role:', id, 'with data:', data)
+    console.log('Permission IDs count:', data.permission_ids?.length || 0)
+
     const response = await client.put<ApiResponse<Role>>(
       `/roles/${id}`,
       data
     )
+
+    console.log('Update response:', response.data)
     return response.data
   }
 

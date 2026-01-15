@@ -52,7 +52,9 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
   'http://localhost:3000',
   'http://127.0.0.1:5173',
   'http://127.0.0.1:5174',
-  'http://127.0.0.1:3000'
+  'http://127.0.0.1:3000',
+  'http://192.168.1.122:5173',  // web-app via IP
+  'http://192.168.1.122:5174',  // admin-panel via IP
 ];
 
 app.use(cors({
@@ -60,7 +62,15 @@ app.use(cors({
     // Allow requests with no origin (like mobile apps, curl, Postman)
     if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) {
+    // Allow any origin from local network (192.168.x.x, 172.x.x.x, 10.x.x.x)
+    const isLocalNetwork = origin && (
+      origin.match(/^https?:\/\/(localhost|127\.0\.0\.1)/) ||
+      origin.match(/^https?:\/\/192\.168\.\d+\.\d+/) ||
+      origin.match(/^https?:\/\/172\.\d+\.\d+\.\d+/) ||
+      origin.match(/^https?:\/\/10\.\d+\.\d+\.\d+/)
+    );
+
+    if (allowedOrigins.includes(origin) || isLocalNetwork) {
       callback(null, true);
     } else {
       callback(null, false);
@@ -217,8 +227,8 @@ const retryManager = new RetryManager({
 const proxyOptions = (target, serviceName, skipPathRewrite = false) => ({
   target,
   changeOrigin: true,
-  timeout: 30000, // 30 seconds
-  proxyTimeout: 30000, // 30 seconds
+  timeout: 120000, // 120 seconds for complex operations
+  proxyTimeout: 120000, // 120 seconds
   pathRewrite: skipPathRewrite ? undefined : (path) => {
     // Remove /api/v1/{service} prefix
     return path.replace(/^\/api\/v1\/[^/]+/, '/api/v1');
@@ -335,10 +345,10 @@ app.use(express.urlencoded({ extended: true }));
 // User Service - UPDATED with dynamic service resolution
 app.use('/api/v1/users', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('user-service'), 'user', true)));
 
-// Roles & Permissions (part of auth-service NOT user-service)
-app.use('/api/v1/roles', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('auth-service'), 'auth', true)));
-app.use('/api/v1/permissions', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('auth-service'), 'auth', true)));
-app.use('/api/v1/page-permissions', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('auth-service'), 'auth', true)));
+// Roles & Permissions (FIXED: moved to user-service where RoleController exists)
+app.use('/api/v1/roles', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('user-service'), 'user', true)));
+app.use('/api/v1/permissions', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('user-service'), 'user', true)));
+app.use('/api/v1/page-permissions', authenticateJWT, generalLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('user-service'), 'user', true)));
 
 // Settings (part of user-service)
 app.use('/api/v1/settings', authenticateJWT, adminLimiter, createProxyMiddleware(proxyOptions(serviceRegistry.getServiceUrl('user-service'), 'user', true)));

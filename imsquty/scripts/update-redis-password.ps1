@@ -32,7 +32,8 @@ foreach ($file in $files) {
         $content = $content -replace 'REDIS_PASSWORD=.*', 'REDIS_PASSWORD=redislabs'
         Set-Content -Path $file -Value $content -NoNewline
         Write-Host "✅ Updated: $file" -ForegroundColor Green
-    } else {
+    }
+    else {
         Write-Host "Not found: $file" -ForegroundColor Yellow
     }
 }
